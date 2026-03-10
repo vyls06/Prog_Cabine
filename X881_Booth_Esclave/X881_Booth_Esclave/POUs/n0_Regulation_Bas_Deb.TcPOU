@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="n0_Regulation_Bas_Deb" Id="{a04b3081-5e88-4a97-a090-45845255cde6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM n0_Regulation_Bas_Deb
+VAR
+	PID_Bas_Deb_Ext: PID;
+	Var_Interne: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de l'enable de la régulation PID*)
+(*Vérification que la conisgne appliquée est compris dans la consigne bas débit*)
+IF((Cons_Actionneur_Registre_Souf_Volh > 0) AND (Cons_Actionneur_Registre_Souf_Volh <= Cons_Max_Bas_Deb_Ext) AND Option_Bas_Debit)
+	THEN
+	IF (E_Vanne_Souf_Bas_Deb_Ouv AND E_Vanne_Ext_Bas_Deb_Ouv)
+		THEN
+		Enable_PID_Bas_Deb_Ext := TRUE;
+		ELSE
+		Enable_PID_Bas_Deb_Ext := FALSE;
+	END_IF;
+	Cmd_Appli_Vanne_Souf_Bas_Deb := TRUE;
+	Cmd_Appli_Vanne_Ext_Bas_Deb := TRUE;
+	ELSE
+	Enable_PID_Bas_Deb_Ext := FALSE;
+	Cmd_Appli_Vanne_Souf_Bas_Deb := FALSE;
+	Cmd_Appli_Vanne_Ext_Bas_Deb := FALSE;
+END_IF;
+
+Var_Interne := LIMIT(0.0,Cons_Actionneur_Registre_Souf_m3h, 16.0);
+
+(**********************************************Régulation PID*)
+PID_Bas_Deb_Ext(
+	ACTUAL:= MES_Petit_Debit_m3h_Extraction,
+	SET_POINT:= Var_Interne, (*Recopie de la consigne de soufflage pour la consigne du bas débit*)
+	KP:= Gain_PID_Bas_Deb_Ext,
+	TN:= Integral_PID_Bas_Deb_Ext,
+	TV:= Derivee_PID_Bas_Deb_Ext,
+	Y_MANUAL:= 0.0,
+	Y_OFFSET:= 0.0,
+	Y_MIN:= 0.0,
+	Y_MAX:= 100.0,
+	RESET:= NOT Enable_PID_Bas_Deb_Ext, (* Attente ouvertures des registres avant de démarrer la régulation*)
+	Y=> S_Cmd_PID_Bas_Deb_Ext);
+
+(*Consigne actionneur*)
+Cons_Actionneur_Moteur_BasDebit := S_Cmd_PID_Bas_Deb_Ext;]]></ST>
+    </Implementation>
+    <LineIds Name="n0_Regulation_Bas_Deb">
+      <LineId Id="5" Count="35" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

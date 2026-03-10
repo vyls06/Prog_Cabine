@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Objet_BatElec" Id="{b84c2eb4-ab7d-444f-a8a1-acac7acec6c3}">
+    <Declaration><![CDATA[TYPE Objet_BatElec :
+	STRUCT
+		Mot_Lecture 				:INT; (*Mot de lecture des bits*)
+		Mot_Ecriture 				:INT; (*Mot d'écriture des bits*)
+		R_TempApresBat			: REAL; (* en °C *)
+		R_Info_Cons				: REAL; (* en % *)
+		W_LimiteMinCons			: REAL; (* en % *)
+		W_LimiteMaxCons 		: REAL; (* en % *)
+		W_ConsForcage			: REAL; (* en % *)
+		W_SeuilTempMax			: REAL; (* en °C *)
+		W_PeriodePWM			: REAL; (* en sec *)
+		W_TempsMinPWM		: REAL; (* en sec *)
+		W_TempsMaxPWM		: REAL; (* en sec *)
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

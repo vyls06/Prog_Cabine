@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <TextList Name="Etats_Cabine" Id="{e5630d9c-6375-44f1-bf5f-77dcbacf7e13}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="TextListObject">
+          <v n="UniqueIdGenerator">"0"</v>
+          <l n="TextList" t="ArrayList" cet="TextListRow">
+            <o>
+              <v n="TextID">"0"</v>
+              <v n="TextDefault">"CABINE EN DEFAUT"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>FAULTY BOOTH</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1"</v>
+              <v n="TextDefault">"CABINE LIBRE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>STANDBY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"2"</v>
+              <v n="TextDefault">"MODE MANUEL EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>MANUAL MODE IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"3"</v>
+              <v n="TextDefault">"RECETTE EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PROTOCOL IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"4"</v>
+              <v n="TextDefault">"MODE DEPOLLUTION EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>DECONTAMINATION IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"5"</v>
+              <v n="TextDefault">"MODE NETTOYAGE EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CLEANING IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"6"</v>
+              <v n="TextDefault">"MODE ECO EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>ECO MODE IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"7"</v>
+              <v n="TextDefault">"MODE MAINTENANCE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>MAINTENANCE MODE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"8"</v>
+              <v n="TextDefault">"MODE STOP"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>STOP MODE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">""</v>
+              <v n="TextDefault">""</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+          </l>
+          <l n="Languages" t="ArrayList" cet="String">
+            <v>En</v>
+          </l>
+          <v n="GuidInit">{bcb9c296-6c65-4de2-b2f3-b38faaeafe8d}</v>
+          <v n="GuidReInit">{3e0c66c9-831d-41f2-8eed-eeef43c4bc0f}</v>
+          <v n="GuidExitX">{3b1167b2-c2d7-4236-9134-ff7e0a30a42f}</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="String">System.String</Type>
+        <Type n="TextListObject">{2bef0454-1bd3-412a-ac2c-af0f31dbc40f}</Type>
+        <Type n="TextListRow">{53da1be7-ad25-47c3-b0e8-e26286dad2e0}</Type>
+      </TypeList>
+    </XmlArchive>
+  </TextList>
+</TcPlcObject>

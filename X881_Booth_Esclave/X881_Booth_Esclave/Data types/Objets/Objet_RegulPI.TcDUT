@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Objet_RegulPI" Id="{fabeef21-7be1-4a70-a95b-249c54554dab}">
+    <Declaration><![CDATA[TYPE Objet_RegulPI :
+STRUCT
+	Mot_Lecture 			:INT; (*Mot de lecture des bits*)
+	Mot_Ecriture 			:INT; (*Mot d'écriture des bits*)
+	R_InfoConsPI			: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	R_MesRegulPI		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	R_SortieCmdPI		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_ConsOccupe		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_ConsInoccupe		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_ConsPIForcage	: REAL; (* en °C *)
+	W_LimiteMinCons		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_LimiteMaxCons 	: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_GainPI 			: REAL; (* en % *)
+	W_IntegralPI 			: REAL; (* en sec *)
+	W_DerivPI 			: REAL; (* en sec *)
+	W_BandeMorte		: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+	W_SortieCMDForcage	: REAL; (* L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....) *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

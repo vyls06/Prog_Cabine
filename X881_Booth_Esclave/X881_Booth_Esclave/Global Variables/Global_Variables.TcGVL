@@ -1,0 +1,953 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <GVL Name="Global_Variables" Id="{82f37c66-9b3d-48dc-95f4-a16f326316ba}">
+    <Declaration><![CDATA[//{attribute 'Tc2GvlVarNames'}Tc2GvlVarNames
+ VAR_GLOBAL
+(* Configuration des E/S *)
+	ETOR1_Fdc_Va_Vid_Lavabo_Ouv			AT %IX0.0 : BOOL;
+	ETOR2_Fdc_Va_Vid_Lavabo_Ferm		AT %IX0.1 : BOOL;
+	ETOR3_Info_Ma_Prise					AT %IX0.2 : BOOL;
+	ETOR4_Service_Humi_CTA				AT %IX0.3 : BOOL;
+	ETOR5_Def_Humi_CTA					AT %IX0.4 : BOOL;
+	ETOR6_Info_Contact_Porte			AT %IX0.5 : BOOL;
+	ETOR7_Def_MotRep_Souf_CTA			AT %IX0.6 : BOOL;
+	ETOR8_Def_MotSouf_Souf_CTA 			AT %IX0.7 : BOOL;
+	ETOR9_Def_Alim_BatElec_CTA			AT %IX0.8 : BOOL;
+	ETOR10_Hygrostat_Souf_CT			AT %IX0.9:BOOL;
+	ETOR11_Pressostat_Secu				AT %IX0.10:BOOL;
+	ETOR12_Thermostat_Secu				AT %IX0.11: BOOL;
+	ETOR13_Marche_BatElec_CTA			AT %IX0.12: BOOL;
+	ETOR14_Libre 						AT %IX0.13 : BOOL;
+	ETOR15_Libre 						AT %IX0.14 : BOOL;
+	ETOR16_Libre 						AT %IX0.15 : BOOL;
+
+	STOR1_Cmd_EV_Alim_Lavabo			AT %QX0.0 : BOOL;
+	STOR2_Cmd_Va_Vid_Lavabo				AT %QX0.1 : BOOL;
+	STOR3_Cmd_Ma_Prise					AT %QX0.2 : BOOL;
+	STOR4_Cmd_BatElec_CTA				AT %QX0.3 : BOOL;
+	STOR5_Libre							AT %QX0.4: BOOL;
+	STOR6_Libre							AT %QX0.5: BOOL;
+	STOR7_Libre							AT %QX0.6: BOOL;
+	STOR8_Libre							AT %QX0.7: BOOL;
+
+	EAN1_Sonde_Debit_Eau_Lavabo	 		AT %I* : INT;
+	EAN2_Sonde_Temp_Cabine 				AT %I* : INT;
+	EAN3_Sonde_Hygro_Cabine				AT %I* : INT;
+	EAN4_Sonde_Temp_Batt_EG				AT %I* : INT;
+	EAN5_Sonde_Pression_Cabine			AT %I* : INT;
+	EAN6_Sonde_press_Souf				AT %I* : INT;
+	EAN7_Retour_Pos_Reg_Etanche_Ext		AT %I* : INT;
+	EAN8_Sonde_press_Ext				AT %I* : INT;
+	
+	EAN9_Sonde_Temp_Souf		 		AT %I* : INT;
+	EAN10_Libre							AT %I* : INT;
+	EAN11_Libre							AT %I* : INT;
+	EAN12_Libre							AT %I* : INT;
+	EAN13_Libre							AT %I* : INT;
+	EAN14_Libre							AT %I* : INT;
+	EAN15_Libre							AT %I* : INT;
+	EAN16_Libre							AT %I* : INT;
+
+	SAN1_Cons_Humi_CTA					AT %Q*:INT;
+	SAN2_Cons_MotRep_CTA 				AT %Q*:INT;
+	SAN3_Cons_MotSouf_CTA				AT %Q*:INT;
+	SAN4_Cons_BatElec_CTA				AT %Q*:INT;
+	SAN5_Cons_V3V_Froid_CTA				AT %Q*:INT;
+	SAN6_Libre							AT %Q*:INT;
+	SAN7_Cons_Ouv_Reg_Etanche_Ext		AT %Q*:INT;
+	SAN8_Libre							AT %Q*:INT;
+
+	MB : ModbusRtuMaster_KL6x22B;
+
+(******************************************************************************************)
+(*Gestion Intercommunication entre automate*)
+(*****************Com IP gestion option automate esclave*************************)
+	bLogDebugMessages					: BOOL := TRUE;
+	MAX_CLIENT_CONNECTIONS				: UDINT(1..20) := 1;
+	MAX_PLCPRJ_RXBUFFER_SIZE			: UDINT := 1000;
+	PLCPRJ_RECONNECT_TIME				: TIME := T#3S;
+(*	PLCPRJ_SEND_CYCLE_TIME				: TIME := T#1s; not used at server side *)
+	PLCPRJ_ACCEPT_POLLING_TIME			: TIME := T#1S;
+	PLCPRJ_RECEIVE_POLLING_TIME		 	: TIME := T#1S;
+	PLCPRJ_RECEIVE_TIMEOUT				: TIME := T#50S;
+	(* Some project specific error codes *)
+	PLCPRJ_ERROR_RECEIVE_BUFFER_OVERFLOW	: UDINT := 16#8101; (* receive buffer overflow*)
+	PLCPRJ_ERROR_RECEIVE_TIMEOUT		: UDINT := 16#8102;(* receive timeout error *)
+	Tab_Com_Send						: ARRAY [0..30] OF REAL;
+	Tab_Com_Receive						: ARRAY [0..30] OF REAL;
+	fbServer							: FB_LocalServer;
+
+(************Gestion ecriture Inter-com Cabine************)
+	Temperature_Cabine 					:REAL;
+	Hygrometrie_Cabine 					:REAL;
+	(*à définir en focntion de la gestion de l'automate maître*)
+
+(************Gestion lecture Inter-com Cabine************)
+	(*à définir en focntion de la gestion de l'automate maître*)
+	Van_Maitre							:WORD;
+	Vmois_Maitre						:WORD;
+	Vjour_Maitre						:WORD;
+	Vheure_Maitre						:WORD;
+	Vminute_Maitre						:WORD;
+	VDayOfWeek_Maitre					:WORD;
+
+(******************************************************************************************)
+(*GESTION DES VARIABLES DE LA CABINE*)
+(******************************************************************************************)
+
+(*Autres (Non utilisé dans la table d'échange)*)
+	(*Gestion des états*)
+	Mode_Occupation						: BOOL;
+	Mode_Evaluation						: BOOL;
+	Mode_Neutre							: BOOL;
+	Arret_Extraction					: BOOL;
+	Arret_Soufflage						: BOOL;
+	Arret_Petit_Debit					: BOOL;
+	Defaut_General_Alim_Eau				: BOOL;
+	Mode_Depollution_cycle1				: BOOL;
+	(*Gestion error com modebus RS485*)
+	Temp_Eau_Mitige						: INT;
+	Temp_Cons_Eau_Mitige				: INT;
+	Com_Ok_Dalcnet						: BOOL;
+	Error_Dalcnet						: BOOL;
+	Com_Ok_Vanne_Thermo					: BOOL;
+	Error_Vanne_Thermo					: BOOL;
+ 	(*Calcul des ecart de régulations*)
+	S_Ecart_Regul_PID_Extraction		: REAL;
+	S_Ecart_Regul_PID_Soufflage			: REAL;
+	S_Ecart_Regul_PID_Pression			: REAL;
+	S_Ecart_Regul_PID_Temp_Eau_Mitig	: REAL;
+	(*Gestion des recettes auto et manu*)
+	Mode_Auto							: Mode;
+	Mode_Manu							: Mode;
+	(*Alarme qui met en pause les recettes*)
+	Alarme_Secu_Mode_1					: BOOL;
+	Alarme_Secu_Mode_2					: BOOL;
+	Alarme_Secu_Mode_3					: BOOL;
+	Alarme_Secu_Mode_4					: BOOL;
+	Alarme_Secu_Mode_5					: BOOL;
+	Alarme_Secu_Mode_6					: BOOL;
+	Alarme_Secu_Mode_7					: BOOL;
+	Alarme_Secu_Mode_8					: BOOL;
+	Alarme_Secu_Mode_10					: BOOL;
+	Alarme_Secu_Mode_11					: BOOL;
+	Alarme_Secu_Mode_12					: BOOL;
+	Alarme_Secu_Mode_13					: BOOL;
+	Alarme_Secu_Mode_14					: BOOL;
+	Alarme_Secu_Mode_15					: BOOL;
+	Alarme_Secu_Mode_16					: BOOL;
+	Alarme_Secu_Mode_17					: BOOL;
+	Alarme_Secu_Mode_18					: BOOL;
+	Alarme_Secu_Mode_19					: BOOL;
+	Alarme_Secu_Mode_23					: BOOL;
+	Alarme_Secu_Mode_24					: BOOL;
+	(*Horodatage*)
+	Van 								: WORD; (* Année courante *)
+	Vmois								: WORD; (* Mois courante *)
+	Vjour								: WORD; (* Jour courante *)
+	Vheure								: WORD; (* Heure courante *)
+	Vminute								: WORD; (* Minute courante *)
+	Vseconde							: WORD; (* Seconde courante *)
+	VDayOfWeek							: WORD; (* Jour de la semaine *)
+	(*Gestion mode arrêt des modes manu et auto*)
+	Mode_Arret_Manu 					:BOOL;
+	Mode_Arret_Auto 					:BOOL;
+	Mode_Warning						:BOOL;
+	(*etape du de l'éxécution du mode auto et manu*)
+	Numero_Mode_Auto					: INT;
+	Numero_Mode_Manu					: INT;
+	(*Lecture commande et consigne actionneur*)
+	Cmd_Appli_PC_Cab 					: BOOL;
+	Cmd_Appli_Vanne_Alim_Douche 		: BOOL;
+	Cmd_Appli_Vanne_Alim_Douchette 		: BOOL;
+	Cmd_Appli_Vanne_Alim_NEP 			: BOOL;
+	Cmd_Appli_Vanne_Alim_Lavabo 		: BOOL;
+	Cmd_Appli_Vanne_Vid_Douche 			: BOOL;
+	Cmd_Appli_Vanne_Vid_Lavabo 			: BOOL;
+	Cmd_Appli_ElectroValve_Alim_Douche 	: BOOL;
+	Cmd_Appli_ElectroValve_Alim_Lavabo 	: BOOL;
+	Cmd_Appli_BattElec 					:BOOL;
+	Cons_Temperature_Eau_F				: INT;
+	Cmd_Appli_Vanne_Souf_Bas_Deb 		:BOOL;
+	Cmd_Appli_Vanne_Ext_Bas_Deb 		:BOOL;
+	Cmd_Appli_Reg_Etanche_Souf 			:BOOL;
+	Cmd_Appli_Verin_WC_GV				: BOOL;
+	Cmd_Appli_Verin_WC_PV				: BOOL;
+	(*Variable PID*)
+	Enable_PID_Bas_Deb_Ext				: BOOL;
+	S_Cmd_PID_Bas_Deb_Ext				: REAL;
+	Enable_PID_Temp_Amb					: BOOL;
+	S_Cmd_PID_Temp_Amb					: REAL;
+	Enable_PID_Press_Cab				: BOOL;
+	S_Cmd_PID_Press_Cab					: REAL;
+	Enable_PID_Temp_Eau_Mitig			: BOOL;
+	S_Cmd_PID_Temp_Eau_Mitig			: REAL;
+	Regul_Humi_YMin						: REAL;
+	(*Temporisation de sécurisation des alimentations*)
+	Temp_Secu_Debord_Douche_Int			: INT;
+	Temp_Secu_Debord_Lavabo_Int			: INT;
+	Mes_Out_Max							: REAL;
+	Forc_Ouv_Alim_Lav_Dou				: BOOL;
+	FCV_01_extraction					: Registre_V1;
+	FCV_02_soufflage					: Registre_V1;
+	(*Gestion des mesures*)
+	E_Sonde_Gros_Debit_Soufflage_1 		:INT;
+	E_Sonde_Gros_Debit_Extraction_1 	:INT;
+	(*Option non utilisé*)
+	Option_Vanne_Thermo_General 		: BOOL;
+	Option_Vanne_Thermo_Par_Cabine 		: BOOL;
+
+(**********************************************************************************************)
+(*configuration des Entrees tor et ana*)
+	E_Info_Niveau_Haut_Douche			: BOOL;
+	E_Info_Niveau_Haut_Lavabo 			: BOOL;
+	E_Info_Contact_Porte 				: BOOL;
+	E_Info_PC_Cab 						: BOOL;
+	E_Etat_Evac_SaniDouche 				: BOOL;
+	E_Info_Klixon_BattElec 				:BOOL;
+	E_Defaut_Prise_Elec 				:BOOL;
+
+	E_Vanne_Alim_Douche_Ouv 			: BOOL;
+	E_Vanne_Alim_Douche_Ferm 			: BOOL;
+	E_Vanne_Alim_Douchette_Ouv 			: BOOL;
+	E_Vanne_Alim_Douchette_Ferm 		: BOOL;
+	E_Vanne_Alim_Lavabo_Ouv 			: BOOL;
+	E_Vanne_Alim_Lavabo_Ferm 			: BOOL;
+	E_Vanne_Vidange_Douche_Ouv 			: BOOL;
+	E_Vanne_Vidange_Douche_Ferm 		: BOOL;
+	E_Vanne_Vidange_Lavabo_Ouv 			: BOOL;
+	E_Vanne_Vidange_Lavabo_Ferm 		: BOOL;
+	E_Vanne_Alim_NEP_Ouv 				:BOOL;
+	E_Vanne_Alim_NEP_Ferm 				:BOOL;
+
+	E_Vanne_Souf_Bas_Deb_Ouv 			:BOOL;
+	E_Vanne_Souf_Bas_Deb_Ferm 			:BOOL;
+	E_Vanne_Ext_Bas_Deb_Ouv 			:BOOL;
+	E_Vanne_Ext_Bas_Deb_Ferm 			:BOOL;
+
+	E_Sonde_Temp_Amb 					: INT;
+	E_Sonde_Hygro_Amb 					: INT;
+	E_Sonde_Pression_Cabine 			:INT;
+	E_Sonde_Temp_Eau_Mitig 				:INT;
+	E_Sonde_press_Souf 					:INT;
+	E_Sonde_press_Ext 					:INT;
+	E_Sonde_Temp_Batt_EG 				:INT;
+
+	E_Sonde_Gros_Debit_Soufflage 		: INT;
+	E_Sonde_Gros_Debit_Extraction 		: INT;
+	E_Sonde_Petit_Debit_Extraction 		: INT;
+	E_Sonde_Pression_ByPass 			:INT;
+	E_Retour_Pos_Reg_Etanche_Ext 		:INT;
+
+	E_Sonde_Debit_Alim_Douche 			:INT;
+	E_Sonde_Debit_Alim_Lavabo 			:INT;
+	E_Sonde_Temp_Souf					:INT;
+(*Sorties tor et ana*)
+	S_Cmd_PC_Cab 						: BOOL;
+	S_Cmd_Vanne_Alim_Douche 			: BOOL;
+	S_Cmd_Vanne_Alim_Douchette 			: BOOL;
+	S_Cmd_Vanne_Alim_Lavabo 			: BOOL;
+	S_Cmd_Vanne_Vid_Douche 				: BOOL;
+	S_Cmd_Vanne_Vid_Lavabo 				: BOOL;
+	S_Cmd_ElectroValve_Alim_Douche 		: BOOL;
+	S_Cmd_ElectroValve_Alim_Lavabo 		: BOOL;
+	S_Cmd_BattElec 						:BOOL;
+	S_Cmd_Vanne_Souf_Bas_Deb 			:BOOL;
+	S_Cmd_Vanne_Ext_Bas_Deb 			:BOOL;
+	S_Cmd_Reg_Etanche_Souf 				:BOOL;
+	S_Cmd_Vanne_NEP 					: BOOL;
+	S_Cmd_Appli_Verin_WC_GV				: BOOL;
+	S_Cmd_Appli_Verin_WC_PV				: BOOL;
+
+	S_Cons_Registre_Extraction 			: INT;
+	S_Cons_Registre_Soufflage 			: INT;
+	S_Cons_Moteur_BasDebit 				: INT;
+	S_Cons_Moteur_ByPass				: INT;
+	S_Cons_BattElec 					:INT;
+	S_Cons_Reg_Etanche_Ext 				:INT;
+	S_Cons_Ouv_V3V_Eau_Mitig 			:INT;
+	S_Cons_Module_Sontay 				:INT;
+
+(*Configuration des Entrées et Sorties - Gestion des enceintes climatiques*)
+	E_Def_MotRep_CTA 					: BOOL;
+	E_Def_MotSouf_CTA 					: BOOL;
+	E_Hygrostat_Souf_CTA 				: BOOL;
+	E_Def_Alim_BatElec_CTA				: BOOL;
+	E_Marche_BatElec_CTA 				: BOOL;
+	E_Def_Humi_CTA 						: BOOL;
+	E_Service_Humi_CTA 					: BOOL;
+	E_Pressostat_Secu 					: BOOL;
+	E_Thermostat_Secu 					: BOOL;
+
+	S_Cmd_BatElec_CTA 					: BOOL;
+	S_Cmd_Humi_CTA 						: BOOL;
+
+	S_Cons_V3V_Froid_CTA				:INT;
+	S_Cons_MotRep_CTA 					:INT;
+	S_Cons_MotSouf_CTA 					:INT;
+	S_Cons_BatElec_CTA 					:INT;
+	S_Cons_Humi_CTA 					:INT;
+
+(*Gestion des alarmes*)
+	(*Non récupérer sur GTC*)
+	Securite_Debord_Douche 				:BOOL;
+	Securite_Debord_Lavabo 				:BOOL;
+	(*Défaut récupéré sur GTC*)
+	Defaut_Debordement_Douche			: BOOL;
+	Defaut_Debordement_Lavabo			: BOOL;
+	Defaut_Discord_Deb_Eau_Douche 		:BOOL;
+	Defaut_Discord_Deb_Eau_Lavabo		 :BOOL;
+
+	Defaut_Discord_PC_Cab				: BOOL;
+	Def_Discord_Alim_Prise				: BOOL;
+	Def_Prise_Porte_Ouverte				: BOOL;
+	Defaut_Pompe_Relevage				: BOOL;
+	Defaut_Porte_Ouverte				: BOOL;
+
+	Defaut_Com_Dalcnet					: BOOL;
+	Defaut_Com_Vanne_Thermo 			:BOOL;
+	Defaut_Com_Vanne_General 			:BOOL;
+	Defaut_Com_Client					:BOOL;
+
+	Defaut_Discord_Vanne_Vid_Douche_Ouv		: BOOL;
+	Defaut_Discord_Vanne_Vid_Douche_Ferm	: BOOL;
+	Defaut_Discord_Vanne_Vid_Lavabo_Ouv		: BOOL;
+	Defaut_Discord_Vanne_Vid_Lavabo_Ferm	: BOOL;
+	Defaut_Discord_Vanne_Alim_Douche_Ouv	: BOOL;
+	Defaut_Discord_Vanne_Alim_Douche_Ferm	: BOOL;
+	Defaut_Discord_Vanne_Alim_Lavabo_Ouv	: BOOL;
+	Defaut_Discord_Vanne_Alim_Lavabo_Ferm	: BOOL;
+	Defaut_Discord_Vanne_Alim_Douchette_Ouv	: BOOL;
+	Defaut_Discord_Vanne_Alim_Douchette_Ferm: BOOL;
+	Defaut_Discord_Vanne_Alim_NEP_Ouv		: BOOL;
+	Defaut_Discord_Vanne_Alim_NEP_Ferm		: BOOL;
+
+	Defaut_Discord_Vanne_Souf_Bas_Deb_Ouv 	:BOOL;
+	Defaut_Discord_Vanne_Souf_Bas_Deb_Ferm 	:BOOL;
+	Defaut_Discord_Vanne_Ext_Bas_Deb_Ouv 	:BOOL;
+	Defaut_Discord_Vanne_Ext_Bas_Deb_Ferm 	:BOOL;
+
+	Defaut_Discord_Deb_Ext				: BOOL;
+	Defaut_Discord_Deb_Souf				: BOOL;
+	Defaut_Discord_Reg_Souf_Ferm		: BOOL;
+	Defaut_Discord_Reg_Ext_Ferm			: BOOL;
+	Defaut_Klixon_BattElec				: BOOL;
+
+	Defaut_Discord_Reg_Etanche_Ext 		:BOOL;
+	Defaut_Discord_Regul_Press_Cab 		:BOOL;
+	Defaut_Differentiel_Prise_Elec 		:BOOL;
+	Defaut_Com_Reg_Souf 				:BOOL;
+	Defaut_Com_Reg_Ext 					:BOOL;
+	Defaut_Ensemble_Bas_Debit 			:BOOL;
+	Defaut_Ensemble_Bypass 				:BOOL;
+	Defaut_Sonde_Press_Cabine 			:BOOL;
+	Defaut_Sonde_Temp_Cabine 			:BOOL;
+	Defaut_Sonde_Hygro_Cabine 			:BOOL;
+	Defaut_Sonde_Temp_Eau_Mitig 		:BOOL;
+	
+	Defaut_Sonde_Temp_Souf				:BOOL;
+
+(*Bit lecture gestion recette et état de la cabine*)
+	Mode_Cabine_Eclairage				: BOOL;
+	Mode_Cabine_Defaut					: BOOL;
+	Mode_Cabine_Libre					: BOOL;
+	Mode_Cabine_Manuel					: BOOL;
+	Mode_Cabine_Automatique				: BOOL;
+	Mode_Cabine_Depollution				: BOOL;
+	Mode_Cabine_Nettoyage				: BOOL;
+	Mode_Maintenance					: BOOL;
+
+	Statut_Pause_Force					: BOOL;
+	Attente_Reset_Pause					: BOOL;
+	Comande_Pause						: BOOL;
+	Condi_Affich_Etape_Suiv				: BOOL;
+	Condi_Affich_Rearm					: BOOL;
+
+(*Lecture des consignes appliquée (Sortie bloc mode)*)
+	(*Affichage du texte du mode en cours*)
+	Lecture_Texte_Choisi_FR				AT %MW1: STRING(139); (*Adresse Modbus GTC : 12289*)
+	Lecture_Texte_Choisi_ENG			AT %MW71: STRING(139); (*Adresse Modbus GTC : 12359*)
+
+(*étape et états de la cabine*)
+	Sel_Etats_Cabine 					AT %MW7211: INT; (*Adresse Modbus GTC : 19499*)
+	Nbre_Etape_Totale 					AT %MW7212: INT; (*Adresse Modbus GTC : 19500*)
+	Numero_Etape_Actuel 				AT %MW7213: INT; (*Adresse Modbus GTC : 19501*)
+
+(* Gestion de la lumière en lecture*)
+	Cde_Dimmer_Cabine					AT %MW7214: INT; (*Adresse Modbus GTC : 19502*)
+	Cde_Rouge_Cabine					AT %MW7215: INT; (*Adresse Modbus GTC : 19503*)
+	Cde_Vert_Cabine						AT %MW7216: INT; (*Adresse Modbus GTC : 19504*)
+	Cde_Bleu_Cabine						AT %MW7217: INT; (*Adresse Modbus GTC : 19505*)
+	Cde_Blanc_Cabine					AT %MW7218: INT; (*Adresse Modbus GTC : 19506*)
+
+(*Lecture des consignes appliquée (Sortie bloc mode)*)
+	(*Décompte de la temporisation et visualisation du volume d'eau*)
+	Temp_Restant_Seconde				AT %MW7220: REAL; (*Adresse Modbus GTC : 19508*)
+	Temp_Restant_Minute					AT %MW7222: REAL; (*Adresse Modbus GTC : 19510*)
+	Temp_Restant_Heure					AT %MW7224: REAL; (*Adresse Modbus GTC : 19512*)
+	Lect_Volume_Eau_Douche				AT %MW7226: REAL; (*Adresse Modbus GTC : 19514*)
+	Lect_Volume_Eau_Lavabo				AT %MW7228: REAL; (*Adresse Modbus GTC : 19516*)
+	(*Consigne de ventilation et consigne de température d'eau*)
+	Cons_Deb_Soufflage_Appli			AT %MW7230: REAL; (*Adresse Modbus GTC : 19518*)
+	Cons_Deb_Extraction_Appli			AT %MW7232: REAL; (*Adresse Modbus GTC : 19520*)
+	Cons_Temperature_Eau_Appli			AT %MW7234: REAL; (*Adresse Modbus GTC : 19522*)
+	Cons_Para_Nbre_Chasse_Eau			AT %MW7236: REAL; (*Adresse Modbus GTC : 19524*)
+	Cons_Para_11_Appli					AT %MW7238: REAL; (*Adresse Modbus GTC : 19526*)
+	Cons_Para_12_Appli					AT %MW7240: REAL; (*Adresse Modbus GTC : 19528*)
+	Cons_Para_13_Appli					AT %MW7242: REAL; (*Adresse Modbus GTC : 19530*)
+	Cons_Para_14_Appli					AT %MW7244: REAL; (*Adresse Modbus GTC : 19532*)
+	Cons_Para_15_Appli					AT %MW7246: REAL; (*Adresse Modbus GTC : 19534*)
+	(*Gestion du décompte du nombre de chasse*)
+	Nbre_Chasse_Total					AT %MW9814: REAL; (*Adresse Modbus GTC : 22102*)
+	Nbre_Chasse_EnCours					AT %MW9816: REAL; (*Adresse Modbus GTC : 22104*)
+
+(*Lecture des consignes actuel (Entrée bloc mode)*)
+	Numero_Mode_Actuel					AT %MW7248: REAL; (*Adresse Modbus GTC : 19536*)
+	Tempo_Transition_seconde_Actuel		AT %MW7250: REAL; (*Adresse Modbus GTC : 19538*)
+	Tempo_Transition_Minute_Actuel		AT %MW7252: REAL; (*Adresse Modbus GTC : 19540*)
+	Tempo_Transition_Heure_Actuel		AT %MW7254: REAL; (*Adresse Modbus GTC : 19542*)
+
+	Cons_Volume_Eau_Douche_Actuel		AT %MW7256: REAL; (*Adresse Modbus GTC : 19544*)
+	Cons_Volume_Eau_Lavabo_Actuel		AT %MW7258: REAL; (*Adresse Modbus GTC : 19546*)
+	Cons_Deb_Soufflage_Actuel			AT %MW7260: REAL; (*Adresse Modbus GTC : 19548*)
+	Cons_Deb_Extraction_Actuel			AT %MW7262: REAL; (*Adresse Modbus GTC : 19550*)
+	Cons_Temperature_Eau_Actuel			AT %MW7264: REAL; (*Adresse Modbus GTC : 19552*)
+	Cons_Para_10_Actuel					AT %MW7266: REAL; (*Adresse Modbus GTC : 19554*)
+	Cons_Para_11_Actuel					AT %MW7268: REAL; (*Adresse Modbus GTC : 19556*)
+	Cons_Para_12_Actuel					AT %MW7270: REAL; (*Adresse Modbus GTC : 19558*)
+	Cons_Para_13_Actuel					AT %MW7272: REAL; (*Adresse Modbus GTC : 19560*)
+	Cons_Para_14_Actuel					AT %MW7274: REAL; (*Adresse Modbus GTC : 19562*)
+	Cons_Para_15_Actuel					AT %MW7276: REAL; (*Adresse Modbus GTC : 19564*)
+
+(*Mesures*)
+	MES_Debit_Volh_Extraction 			AT %MW7278: REAL; (*Adresse Modbus GTC : 19566*)
+	MES_Debit_Volh_Soufflage 			AT %MW7280: REAL; (*Adresse Modbus GTC : 19568*)
+	MES_Petit_Debit_Volh_Extraction 	AT %MW7282: REAL; (*Adresse Modbus GTC : 19570*)	
+	MES_Petit_Debit_m3h_Extraction		AT %MW7316: REAL; (*Adresse Modbus GTC : 19604*)	
+	MES_Sonde_Temp_Amb_F				AT %MW7284: REAL; (*Adresse Modbus GTC : 19572*)
+	MES_Temp_Eau_Mitige_Cabine			AT %MW7286: REAL; (*Adresse Modbus GTC : 19574*)
+	MES_Temp_Eau_Mitige_Cabine_F		AT %MW7288: REAL; (*Adresse Modbus GTC : 19576*)
+	MES_Temp_Eau_Mitige_General			AT %MW7290: REAL; (*Adresse Modbus GTC : 19578*)
+	MES_Temp_Eau_Mitige_General_F		AT %MW7292: REAL; (*Adresse Modbus GTC : 19580*)	
+	MES_Debit_ByPass_Volh				AT %MW9050: REAL; (*Adresse Modbus GTC : 21338*)
+	MES_Debit_ByPass_m3h				AT %MW9052: REAL; (*Adresse Modbus GTC : 21340*)
+	MES_Pos_Reg_Etanche_Ext				AT %MW9054: REAL; (*Adresse Modbus GTC : 21342*)	
+	MES_Pos_Reg_Souf					AT %MW9076: REAL; (*Adresse Modbus GTC : 21364*)
+
+(*Lectures des consignes Actionneur*)
+	Cons_Actionneur_Registre_Ext_Volh 	AT %MW7294: REAL; (*Adresse Modbus GTC : 19582*)
+	Cons_Actionneur_Registre_Souf_Volh 	AT %MW7296: REAL; (*Adresse Modbus GTC : 19584*)
+	Cons_Actio_Registre_Ext_m3h			AT %MW7298: REAL; (*Adresse Modbus GTC : 19586*)
+	Cons_Actio_Registre_Souf_m3h 		AT %MW7300: REAL; (*Adresse Modbus GTC : 19588*)
+	Cons_Actionneur_Moteur_BasDebit 	AT %MW7302: REAL; (*Adresse Modbus GTC : 19590*)
+	Cons_Actionneur_Moteur_ByPass		AT %MW7304: REAL; (*Adresse Modbus GTC : 19592*)
+	Cons_Actionneur_BattElec			AT %MW7306: REAL; (*Adresse Modbus GTC : 19594*)
+	Cons_Temperature_Eau				AT %MW7308: REAL; (*Adresse Modbus GTC : 19596*)
+	
+	Cons_Actionneur_Reg_Etanche_Ext 	AT %MW9056: REAL; (*Adresse Modbus GTC : 21344*)
+	Cons_Actionneur_V3V_Eau_Mitig		AT %MW9058: REAL; (*Adresse Modbus GTC : 21346*) 
+
+	Cons_Actionneur_Registre_Ext_m3h	: REAL;
+	Cons_Actionneur_Registre_Souf_m3h 	: REAL;
+
+(*Lecture de la temporisation du mode dépollution*)
+	Lect_Temp_Seconde_Depol 			AT %MW7310: REAL; (*Adresse Modbus GTC : 19598*)
+	Lect_Temp_Minute_Depol 				AT %MW7312: REAL; (*Adresse Modbus GTC : 19600*)
+	Lect_Temp_heure_Depol 				AT %MW7314: REAL; (*Adresse Modbus GTC : 19602*)
+
+(*Com RS485 Registre Soufflage*)
+	Com_Ok_Reg_Souf 					: BOOL;
+	Error_Com_Reg_Souf 					: BOOL;
+
+	ValeursLues_Reg_Souf  				:ARRAY[1..4] OF INT;
+	ValeursLues_Reg_Souf2  				:ARRAY[1..2] OF INT;
+	ValeursLues_Reg_Souf3  				:ARRAY[1..2] OF INT;
+
+	Posi_Relative_Reg_Souf 				: INT;
+	Debit_Relative_Reg_Souf 			: INT;
+	Lecture_Etat_Reg_Souf 				: INT;
+	Lecture_ls_m3h_Reg_Souf 			: INT;
+	Lecture_Software_Souf 				: INT;
+
+	Posi_Absolue_Reg_Souf 		 		:INT;
+	Debit_Absolue_Reg_Souf 				: INT;
+	Lecture_Override_Control_Souf 		: INT;
+	Lecture_Cons_Btw_Reg_Souf 			: INT;
+
+	Lecture_Installation_Reg_Souf 		AT %MW9060: INT; (*Adresse Modbus GTC : 21348*)
+	Lecture_Cons_Max_Reg_Souf 			AT %MW9061: INT; (*Adresse Modbus GTC : 21349*)
+	Lecture_Cons_Min_Reg_Souf 			AT %MW9062: INT; (*Adresse Modbus GTC : 21350*)
+	Lecture_Adresse_Reg_Souf 			AT %MW9063: INT; (*Adresse Modbus GTC : 21351*)
+	Lecture_Self_Test_Reg_Souf 			AT %MW9064: INT; (*Adresse Modbus GTC : 21352*)
+
+
+	Enable_ecr_param_Reg_Souf AT %MX17436.0:BOOL; (*Adresse Modbus GTC : 21006 bit 0*)
+
+(*Com RS485 Registre Extraction*)
+	Com_Ok_Reg_Extraction 				: BOOL;
+	Error_RS485_Reg_Ext 				: BOOL;
+
+	ValeursLues_Reg_Extraction  		 :ARRAY[1..4] OF INT;
+
+	Posi_Relative_Reg_Extraction 		: INT;
+	Debit_Relative_Reg_Extraction 		: INT;
+	Posi_Absolue_Reg_Extraction 		: INT;
+	Debit_Absolue_Reg_Extraction 		: INT;
+
+	Ecriture_ls_m3h_Reg_Extraction 		: INT;
+	Lecture_ls_m3h_Reg_Extraction 		: INT;
+	Lecture_Override_Control_Ext 		: INT;
+	Ecriture_Override_Control_Ext 		: INT;
+	Lecture_Software_Ext 				: INT;
+	Lecture_Etat_Reg_Extraction 		: INT;
+
+(******************************************************************************************)
+(*GESTION DES VARIABLES DE LA PARTIE ENCEINTE CLIMATIQUES*)
+(******************************************************************************************)
+
+(*Autres (Non utilisé dans la table d'échange)*)
+	(*Gestion des états*)
+	Mode_MEnCond						: BOOL;
+	Mode_Fctnmt							: BOOL;
+	Defaut_General_Humi 				:BOOL;
+	Defaut_Arret_Mode25 				:BOOL;
+	Dmd_Post_Ventilation				: BOOL;
+	(*Autres*)
+	RS_MEnCond: RS;
+	(*Gestion des regulations*)
+	(*Regule température*)
+	Enable_Regul_PID_Temp 				:BOOL;
+	Enable_Regul_PID_Temp_Chaud 		:BOOL;
+	Enable_Regul_PID_Temp_Froid 		:BOOL;
+	S_Cmd_Regul_PID_Temp_Chaud 			:REAL;
+	S_Cmd_Regul_PID_Temp_Froid 			:REAL;
+	(*Regule hygrométrie*)
+	Enable_Regul_PID_Hr 				:BOOL;
+	Enable_Regul_PID_Humi 				:BOOL;
+	Enable_Regul_PID_Deshu 				:BOOL;
+	S_Cmd_Regul_PID_Humi 				:REAL;
+	S_Cmd_Regul_PID_Deshu 				:REAL;
+	(*Gestion sortie d'ecart*)
+	S_Ecart_Regul_PID_Temp 				:REAL;
+	S_Ecart_Regul_PID_Hygro 			:REAL;
+	(*Lecture des consignes appliquées*)
+	Lect_Cons_Temperature_Cabine		: REAL;
+	Lect_Cons_Hygrometrie_Cabine		: REAL;
+	Lect_Cons_VitMot_Cabine_MEnCond		: REAL;
+	MotRep_CTA						: Moteur_EC;
+	MotSouf_CTA						: Moteur_EC;
+
+(*Gestion des défauts*)
+	Defaut_MotRep_CTA					:BOOL;
+	Defaut_MotSouf_CTA					:BOOL;
+	Defaut_Hygrostat_CTA 				:BOOL;
+	Defaut_Alim_BatElec_CTA				:BOOL;
+	Defaut_Humi_CTA						:BOOL;
+
+	Defaut_Regul_Temp					:BOOL;
+	Defaut_Regul_Hygro					:BOOL;
+	Defaut_Discord_Souf_CTA				:BOOL;
+	Defaut_Thermostat_Secu				:BOOL;
+
+(*Lectures des consignes et des commandes Actionneurs*)
+	Cons_Actionneur_V3V_Froid_CTA		AT %MW9066:REAL; (*Adresse Modbus GTC : 21354*)
+	Cons_Actionneur_Mot1_Souf_CTA		AT %MW9068:REAL; (*Adresse Modbus GTC : 21356*)
+	Cons_Actionneur_Mot2_Souf_CTA		AT %MW9070:REAL; (*Adresse Modbus GTC : 21358*)
+	Cons_Actionneur_BatElec_CTA			AT %MW9072:REAL; (*Adresse Modbus GTC : 21360*)
+	Cons_Actionneur_Humi_CTA			AT %MW9074:REAL; (*Adresse Modbus GTC : 21362*)
+
+	Cmd_Actionneur_BatElec_CTA			:BOOL;
+	Cmd_Actionneur_Humi_CTA				:BOOL;
+END_VAR
+
+(*===========================================================================*)
+(*===========================================================================*)
+(*===========================================================================*)
+(*===========================================================================*)
+
+VAR_GLOBAL PERSISTENT
+(******************************************************************************************)
+(*GESTION DES VARIABLES DE LA CABINE*)
+(******************************************************************************************)
+
+(*Consigne non récupérer sur la gtc et l'écran*)
+	Own_Ip_Adress 						:STRING; 	(*Adresse Ip de l'automate à renseigner*)
+	(*Variable PID*)
+	Gain_PID_Bas_Deb_Ext				: REAL;
+	Integral_PID_Bas_Deb_Ext			: REAL;
+	Derivee_PID_Bas_Deb_Ext				: REAL;
+	Gain_PID_Temp_Amb					: REAL;
+	Integral_PID_Temp_Amb				: REAL;
+	Derivee_PID_Temp_Amb				: REAL;
+	Gain_PID_Press_Cab					: REAL;
+	Integral_PID_Press_Cab				: REAL;
+	Derivee_PID_Press_Cab				: REAL;
+	Gain_PID_Temp_Eau_Mitig				: REAL;
+	Integral_PID_Temp_Eau_Mitig			: REAL;
+	Derivee_PID_Temp_Eau_Mitig			: REAL;
+	(*Gestion des tolérance pour RAZ*)
+	TOL_RAZ_MES_Deb_Souf 				:INT;
+	TOL_RAZ_MES_Deb_Ext 				:INT;
+	TOL_RAZ_MES_Petit_Deb 				:INT;
+	TOL_RAZ_MES_Bypass 					:INT;
+	TOL_Debit_Extraction 				:REAL;
+	TOL_Debit_Soufflage 				:REAL;
+	TOL_Deb_Ext_Reg_Ferm 				:REAL;
+	TOL_Deb_Souf_Reg_Ferm 				:REAL;
+	TOL_Regul_Press 					:REAL;
+	(*Gestion ouverture de l'eau*)
+	Cons_J_Forc_Vid_Lavabo 				:WORD;
+	Cons_H_Forc_Vid_Lavabo 				:WORD;
+	Cons_M_Forc_Vid_Lavabo 				:WORD;
+	(*Couleur led mode libre*)
+	Cde_Rouge_Cabine_Libre				:WORD;
+	Cde_Vert_Cabine_Libre				:WORD;
+	Cde_Bleu_Cabine_Libre				:WORD;
+	Cde_Blanc_Cabine_Libre				:WORD;
+
+	(* Paramètres registre ultrasson soufflage *)
+	Ecriture_Installation_Reg_Souf 		AT %MW7992: INT; (*Adresse Modbus GTC : 20280*)
+	Ecriture_Cons_Max_Reg_Souf 			AT %MW7993: INT; (*Adresse Modbus GTC : 20281*)
+	Ecriture_Cons_Min_Reg_Souf 			AT %MW7994: INT; (*Adresse Modbus GTC : 20282*)
+	Ecriture_Adresse_Reg_Souf 			AT %MW7995: INT; (*Adresse Modbus GTC : 20283*)
+	Ecriture_Self_Test_Reg_Souf 		AT %MW7996: INT; (*Adresse Modbus GTC : 20284*)
+	Ecriture_Cons_Btw_Reg_Souf 			: INT;
+	Ecriture_Override_Control_Souf 		: INT;
+	Ecriture_ls_m3h_Reg_Souf 			: INT; (*1=m3/h*)
+
+(*Consigne non clasée*)
+	Numero_Recette_Sel 					AT %MW7732: INT;  (*Adresse Modbus GTC : 20020*)
+	Volume_Cabine						AT %MW7734: REAL; (*Adresse Modbus GTC : 20022*)
+	Cons_Moteur_ByPass					AT %MW7736: REAL; (*Adresse Modbus GTC : 20024*)
+	Cons_Temp_Amb						AT %MW7738: REAL; (*Adresse Modbus GTC : 20026*)
+	Cons_Press_Cab						AT %MW7976: REAL; (*Adresse Modbus GTC : 20264*)
+	Cons_Temp_EauMitige					AT %MW7998: REAL; (*Adresse Modbus GTC : 20286*)
+
+(*Gestion des différents Tableau*)
+	Tab_Nom_Recette						AT %MW141: ARRAY [1..2, 0..20] OF STRING(39); (*Adresse Modbus GTC : 12429*)
+	Tab_Nom_Mode						AT %MW981: ARRAY [1..2, 1..30] OF STRING(31); (*Adresse Modbus GTC : 13269*)
+	Tab_Mode_Texte						AT %MW1941: ARRAY [1..2, 30..60] OF STRING(139); (*Adresse Modbus GTC : 14229*)
+	Tab_Enr_Recette						AT %MW6302: ARRAY[0..0, 1..30, 1..15] OF REAL; (*Adresse Modbus GTC : 18590*)
+	Tab_Recette_Auto					: ARRAY[0..20, 1..30, 1..15] OF REAL;
+	Tab_Enr_Mode_Manu					: ARRAY[1..15] OF REAL;
+
+(* gestion Horodatage *)
+	RTC_Modifiable						: TIMESTRUCT;
+	rtcTime								: TIMESTRUCT;
+	rtcMicro							: DWORD;
+	Ecr_Annee_Automate					: WORD;
+	Ecr_Mois_Automate					: WORD;
+	Ecr_Jour_Automate					: WORD;
+	Ecr_Heure_Automate					: WORD;
+	Ecr_Minute_Automate					: WORD;
+
+	deb_lundi							AT %MW7711: INT; (*Adresse Modbus GTC : 19999*)
+	Fin_Lundi							AT %MW7712: INT; (*Adresse Modbus GTC : 20000*)
+	deb_Mardi							AT %MW7713: INT; (*Adresse Modbus GTC : 20001*)
+	Fin_Mardi							AT %MW7714: INT; (*Adresse Modbus GTC : 20002*)
+	deb_Mercredi						AT %MW7715: INT; (*Adresse Modbus GTC : 20003*)
+	Fin_Mercredi						AT %MW7716: INT; (*Adresse Modbus GTC : 20004*)
+	deb_Jeudi							AT %MW7717: INT; (*Adresse Modbus GTC : 20005*)
+	Fin_Jeudi							AT %MW7718: INT; (*Adresse Modbus GTC : 20006*)
+	deb_Vendredi						AT %MW7719: INT; (*Adresse Modbus GTC : 20007*)
+	Fin_Vendredi						AT %MW7720: INT; (*Adresse Modbus GTC : 20008*)
+	deb_Samedi							AT %MW7721: INT; (*Adresse Modbus GTC : 20009*)
+	Fin_Samedi							AT %MW7722: INT; (*Adresse Modbus GTC : 20010*)
+	deb_Dimanche						AT %MW7723: INT; (*Adresse Modbus GTC : 20011*)
+	Fin_Dimanche						AT %MW7724: INT; (*Adresse Modbus GTC : 20012*)
+
+(*Gestion des forçages*)
+	F_Cons_Registre_Extraction 			AT %MW7725: INT; (*Adresse Modbus GTC : 20013*)
+	F_Cons_Registre_Soufflage 			AT %MW7726: INT; (*Adresse Modbus GTC : 20014*)
+	F_Cons_Reg_Etanche_Ext				AT %MW7974: REAL; (*Adresse Modbus GTC : 20262*)
+	F_Cons_V3V_Eau_Mitig				AT %MW7978: REAL; (*Adresse Modbus GTC : 20266*)
+
+(* Gestion des consignes de la lumière *)
+	Cons_Dimmer_Auto					AT %MW7727: INT; (*Adresse Modbus GTC : 20015*)
+	Cons_Appl_Rouge_Auto				AT %MW7728: INT; (*Adresse Modbus GTC : 20016*)
+	Cons_Appl_Vert_Auto					AT %MW7729: INT; (*Adresse Modbus GTC : 20017*)
+	Cons_Appl_Bleu_Auto					AT %MW7730: INT; (*Adresse Modbus GTC : 20018*)
+	Cons_Appl_Blanc_Auto				AT %MW7731: INT; (*Adresse Modbus GTC : 20019*)
+
+(*Gestion du trop plein*)
+	Garde_Deau_Douche 					AT %MW7740: REAL; (*Adresse Modbus GTC : 20028*)
+	Garde_Deau_Lavabo 					AT %MW7742: REAL; (*Adresse Modbus GTC : 20030*)
+	Trop_Plein_Douche 					AT %MW7744: REAL; (*Adresse Modbus GTC : 20032*)
+	Trop_Plein_Lavabo 					AT %MW7746: REAL; (*Adresse Modbus GTC : 20034*)
+	Coef_Correction_DebitEau			: REAL;
+
+(*Consigne mode manu*)
+	Manu_Choix_Numero_Mode 				AT %MW7748: REAL; (*Adresse Modbus GTC : 20036*)
+	Manu_Tempo_Transition_Seconde		AT %MW7750: REAL; (*Adresse Modbus GTC : 20038*)
+	Manu_Tempo_Transition_Minute 		AT %MW7752: REAL; (*Adresse Modbus GTC : 20040*)
+	Manu_Tempo_Transition_Heure 		AT %MW7754: REAL; (*Adresse Modbus GTC : 20042*)
+	Manu_Lct_Cons_Vol_Douche			AT %MW7756: REAL; (*Adresse Modbus GTC : 20044*)
+	Manu_Lct_Cons_Vol_Lavabo			AT %MW7758: REAL; (*Adresse Modbus GTC : 20046*)
+	Manu_Cons_Deb_Soufflage				AT %MW7760: REAL; (*Adresse Modbus GTC : 20048*)
+	Manu_Cons_Deb_Extraction			AT %MW7762: REAL; (*Adresse Modbus GTC : 20050*)
+	Manu_Cons_Temp_Eau					AT %MW7764: REAL; (*Adresse Modbus GTC : 20052*)
+	Manu_Cons_Nbre_Chasse				AT %MW7766: REAL; (*Adresse Modbus GTC : 20054*)
+	Manu_Cons_Para11					AT %MW7768: REAL; (*Adresse Modbus GTC : 20056*)
+	Manu_Cons_Para12					AT %MW7770: REAL; (*Adresse Modbus GTC : 20058*)
+	Manu_Cons_Para13					AT %MW7772: REAL; (*Adresse Modbus GTC : 20060*)
+	Manu_Cons_Para14 					AT %MW7774: REAL; (*Adresse Modbus GTC : 20062*)
+	Manu_Cons_Para15 					AT %MW7776: REAL; (*Adresse Modbus GTC : 20064*)
+
+(*Temporisation de sécurisation des alimentations*)
+	Temp_Secu_Debord_Douche				AT %MW7778: INT; (*Adresse Modbus GTC : 20066*)
+	Temp_Secu_Debord_Lavabo				AT %MW7780: INT; (*Adresse Modbus GTC : 20068*)
+	Volume_Secu_Debord_Douche			AT %MW9810:INT; (*Adresse Modbus GTC : 22098*)
+	Volume_Secu_Debord_Lavabo			AT %MW9812:INT; (*Adresse Modbus GTC : 22100*)
+	Temps_Remplissage_WC				:INT;
+
+(*Gestion des consignes de regulation d'air*)
+	Cons_Deb_Souf_Etat_Libre			AT %MW7782: REAL; (*Adresse Modbus GTC : 20070*)
+	Cons_Deb_Ext_Etat_Libre				AT %MW7784: REAL; (*Adresse Modbus GTC : 20072*)
+
+	Cons_Deb_Souf_Etat_Depol			AT %MW7786: REAL; (*Adresse Modbus GTC : 20074*)
+	Cons_Deb_PD_Etat_Depol				AT %MW7788: REAL; (*Adresse Modbus GTC : 20076*)
+
+	Cons_Deb_Souf_Mode_Focnt	 		AT %MW7790: REAL; (*Adresse Modbus GTC : 20078*)
+	Cons_Deb_Ext_Mode_Focnt				AT %MW7792: REAL; (*Adresse Modbus GTC : 20080*)
+
+	Cons_Deb_Souf_Mode_MEC				AT %MW7794: REAL; (*Adresse Modbus GTC : 20082*)
+	Cons_Deb_Ext_Mode_MEC				AT %MW7796: REAL; (*Adresse Modbus GTC : 20084*)
+	
+	Cons_Deb_Souf_Etat_Nettoyage 		: REAL;
+	Cons_Deb_Ext_Etat_Nettoyage			: REAL;
+
+	Cons_Deb_Souf_Etat_Evaluation 		: REAL;
+	Cons_Deb_Ext_Etat_Evaluation		: REAL;
+
+(*	
+	Cons_Deb_Souf_Etat_Nettoyage 		AT %MW7790: REAL; (*Adresse Modbus GTC : 20078*)
+	Cons_Deb_Ext_Etat_Nettoyage			AT %MW7792: REAL; (*Adresse Modbus GTC : 20080*)
+
+	Cons_Deb_Souf_Etat_Evaluation 		AT %MW7794: REAL; (*Adresse Modbus GTC : 20082*)
+	Cons_Deb_Ext_Etat_Evaluation		AT %MW7796: REAL; (*Adresse Modbus GTC : 20084*)
+*)
+
+	Cons_Max_Bas_Deb_Ext				AT %MW7798: REAL; (*Adresse Modbus GTC : 20086*)
+	Cons_Min_Bas_Deb_Ext				AT %MW7800: REAL; (*Adresse Modbus GTC : 20088*)
+
+(*Gestion des consignes de temporisation de la dépollution*)
+	Cons_Temp_Minute_Depol 				AT %MW7802: REAL; (*Adresse Modbus GTC : 20090*)
+	Cons_Temp_heure_Depol 				AT %MW7804: REAL; (*Adresse Modbus GTC : 20092*)
+
+(*Gestion des objets actionenurs*)
+	Tab_Mot_Aerobox_Bas_Deb				AT %MW7806:Objet_Moteur_EC; (*Adresse Modbus GTC : 20094*)
+	Tab_Batterie_Elec					AT %MW7826:Objet_BatElec; (*Adresse Modbus GTC : 20114*)
+	Tab_Mot_ByPass						AT %MW7846:Objet_Moteur_EC; (*Adresse Modbus GTC : 20134*)
+
+(*Gestion des objets sondes*)
+	Tab_MES_Sonde_Temp_Amb 				AT %MW7866:Objet_Sonde; (*Adresse Modbus GTC : 20154*)
+	Tab_MES_Sonde_Hygro_Amb 			AT %MW7878:Objet_Sonde; (*Adresse Modbus GTC : 20166*)
+	Tab_MES_Sonde_Gros_Debit_Soufflage 	AT %MW7890:Objet_Sonde; (*Adresse Modbus GTC : 20178*)
+	Tab_MES_Sonde_Gros_Debit_Extraction AT %MW7902:Objet_Sonde; (*Adresse Modbus GTC : 20190*)
+	Tab_MES_Sonde_Petit_Debit_Extraction AT %MW7914:Objet_Sonde; (*Adresse Modbus GTC : 20202*)
+	Tab_MES_Sonde_Debit_Alim_Douche 	AT %MW7926:Objet_Sonde; (*Adresse Modbus GTC : 20214*)
+	Tab_MES_Sonde_Debit_Alim_Lavabo 	AT %MW7938:Objet_Sonde; (*Adresse Modbus GTC : 20226*)
+	Tab_MES_Sonde_Press_Cab				AT %MW7950:Objet_Sonde; (*Adresse Modbus GTC : 20238*)
+	Tab_MES_Sonde_Press_ByPass 			AT %MW7962:Objet_Sonde; (*Adresse Modbus GTC : 20250*)
+	Tab_MES_Sonde_Temp_Eau_Mitig 		AT %MW7980:Objet_Sonde; (*Adresse Modbus GTC : 20268*)
+
+	Tab_Mes_Sonde_Temp_BatEG			AT %MW9746:Objet_Sonde; (*Adresse Modbus GTC : 22034*)
+	Tab_Mes_Sonde_Pression_Souf			AT %MW9786:Objet_Sonde; (*Adresse Modbus GTC : 22074*)
+	Tab_Mes_Sonde_Pression_Ext			AT %MW9798:Objet_Sonde; (*Adresse Modbus GTC : 22086*)
+	Tab_Mes_Sonde_Temp_Souf				AT %MW8238:Objet_Sonde; (*Adresse Modbus GTC : 20526*)
+
+(* Gestion des ecritures et lectures des bits *)
+	//Ecr_Bit_Cmd_IHM1 AT %MW17422: INT; (*Adresse Modbus GTC : 20999*)
+	//Ecr_Bit_Cmd_IHM2 AT %MW17424: INT; (*Adresse Modbus GTC : 21000*)
+	//Ecr_Bit_Cmd_IHM3 AT %MW17426: INT; (*Adresse Modbus GTC : 21001*)
+	//Ecr_Bit_Cmd_IHM4 AT %MW17428: INT; (*Adresse Modbus GTC : 21002*)
+	//Ecr_Bit_Cmd_IHM5 AT %MW17430: INT; (*Adresse Modbus GTC : 21003*)
+	//Ecr_Bit_Cmd_IHM6 AT %MW17432: INT; (*Adresse Modbus GTC : 21004*)
+	//Ecr_Bit_Cmd_IHM7 AT %MW17434: INT; (*Adresse Modbus GTC : 21005*)
+	//Ecr_Bit_Cmd_IHM8 AT %MW17436: INT; (*Adresse Modbus GTC : 21006*)
+	//Ecr_Bit_Cmd_IHM9 AT %MW17438: INT; (*Adresse Modbus GTC : 21007*)
+	//Ecr_Bit_Cmd_IHM10 AT %MW17440: INT; (*Adresse Modbus GTC : 21008*)
+
+	//Lect_Bit_IHM1 AT %MW17442: INT; (*Adresse Modbus GTC : 21009*)
+	//Lect_Bit_IHM2 AT %MW17444: INT; (*Adresse Modbus GTC : 21010*)
+	//Lect_Bit_IHM3 AT %MW17446: INT; (*Adresse Modbus GTC : 21011*)
+	//Lect_Bit_IHM4 AT %MW17448: INT; (*Adresse Modbus GTC : 21012*)
+	//Lect_Bit_IHM5 AT %MW17450: INT; (*Adresse Modbus GTC : 21013*)
+	//Lect_Bit_IHM6 AT %MW17452: INT; (*Adresse Modbus GTC : 21014*)
+	//Lect_Bit_IHM7 AT %MW17454: INT; (*Adresse Modbus GTC : 21015*)
+	//Lect_Bit_IHM8 AT %MW17456: INT; (*Adresse Modbus GTC : 21016*)
+	//Lect_Bit_IHM9 AT %MW17458: INT; (*Adresse Modbus GTC : 21017*)
+	//Lect_Bit_IHM10 AT %MW17460: INT; (*Adresse Modbus GTC : 21018*)	
+
+(*Bit ecriture gestion recette*)
+	Start_Mode_Manu						AT %MX17422.0: BOOL; (*Adresse Modbus GTC : 20999 bit 0*)
+	Reset_Mode_Manu						AT %MX17422.1: BOOL; (*Adresse Modbus GTC : 20999 bit 1*)
+	Start_Etat_Depollution				AT %MX17422.2: BOOL; (*Adresse Modbus GTC : 20999 bit 2*)
+	Start_Etat_Nettoyage				AT %MX17422.3: BOOL; (*Adresse Modbus GTC : 20999 bit 3*)
+	Activation_Ecl						AT %MX17422.4: BOOL; (*Adresse Modbus GTC : 20999 bit 4*)
+	Choix_Langue						AT %MX17422.5: BOOL; (*Adresse Modbus GTC : 20999 bit 5*) (*0=Français / 1=Américain*)
+	Valid_Texte							AT %MX17422.6: BOOL; (*Adresse Modbus GTC : 20999 bit 6*)
+	Bp_Pause							AT %MX17422.7: BOOL; (*Adresse Modbus GTC : 20999 bit 7*)
+	Detail_Nom_Recette_Mode				AT %MX17422.8: BOOL; (*Adresse Modbus GTC : 20999 bit 8*)
+	Validation_Recette_Auto				AT %MX17422.9: BOOL; (*Adresse Modbus GTC : 20999 bit 9*)
+	Start_Recette_Mode_Auto				AT %MX17422.10: BOOL;(*Adresse Modbus GTC : 20999 bit 10*)
+	Reset_Mode_Auto						AT %MX17422.11: BOOL; (*Adresse Modbus GTC : 20999 bit 11*)
+	Cmd_Rearmement						AT %MX17422.12: BOOL; (*Adresse Modbus GTC : 20999 bit 12*)
+	Cmd_Enr_Recette						AT %MX17422.13: BOOL; (*Adresse Modbus GTC : 20999 bit 13*)
+	Cmd_Mode_Maintenance				AT %MX17422.14: BOOL; (*Adresse Modbus GTC : 20999 bit 14*)	
+	
+(*Gestion des options*)
+	(*Option types de cabine*)
+	Option_Cabine_Seche 				AT %MX17426.0: BOOL; (*Adresse Modbus GTC : 21001 bit 0*)
+	Option_Cabine_Humide 				AT %MX17426.1: BOOL; (*Adresse Modbus GTC : 21001 bit 1*)
+	Option_Cabine_Climatique 			AT %MX17428.15: BOOL; (*Adresse Modbus GTC : 21002 bit 15*)
+
+	(*Option actionneurs*)
+	Option_Douche						AT %MX17426.2: BOOL; (*Adresse Modbus GTC : 21001 bit 2*)
+	Option_Lavabo 						AT %MX17426.3: BOOL; (*Adresse Modbus GTC : 21001 bit 3*)
+	Option_Douchette 					AT %MX17426.4: BOOL; (*Adresse Modbus GTC : 21001 bit 4*)
+	Option_NEP							AT %MX17428.14: BOOL; (*Adresse Modbus GTC : 21002 bit 14*)
+	Option_Prise 						AT %MX17426.5: BOOL; (*Adresse Modbus GTC : 21001 bit 5*)
+	Option_WC_GV 						AT %MX17424.0: BOOL; (*Adresse Modbus GTC : 21000 bit 0*)
+	Option_WC_PV 						AT %MX17424.1: BOOL; (*Adresse Modbus GTC : 21000 bit 1*)
+	Option_RegSouf_Ultrason 			AT %MX17428.12: BOOL; (*Adresse Modbus GTC : 21002 bit 12*)
+	Option_Reg_Etanche_Ext 				AT %MX17428.8: BOOL; (*Adresse Modbus GTC : 21002 bit 0*)
+	Option_V3V_EauMitig 				AT %MX17426.8: BOOL; (*Adresse Modbus GTC : 21001 bit 8*)
+	Option_RegExt_Ultrason 				AT %MX17428.13: BOOL; (*Adresse Modbus GTC : 21002 bit 13*)
+	Option_Reg_Etanche_Souf 			AT %MX17428.7: BOOL; (*Adresse Modbus GTC : 21002 bit 7*)
+	Option_Bas_Debit					AT %MX17426.10: BOOL; (*Adresse Modbus GTC : 21001 bit 10*)
+	Option_Batt_Elec 					AT %MX17428.3: BOOL; (*Adresse Modbus GTC : 21002 bit 3*)
+	Option_Mot_ByPass 					AT %MX17428.4: BOOL; (*Adresse Modbus GTC : 21002 bit 4*)
+	Option_Pompe_De_Relevage 			AT %MX17426.13: BOOL; (*Adresse Modbus GTC : 21001 bit 13*)
+
+	(*Option capteurs*)
+	Option_Debitmetre_Douche 			AT %MX17428.1: BOOL; (*Adresse Modbus GTC : 21002 bit 1*)
+	Option_Debitmetre_Lavabo 			AT %MX17428.2: BOOL; (*Adresse Modbus GTC : 21002 bit 2*)
+	Option_Sonde_Temp_Hygro_Amb 		AT %MX17426.11: BOOL; (*Adresse Modbus GTC : 21001 bit 11*)
+	Option_Capteur_Press_Cab 			AT %MX17428.6: BOOL; (*Adresse Modbus GTC : 21002 bit 6*)
+	Option_Press_SoufExt_General 		AT %MX17426.7: BOOL; (*Adresse Modbus GTC : 21001 bit 7*)
+	Option_Sonde_Temp_EauMitig 			AT %MX17424.2: BOOL; (*Adresse Modbus GTC : 21000 bit 2*)
+	Option_Temp_Batterie_EG 			AT %MX17424.3: BOOL; (*Adresse Modbus GTC : 21000 bit 3*)
+	Option_Sonde_Temp_Amb 				AT %MX17426.12: BOOL; (*Adresse Modbus GTC : 21001 bit 12*)
+	Option_Contact_Porte 				AT %MX17428.0: BOOL; (*Adresse Modbus GTC : 21002 bit 0*)
+	Option_Niveau_Haut_Douche 			AT %MX17426.14: BOOL; (*Adresse Modbus GTC : 21001 bit 14*)
+	Option_Niveau_Haut_Lavabo 			AT %MX17426.15: BOOL; (*Adresse Modbus GTC : 21001 bit 15*)
+	Option_Defaut_Prise_Elec 			AT %MX17428.10: BOOL; (*Adresse Modbus GTC : 21002 bit 10*)
+
+	(*Option communication*)
+	Option_InterCom 					AT %MX17426.6: BOOL; (*Adresse Modbus GTC : 21001 bit 6*)
+	Option_Com_RegSouf_Ultrason			AT %MX17428.5: BOOL; (*Adresse Modbus GTC : 21002 bit 5*)
+	Option_Com_RegExt_Ultrason 			AT %MX17428.11: BOOL; (*Adresse Modbus GTC : 21002 bit 0*)
+
+	(*Option régulations*)
+	Option_Regul_Deb_Ou_Press 			AT %MX17428.9: BOOL; (*Adresse Modbus GTC : 21002 bit 8*)(*0=Deb 1=press*)
+	Option_Regul_Temp_Eau				AT %MX17426.9: BOOL; (*Adresse Modbus GTC : 21001 bit 9*)
+
+(*Gestion des forçages*)
+	EF_Cmd_PC_Cab  						AT %MX17430.0: BOOL;
+	EF_Cmd_Vanne_Alim_Douche  			AT %MX17430.1: BOOL;
+	EF_Cmd_Vanne_Alim_Douchette  		AT %MX17430.2: BOOL;
+	EF_Cmd_Vanne_Alim_Lavabo  			AT %MX17430.3: BOOL;
+	EF_Cmd_Vanne_Vid_Douche  			AT %MX17430.4: BOOL;
+	EF_Cmd_Vanne_Vid_Lavabo 			AT %MX17430.5: BOOL;
+	EF_Cmd_ElectroValve_Alim_Douche  	AT %MX17430.6: BOOL;
+	EF_Cmd_ElectroValve_Alim_Lavabo 	AT %MX17430.7: BOOL;
+	EF_Cons_Registre_Extraction 		AT %MX17430.8: BOOL;
+	EF_Cons_Registre_Soufflage 			AT %MX17430.9: BOOL;
+	EF_Vanne_Souf_Bas_Deb 				AT %MX17430.10: BOOL;
+	EF_Vanne_Ext_Bas_Deb 				AT %MX17430.11: BOOL;
+	EF_Cons_Reg_Etanche_Ext 			AT %MX17430.12: BOOL;
+	EF_Cmd_Reg_Etanche_Souf 			AT %MX17430.13: BOOL;
+	EF_Cons_V3V_Eau_Mitig 				AT %MX17430.14: BOOL;
+	EF_Vanne_Alim_NEP 					AT %MX17430.15: BOOL;
+	EF_Cons_V3V_Bat_Froid_CTA  			AT %MX17438.0: BOOL;
+	EF_Cmd_Verin_WC_GV  				AT %MX17438.1: BOOL;
+	EF_Cmd_Verin_WC_PV  				AT %MX17438.3: BOOL;
+
+	F_Cmd_PC_Cab  						AT %MX17432.0: BOOL;
+	F_Cmd_Vanne_Alim_Douche  			AT %MX17432.1: BOOL;
+	F_Cmd_Vanne_Alim_Douchette  		AT %MX17432.2: BOOL;
+	F_Cmd_Vanne_Alim_Lavabo  			AT %MX17432.3: BOOL;
+	F_Cmd_Vanne_Vid_Douche  			AT %MX17432.4: BOOL;
+	F_Cmd_Vanne_Vid_Lavabo 				AT %MX17432.5: BOOL;
+	F_Cmd_ElectroValve_Alim_Douche  	AT %MX17432.6: BOOL;
+	F_Cmd_ElectroValve_Alim_Lavabo 		AT %MX17432.7: BOOL;
+	F_Vanne_Souf_Bas_Deb 				AT %MX17432.8: BOOL;
+	F_Vanne_Ext_Bas_Deb 				AT %MX17432.9: BOOL;
+	F_Cmd_Reg_Etanche_Souf 				AT %MX17432.10: BOOL;
+	F_Vanne_Alim_NEP 					AT %MX17432.11: BOOL;
+	F_Cmd_Verin_WC_GV  					AT %MX17438.2: BOOL; (*Impultion*)
+	F_Cmd_Verin_WC_PV  					AT %MX17438.4: BOOL; (*Impultion*)
+
+(*Bit horodatage*)
+	Sel_Lundi  							AT %MX17434.0: BOOL;
+	Sel_Mardi  							AT %MX17434.1: BOOL;
+	Sel_Mercredi  						AT %MX17434.2: BOOL;
+	Sel_Jeudi  							AT %MX17434.3: BOOL;
+	Sel_Vendredi  						AT %MX17434.4: BOOL;
+	Sel_Samedi 							AT %MX17434.5: BOOL;
+	Sel_Dimanche  						AT %MX17434.6: BOOL;
+	StartMiseALheure   					AT %MX17434.7: BOOL; (*Impultion*)
+	
+(******************************************************************************************)
+(*GESTION DES VARIABLES DE LA PARTIE ENCEINTE CLIMATIQUES*)
+(******************************************************************************************)
+(*Consigne non récupérer sur la gtc et l'écran*)
+	(*Gestion des tolérance pour RAZ*)
+	TOL_Regul_Temp_EnceintClim 			:REAL;
+	TOL_Regul_Hygro_EnceintClim 		:REAL;
+	(*Gestion des regulations*)
+	(*Regule température*)
+	Offset_Regul_PID_Temp 				:REAL;
+	Gain_Regul_PID_Temp_Chaud 			:REAL;
+	Integral_Regul_PID_Temp_Chaud 		:REAL;
+	Derive_Regul_PID_Temp_Chaud 		:REAL;
+	Gain_Regul_PID_Souf_Chaud 			:REAL;
+	Integral_Regul_PID_Souf_Chaud 		:REAL;
+	Derive_Regul_PID_Souf_Chaud 		:REAL;
+	Gain_Regul_PID_Temp_Froid 			:REAL;
+	Integral_Regul_PID_Temp_Froid 		:REAL;
+	Derive_Regul_PID_Temp_Froid 		:REAL;
+	Limit_Max_Souf						:REAL;
+	Limit_Min_Souf						:REAL;
+	Kp_Ambiance							:REAL;
+	Ki_Ambiance							:REAL;
+	Kd_Ambiance							:REAL;
+	(*Regule hygrométrie*)
+	Offset_Regul_PID_Hr 				:REAL;
+	Gain_Regul_PID_Humi 				:REAL;
+	Integral_Regul_PID_Humi 			:REAL;
+	Derive_Regul_PID_Humi 				:REAL;
+	Gain_Regul_PID_Deshu 				:REAL;
+	Integral_Regul_PID_Deshu 			:REAL;
+	Derive_Regul_PID_Deshu 				:REAL;
+	(*Gestion Mini Maxi des actionneurs*)
+	Cons_Mini_V3V_Bat_Froid				:REAL;
+	Cons_Maxi_V3V_Bat_Froid				:REAL;
+	Cons_Maxi_Bat_Electrique 			:REAL;
+	Cons_Maxi_Humidificateur 			:REAL;
+	Cons_Maxi_Mot1_CTA	 				:REAL;
+	Cons_Maxi_Mot2_CTA	 				:REAL;
+	(*A classer*)
+	Cons_Sec_Post_Ventil				:INT;
+	Mini_Decal_PID_Deshu				:REAL;
+	Maxi_Decal_PID_Deshu				:REAL;
+	Mini_Decal_Deshu					:REAL;
+	Maxi_Decal_Deshu					:REAL;
+
+(*Gestion des consignes de fonctionnement de l'enceinte climatique*)
+	Cons_Temperature_Cabine				AT %MW8000: REAL; (*Adresse Modbus GTC : 20288*)
+	Cons_Hygrometrie_Cabine				AT %MW8002: REAL; (*Adresse Modbus GTC : 20290*)
+	Cons_VitMot_Cabine_MEnCond			AT %MW8004: REAL; (*Adresse Modbus GTC : 20292*)
+	Cons_VitMot_Cabine_EnCond			AT %MW8006: REAL; (*Adresse Modbus GTC : 20294*)
+
+(*Gestion des Objets*)
+	Tab_MotRep_CTA						AT %MW8010: Objet_Moteur_EC; (*Adresse Modbus GTC : 20298*)
+	Tab_MotSouf_CTA						AT %MW8030: Objet_Moteur_EC; (*Adresse Modbus GTC : 20318*)
+	Tab_Batterie_Elec_CTA				AT %MW8050: Objet_BatElec; (*Adresse Modbus GTC : 20338*)
+
+(*Gestion des forçages*)
+	F_Cons_V3V_Bat_Froid_CTA 			AT %MW8008:REAL; (*Adresse Modbus GTC : 20296*)
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

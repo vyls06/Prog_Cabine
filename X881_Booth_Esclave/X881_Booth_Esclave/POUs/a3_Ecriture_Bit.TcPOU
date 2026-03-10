@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="a3_Ecriture_Bit" Id="{cfd51b1b-7ad0-45cb-b8d7-314658a28fe1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a3_Ecriture_Bit
+VAR
+	TP_RAZ_Marche_Manu: TP;
+	TP_RAZ_Stop_Manu: TP;
+	TP_RAZ_Depollution: TP;
+	TP_RAZ_Valid: TP;
+	TP_RAZ_Pause: TP;
+	TP_RAZ_Valid_Recette: TP;
+	TP_RAZ_Marche_Auto: TP;
+	TP_RAZ_Stop_Auto: TP;
+	TP_RAZ_Rearm: TP;
+	TP_RAZ_Enr_Recette: TP;
+	TP_RAZ_MAL: TP;
+	TP_RAZ_FWCGV: TP;
+	TP_RAZ_FWCPV: TP;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion des RAZ des Bits d'écriture de l'IHM et GTC*)
+TP_RAZ_Marche_Manu(IN:= %MX17422.0, PT:= T#1S);
+%MX17422.0 := (SEL(%MX17422.0, %MX17422.0, FALSE) OR TP_RAZ_Marche_Manu.Q);
+
+TP_RAZ_Stop_Manu(IN:= %MX17422.1, PT:= T#1s);
+%MX17422.1 := (SEL(%MX17422.1, %MX17422.1, FALSE) OR TP_RAZ_Stop_Manu.Q);
+
+TP_RAZ_Depollution(IN:= %MX17422.2, PT:= T#1s);
+%MX17422.2 := (SEL(%MX17422.2, %MX17422.2, FALSE) OR TP_RAZ_Depollution.Q);
+
+TP_RAZ_Valid(IN:= %MX17422.6, PT:= T#2s);
+%MX17422.6 := (SEL(%MX17422.6, %MX17422.6, FALSE) OR TP_RAZ_Valid.Q);
+
+TP_RAZ_Pause(IN:= %MX17422.7, PT:= T#1s);
+%MX17422.7 := (SEL(%MX17422.7, %MX17422.7, FALSE) OR TP_RAZ_Pause.Q);
+
+TP_RAZ_Valid_Recette(IN:= %MX17422.9, PT:= T#5s);
+%MX17422.9 := (SEL(%MX17422.9, %MX17422.9, FALSE) OR TP_RAZ_Valid_Recette.Q);
+
+TP_RAZ_Marche_Auto(IN:= %MX17422.10, PT:= T#5s);
+%MX17422.10 := (SEL(%MX17422.10, %MX17422.10, FALSE) OR TP_RAZ_Marche_Auto.Q);
+
+TP_RAZ_Stop_Auto(IN:= %MX17422.11, PT:= T#1s);
+%MX17422.11 := (SEL(%MX17422.11, %MX17422.11, FALSE) OR TP_RAZ_Stop_Auto.Q);
+
+TP_RAZ_Rearm(IN:= %MX17422.12, PT:= T#1s);
+%MX17422.12 := (SEL(%MX17422.12, %MX17422.12, FALSE) OR TP_RAZ_Rearm.Q);
+
+TP_RAZ_Enr_Recette(IN:= %MX17422.13, PT:= T#5s);
+%MX17422.13 := (SEL(%MX17422.13, %MX17422.13, FALSE) OR TP_RAZ_Enr_Recette.Q);
+
+TP_RAZ_MAL(IN:= %MX17434.7, PT:= T#1S);
+%MX17434.7 := (SEL(%MX17434.7, %MX17434.7, FALSE) OR TP_RAZ_MAL.Q);
+
+TP_RAZ_FWCGV(IN:= %MX17438.2, PT:= T#2S);
+%MX17438.2 := (SEL(%MX17438.2, %MX17438.2, FALSE) OR TP_RAZ_FWCGV.Q);
+
+TP_RAZ_FWCPV(IN:= %MX17438.4, PT:= T#2s);
+%MX17438.4 := (SEL(%MX17438.4, %MX17438.4, FALSE) OR TP_RAZ_FWCPV.Q);
+
+(**********************************************Variable Ecr_Bit_Cmd_IHM1*) (*Adresse Modbus GTC : 20999*)
+(*Bit ecriture gestion recette*)
+Start_Mode_Manu := 					Start_Mode_Manu; (*Impultion*)
+Reset_Mode_Manu := 					Reset_Mode_Manu; (*Impultion*)
+Start_Etat_Depollution := 			Start_Etat_Depollution; (*Impultion*)
+Start_Etat_Nettoyage := 			Start_Etat_Nettoyage;
+Activation_Ecl := 					Activation_Ecl;
+Choix_Langue :=						Choix_Langue;
+Valid_Texte := 						Valid_Texte; (*Impultion*)
+Bp_Pause :=							Bp_Pause; (*Impultion*)
+Detail_Nom_Recette_Mode :=			Detail_Nom_Recette_Mode;
+Validation_Recette_Auto :=			Validation_Recette_Auto; (*Impultion*)
+Start_Recette_Mode_Auto :=			Start_Recette_Mode_Auto; (*Impultion*)
+Reset_Mode_Auto := 					Reset_Mode_Auto; (*Impultion*)
+Cmd_Rearmement :=					Cmd_Rearmement; (*Impultion*)
+Cmd_Enr_Recette :=					Cmd_Enr_Recette; (*Impultion*)
+Cmd_Mode_Maintenance :=				Cmd_Mode_Maintenance;
+
+(**********************************************GESTION DES OPTIONS*)
+
+(*Option types de cabine*)
+Option_Cabine_Seche := 				Option_Cabine_Seche; (*Adresse Modbus GTC : 21001 bit 0*)
+Option_Cabine_Humide := 			Option_Cabine_Humide; (*Adresse Modbus GTC : 21001 bit 1*)
+Option_Cabine_Climatique := 		Option_Cabine_Climatique; (*Adresse Modbus GTC : 21002 bit 15*)
+
+(*Option actionneurs*)
+Option_Douche := 					Option_Douche; (*Adresse Modbus GTC : 21001 bit 2*)
+Option_Lavabo := 					Option_Lavabo; (*Adresse Modbus GTC : 21001 bit 3*)
+Option_Douchette := 				Option_Douchette; (*Adresse Modbus GTC : 21001 bit 4*)
+Option_NEP := 						Option_NEP; (*Adresse Modbus GTC : 21002 bit 14*)
+Option_Prise :=						Option_Prise; (*Adresse Modbus GTC : 21001 bit 5*)
+Option_WC_GV :=						Option_WC_GV; (*Adresse Modbus GTC : 21000 bit 0*)
+Option_WC_PV :=						Option_WC_PV; (*Adresse Modbus GTC : 21000 bit 1*)
+Option_RegSouf_Ultrason := 			Option_RegSouf_Ultrason; (*Adresse Modbus GTC : 21002 bit 12*)
+Option_Reg_Etanche_Ext := 			Option_Reg_Etanche_Ext; (*Adresse Modbus GTC : 21002 bit 0*)
+Option_V3V_EauMitig :=				Option_V3V_EauMitig; (*Adresse Modbus GTC : 21001 bit 8*)
+Option_RegExt_Ultrason := 			Option_RegExt_Ultrason; (*Adresse Modbus GTC : 21002 bit 13*)
+Option_Reg_Etanche_Souf := 			Option_Reg_Etanche_Souf; (*Adresse Modbus GTC : 21002 bit 7*)
+Option_Bas_Debit :=					Option_Bas_Debit; (*Adresse Modbus GTC : 21001 bit 10*)
+Option_Batt_Elec := 				Option_Batt_Elec; (*Adresse Modbus GTC : 21002 bit 3*)
+Option_Mot_ByPass := 				Option_Mot_ByPass; (*Adresse Modbus GTC : 21002 bit 4*)
+Option_Pompe_De_Relevage :=			Option_Pompe_De_Relevage; (*Adresse Modbus GTC : 21001 bit 13*)
+
+(*Option capteurs*)
+Option_Debitmetre_Douche := 		Option_Debitmetre_Douche; (*Adresse Modbus GTC : 21002 bit 1*)
+Option_Debitmetre_Lavabo := 		Option_Debitmetre_Lavabo; (*Adresse Modbus GTC : 21002 bit 2*)
+Option_Sonde_Temp_Hygro_Amb := 		Option_Sonde_Temp_Hygro_Amb; (*Adresse Modbus GTC : 21001 bit 11*)
+Option_Capteur_Press_Cab := 		Option_Capteur_Press_Cab; (*Adresse Modbus GTC : 21002 bit 6*)
+Option_Sonde_Temp_EauMitig :=		Option_Sonde_Temp_EauMitig; (*Adresse Modbus GTC : 21001 bit 7*)
+Option_Press_SoufExt_General  :=	Option_Press_SoufExt_General; (*Adresse Modbus GTC : 21000 bit 2*)
+Option_Temp_Batterie_EG  :=			Option_Temp_Batterie_EG; (*Adresse Modbus GTC : 21000 bit 3*)
+Option_Sonde_Temp_Amb :=			Option_Sonde_Temp_Amb; (*Adresse Modbus GTC : 21001 bit 12*)
+Option_Contact_Porte := 			Option_Contact_Porte; (*Adresse Modbus GTC : 21002 bit 0*)
+Option_Niveau_Haut_Douche :=		Option_Niveau_Haut_Douche; (*Adresse Modbus GTC : 21001 bit 14*)
+Option_Niveau_Haut_Lavabo :=		Option_Niveau_Haut_Lavabo; (*Adresse Modbus GTC : 21001 bit 15*)
+Option_Defaut_Prise_Elec := 		Option_Defaut_Prise_Elec; (*Adresse Modbus GTC : 21002 bit 10*)
+
+(*Option communication*)
+Option_InterCom := 					Option_InterCom; (*Adresse Modbus GTC : 21001 bit 6*)
+Option_Com_RegSouf_Ultrason := 		Option_Com_RegSouf_Ultrason; (*Adresse Modbus GTC : 21002 bit 5*)
+Option_Com_RegExt_Ultrason := 		Option_Com_RegExt_Ultrason; (*Adresse Modbus GTC : 21002 bit 0*)
+
+(*Option régulations*)
+Option_Regul_Deb_Ou_Press := 		Option_Regul_Deb_Ou_Press; (*Adresse Modbus GTC : 21002 bit 8*)
+Option_Regul_Temp_Eau :=			Option_Regul_Temp_Eau; (*Adresse Modbus GTC : 21001 bit 9*)
+
+(**********************************************Variable Ecr_Bit_Cmd_IHM5*) (*Adresse Modbus GTC : 21003*)
+(*Gestion des forçages*)
+EF_Cmd_PC_Cab := 					EF_Cmd_PC_Cab;
+EF_Cmd_Vanne_Alim_Douche := 		EF_Cmd_Vanne_Alim_Douche;
+EF_Cmd_Vanne_Alim_Douchette := 		EF_Cmd_Vanne_Alim_Douchette;
+EF_Cmd_Vanne_Alim_Lavabo := 		EF_Cmd_Vanne_Alim_Lavabo;
+EF_Cmd_Vanne_Vid_Douche := 			EF_Cmd_Vanne_Vid_Douche;
+EF_Cmd_Vanne_Vid_Lavabo :=			EF_Cmd_Vanne_Vid_Lavabo;
+EF_Cmd_ElectroValve_Alim_Douche := 	EF_Cmd_ElectroValve_Alim_Douche;
+EF_Cmd_ElectroValve_Alim_Lavabo :=	EF_Cmd_ElectroValve_Alim_Lavabo;
+EF_Cons_Registre_Extraction :=		EF_Cons_Registre_Extraction;
+EF_Cons_Registre_Soufflage :=		EF_Cons_Registre_Soufflage;
+EF_Vanne_Souf_Bas_Deb :=			EF_Vanne_Souf_Bas_Deb;
+EF_Vanne_Ext_Bas_Deb :=				EF_Vanne_Ext_Bas_Deb;
+EF_Cons_Reg_Etanche_Ext :=			EF_Cons_Reg_Etanche_Ext;
+EF_Cmd_Reg_Etanche_Souf :=			EF_Cmd_Reg_Etanche_Souf;
+EF_Cons_V3V_Eau_Mitig :=			EF_Cons_V3V_Eau_Mitig;
+EF_Vanne_Alim_NEP :=				EF_Vanne_Alim_NEP;
+EF_Cons_V3V_Bat_Froid_CTA := 		EF_Cons_V3V_Bat_Froid_CTA;
+EF_Cmd_Verin_WC_GV := 				EF_Cmd_Verin_WC_GV;
+EF_Cmd_Verin_WC_PV := 				EF_Cmd_Verin_WC_PV;
+
+(**********************************************Variable Ecr_Bit_Cmd_IHM6*) (*Adresse Modbus GTC : 21004*)
+(*Gestion des forçages*)
+F_Cmd_PC_Cab := 					F_Cmd_PC_Cab;
+F_Cmd_Vanne_Alim_Douche := 			F_Cmd_Vanne_Alim_Douche;
+F_Cmd_Vanne_Alim_Douchette := 		F_Cmd_Vanne_Alim_Douchette;
+F_Cmd_Vanne_Alim_Lavabo := 			F_Cmd_Vanne_Alim_Lavabo;
+F_Cmd_Vanne_Vid_Douche := 			F_Cmd_Vanne_Vid_Douche;
+F_Cmd_Vanne_Vid_Lavabo :=			F_Cmd_Vanne_Vid_Lavabo;
+F_Cmd_ElectroValve_Alim_Douche := 	F_Cmd_ElectroValve_Alim_Douche;
+F_Cmd_ElectroValve_Alim_Lavabo :=	F_Cmd_ElectroValve_Alim_Lavabo;
+F_Vanne_Souf_Bas_Deb :=				F_Vanne_Souf_Bas_Deb;
+F_Vanne_Ext_Bas_Deb :=				F_Vanne_Ext_Bas_Deb;
+F_Cmd_Reg_Etanche_Souf :=			F_Cmd_Reg_Etanche_Souf;
+F_Vanne_Alim_NEP :=					F_Vanne_Alim_NEP;
+F_Cmd_Verin_WC_GV := 				F_Cmd_Verin_WC_GV; (*Impultion*)
+F_Cmd_Verin_WC_PV := 				F_Cmd_Verin_WC_PV; (*Impultion*)
+
+(**********************************************Variable Ecr_Bit_Cmd_IHM7*) (*Adresse Modbus GTC : 21005*)
+(*Bit horodatage*)
+Sel_Lundi := 						Sel_Lundi;
+Sel_Mardi := 						Sel_Mardi;
+Sel_Mercredi := 					Sel_Mercredi;
+Sel_Jeudi := 						Sel_Jeudi;
+Sel_Vendredi := 					Sel_Vendredi;
+Sel_Samedi :=						Sel_Samedi;
+Sel_Dimanche := 					Sel_Dimanche;
+StartMiseALheure  := 				StartMiseALheure; (*Impultion*)]]></ST>
+    </Implementation>
+    <LineIds Name="a3_Ecriture_Bit">
+      <LineId Id="192" Count="154" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Sontay_4RM" Id="{2c2185e6-5639-45f5-93b7-46b7566d46be}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Sontay_4RM
+VAR_INPUT
+	OUTPUT_1 :BOOL;
+	OUTPUT_2 :BOOL;
+	OUTPUT_3 :BOOL;
+	OUTPUT_4 :BOOL;
+	SWITCH_SEQUENCE :INT; (*0=Sequenced / 1=Staged / 1=Binary*)
+END_VAR
+VAR_OUTPUT
+	OUT_SAN :INT;
+END_VAR
+VAR
+	Sortie_Calcul_Sequenced :INT;
+	SCL_Sequenced: SCL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Bloc de fonction permettant de gérer le module IO-RM4 de sontay*)
+
+(*Version Sequenced*)
+IF (SWITCH_SEQUENCE = 0)
+	THEN
+	IF (OUTPUT_1) (*La valeur doit être comprise entre 2 et 4 VDC*)
+		THEN
+		Sortie_Calcul_Sequenced := 3;
+	END_IF;
+	IF (OUTPUT_2) (*La valeur doit être comprise entre 4 et 6 VDC*)
+		THEN
+		Sortie_Calcul_Sequenced := 5;
+	END_IF;
+	IF (OUTPUT_3) (*La valeur doit être comprise entre 6 et 8 VDC*)
+		THEN
+		Sortie_Calcul_Sequenced := 7;
+	END_IF;
+	IF (OUTPUT_4) (*La valeur doit être comprise entre 8 et 10 VDC*)
+		THEN
+		Sortie_Calcul_Sequenced := 9;
+	END_IF;
+	IF (NOT OUTPUT_1 AND NOT OUTPUT_2 AND NOT OUTPUT_3 AND NOT OUTPUT_4)
+		THEN
+		Sortie_Calcul_Sequenced := 0;
+	END_IF;
+END_IF;
+
+(*Mise à l'échelle de la valeur*)
+SCL_Sequenced(
+	IN_INT:= Sortie_Calcul_Sequenced,
+	LIM_MIN_IN_REAL:= 0,
+	LIM_MAX_IN_REAL:= 10,
+	LIM_MIN_OUT_REAL:= 0.0,
+	LIM_MAX_OUT_REAL:= 32767.0,
+	OUT_INT=> OUT_SAN);]]></ST>
+    </Implementation>
+    <LineIds Name="Sontay_4RM">
+      <LineId Id="30" Count="33" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

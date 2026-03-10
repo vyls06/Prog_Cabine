@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="a6_Lecture_InterCom" Id="{567fc0bc-06c9-411d-994a-f073a4899aa5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a6_Lecture_InterCom
+VAR
+	Cons_Temp_Eau_General: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion lecture inter com*)
+MES_Temp_Eau_Mitige_General := Tab_Com_Receive[0];
+Cons_Temp_Eau_General		:= Tab_Com_Receive[1];]]></ST>
+    </Implementation>
+    <LineIds Name="a6_Lecture_InterCom">
+      <LineId Id="4" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="26" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

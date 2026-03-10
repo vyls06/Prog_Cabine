@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="Erreur_Struct" Id="{b2b0f98c-32dc-44f0-a0c4-73f287a43cc5}">
+    <Declaration><![CDATA[TYPE Erreur_Struct :
+STRUCT
+	IdDefaut : INT; //Identifiant dans la text list
+	DateDefaut : STRING; //Heure d'arrivé du défaut
+	TypeDefaut : SINT ; //0=Erreur;1=Warning;2=Warning acquittable	
+	EtatDefaut : STRING(3); //DP = Defaut présent; DD = Defaut disparu non acquité ; WP = warning présent ; WD = Warning disparu non acquité; WA = Warning aquittable
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

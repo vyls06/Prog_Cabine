@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Com485_Dalcnet" Id="{ac542323-6b5c-4fa6-81d0-fe89e6d83b16}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Com485_Dalcnet
+VAR_INPUT
+	Adresse_RS485		:BYTE;
+	Start_Chenillard	: BOOL;
+	In_Dimmer_Cabine	:INT;
+	In_Rouge_Cabine		:INT;
+	In_Vert_Cabine		:INT;
+	In_Bleu_Cabine		:INT;
+	In_Blanc_Cabine		:INT;
+END_VAR
+VAR_OUTPUT
+	Com_Ok 				: BOOL;
+	Com_Error 			: BOOL;
+	etape				: INT := 0;
+	Defaut_Com			: BOOL;
+	Next_Chenillard		: BOOL;
+	Out_Dimmer_Cabine	:INT;
+	Out_Rouge_Cabine	:INT;
+	Out_Vert_Cabine		:INT;
+	Out_Bleu_Cabine		:INT;
+	Out_Blanc_Cabine	:INT;
+END_VAR
+VAR
+	Last_Error				: MODBUS_ERRORS;
+	ValeursEcrites_Dalcnet 	: ARRAY[0..5] OF INT;
+	ValeursLues_Dalcnet 	: ARRAY[0..5] OF INT;
+	Chgt_Ecr_Cons_Dalcnet	: BOOL;
+	F_TRIG_1				: F_TRIG;
+	F_TRIG_2				: F_TRIG;
+	TON_1					: TON;
+	TON_2					: TON;
+	R_TRIG_Start			: R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Gestion de l'ecriture*)
+ValeursEcrites_Dalcnet[0] 	:= In_Dimmer_Cabine;
+ValeursEcrites_Dalcnet[1] 	:= In_Rouge_Cabine;
+ValeursEcrites_Dalcnet[2] 	:= In_Vert_Cabine;
+ValeursEcrites_Dalcnet[3] 	:= In_Bleu_Cabine;
+ValeursEcrites_Dalcnet[4] 	:= In_Blanc_Cabine;
+(*Recopie des consignes du Dalcnet*)
+Out_Dimmer_Cabine 			:= ValeursLues_Dalcnet[0];
+Out_Rouge_Cabine 			:= ValeursLues_Dalcnet[1];
+Out_Vert_Cabine 			:= ValeursLues_Dalcnet[2];
+Out_Bleu_Cabine 			:= ValeursLues_Dalcnet[3];
+Out_Blanc_Cabine 			:= ValeursLues_Dalcnet[4];
+
+(*Changement de consigne pour l'ecriture Modbus*)
+IF((Out_Rouge_Cabine <> In_Rouge_Cabine) OR (Out_Vert_Cabine <> In_Vert_Cabine) OR (Out_Bleu_Cabine <> In_Bleu_Cabine) OR (Out_Blanc_Cabine <> In_Blanc_Cabine))
+	THEN
+	Chgt_Ecr_Cons_Dalcnet := TRUE;
+	ELSE
+	Chgt_Ecr_Cons_Dalcnet := FALSE;
+END_IF;
+
+(**********************************************Gestion sécurité anti-blocage*)
+(*En cas de blocage de la variable etape à 0*)
+TON_1(IN:=(etape = 1) , PT:= T#3S);
+IF (TON_1.Q) THEN etape := 3; END_IF;
+
+(*En cas de blocage de la variable etape à 3*)
+TON_2(IN:=(etape = 3) , PT:= T#3S);
+IF (TON_2.Q) THEN etape := 0; END_IF;
+
+(**********************************************Lecture/ecriture modbus*)
+CASE etape OF
+	0: (*Etape Attente*)
+		R_TRIG_Start(CLK:= Start_Chenillard);
+		IF (R_TRIG_Start.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+		Next_Chenillard := FALSE;
+	(*Lecture dalcnet*)
+	1:	MB.ReadRegs(	Execute := NOT MB.BUSY,
+						UnitID := Adresse_RS485,
+						Quantity := 6,								(* Lecture de 6 mots *)
+						MBAddr := 16#0,							(*A partir de l'adresse 0*)
+						cbLength := SIZEOF(ValeursLues_Dalcnet),
+						pMemoryAddr := ADR(ValeursLues_Dalcnet),
+						Timeout := T#5000MS);
+		F_TRIG_1(CLK:= MB.BUSY);
+		IF(F_TRIG_1.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	2:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+		(*Ecriture dalcnet*)
+	3:	MB.WriteRegs(	Execute := (NOT MB.BUSY AND Chgt_Ecr_Cons_Dalcnet),
+						UnitID := Adresse_RS485,
+						Quantity := 6,								(* Ecriture de 6 mots *)
+						MBAddr := 16#0,							(*A partir de l'adresse 0*)
+						cbLength := SIZEOF(ValeursEcrites_Dalcnet),
+						pMemoryAddr := ADR(ValeursEcrites_Dalcnet),
+						Timeout := T#5000ms);
+		F_TRIG_2(CLK:= MB.BUSY);
+		Next_Chenillard := TRUE;
+		IF(F_TRIG_2.Q OR NOT Chgt_Ecr_Cons_Dalcnet)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	4:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := 0;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="Com485_Dalcnet">
+      <LineId Id="22" Count="10" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="36" Count="6" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="99" Count="7" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="109" Count="5" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="47" Count="32" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="80" Count="12" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="93" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

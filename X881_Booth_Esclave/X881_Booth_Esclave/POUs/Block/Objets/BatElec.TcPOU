@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="BatElec" Id="{7ebcdd57-0ba1-40dc-9ed0-1b6630c6bc95}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK BatElec
+VAR_INPUT
+	Enable				:BOOL;
+	Cons_BatElec_Dem	:REAL;	(*Consigne batterie éléctrique demandé (venant de la Régulation) / en %*)
+	Cmd_BatElec_Dem	:BOOL;
+	Mes_Temp			:REAL;	(*Mesure température apréS batterie / en °C*)
+	Info_Defaut			:BOOL;	(*VAR_INPUT	Info défaut klixon batterie electrique (Recopie ETOR) / 1 = Défaut*)
+	Info_Ma_Mot			:BOOL;	(*Récupération de l'information marche du moteur de ventilation*)
+	Info_Press_Sec		:BOOL;	(*Récupération du pressostat de sécurité de présence d'air*)
+	Type_Commande		:BOOL;	(*VAR_INPUT	Choix du TYPE de pilotage de la batterie éléctrique / 0 = PWM / 1 = ANA*)
+	Inverse_SAN			:BOOL;	(*Inversion de la sortie SAN / 1 = Sens inverse / 0 = Sens normal*)
+	SAN_MIN			:REAL;	(*Valeur minimal de la sortie SAN / en point automate*)
+	SAN_MAX			:REAL;	(*Valeur maximal de la sortie SAN / en point automate*)
+END_VAR
+
+VAR_OUTPUT
+	SAN_CONS_BAT_ELEC	:INT;	(*Consigne a appliqué à la batterie éléctrique (pour SAN) / en %*)
+	STOR_CMD_BAT_ELEC	:BOOL;	(*VAR_OUTPUT	Commande a appliqué à la batterie éléctrique (pour STOR PWM) / 1 = Marche*)
+	OUT_Info_Temps_Cycle	:TIME;	(*VAR_OUTPUT	Temps de cycle restant / En sec*)
+END_VAR
+
+VAR
+	OUT_PWM			:BOOL;	(*Sortie du PWM / 1 = Marche*)
+	Temp_ON			:REAL;
+	TP_1				:TP;
+	TIME_BaseTemps	:TIME;
+	TIME_Temp_ON		:TIME;
+	DINT_BaseTemps	:DINT;
+	DINT_Temp_ON		:DINT;
+	front					:BOOL;
+	Temp_ON_bis		:REAL;
+	TON_PWM			:TON;
+
+	CONS_BATELEC_INT	:REAL;
+	CONS_BAT_ELEC	:REAL;
+	val_x				:REAL;
+	val_b				:REAL;
+	val_a				:REAL;
+	val_y				:REAL;
+	val_final				:REAL;
+	Val_Calcul1			:REAL;
+END_VAR
+
+VAR_IN_OUT
+	Tab_BatElec	:Objet_BatElec; (*Tableau des valeurs*)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion consigne **************************************************************)
+IF Tab_BatElec.Mot_Ecriture.0
+	THEN
+		CONS_BATELEC_INT := Tab_BatElec.W_ConsForcage;
+	ELSE
+		CONS_BATELEC_INT := Cons_BatElec_Dem;
+END_IF;
+CONS_BAT_ELEC := LIMIT(Tab_BatElec.W_LimiteMinCons,CONS_BATELEC_INT,Tab_BatElec.W_LimiteMaxCons);
+
+
+(* Gestion PWM **************************************************************)
+IF NOT(Type_Commande)
+	THEN
+		(* Cacule temps PWM *)
+		Temp_ON := (Tab_BatElec.W_PeriodePWM / 100.0) * CONS_BAT_ELEC;
+	
+		(* Sécurité Temp On Max *)
+		IF Temp_ON > Tab_BatElec.W_TempsMaxPWM
+			THEN
+				Temp_ON_bis := Tab_BatElec.W_TempsMaxPWM;
+			ELSE
+				Temp_ON_bis := Temp_ON;
+		END_IF;	
+		DINT_BaseTemps := REAL_TO_DINT(Tab_BatElec.W_PeriodePWM);
+		TIME_BaseTemps := DINT_TO_TIME(DINT_BaseTemps * 1000);
+		DINT_Temp_ON := REAL_TO_DINT(Temp_ON_bis * 10);
+		TIME_Temp_ON := DINT_TO_TIME(DINT_Temp_ON * 100);
+
+		(* Sécurité si Temps ON < Temps MIN on active pas la sortie *)
+		IF (Temp_ON > Tab_BatElec.W_TempsMinPWM)
+			THEN
+				TP_1(IN := front,PT := TIME_Temp_ON);
+				OUT_PWM := TP_1.Q;
+			ELSE
+				OUT_PWM := FALSE;
+		END_IF;
+		IF CONS_BAT_ELEC = 0.0
+			THEN
+				OUT_PWM := FALSE;
+		END_IF;
+		IF ((CONS_BAT_ELEC = 100.0) AND (Temp_ON = Tab_BatElec.W_TempsMaxPWM))
+			THEN
+				OUT_PWM := TRUE;
+		END_IF;
+
+		TON_PWM(IN := TRUE AND NOT(TON_PWM.Q), PT := TIME_BaseTemps);
+		front := TON_PWM.Q;
+		OUT_Info_Temps_Cycle := TON_PWM.ET;
+	ELSE
+		OUT_PWM := FALSE;
+		OUT_Info_Temps_Cycle := t#0s;
+END_IF;
+
+
+(* Gestion sortie analogique ou TOR **************************************************************)
+IF Type_Commande
+	THEN (* Gestion sortie analogique *)
+		(* Mise à l'echelle sortie ****)
+		val_x := CONS_BAT_ELEC;
+		val_b := SAN_Max - (val_a * 100.0);
+		val_a := (SAN_Max - SAN_Min) / 100.0;
+		val_y := (val_a * val_x) + val_b;
+
+		(* Inversion de la sortie ANA ****)
+		IF (Inverse_SAN)
+			THEN
+				val_final := SAN_Max - val_y;
+			ELSE
+				val_final := val_y;
+		END_IF;
+		Val_Calcul1 := LIMIT(SAN_Min,val_final, SAN_Max);
+		SAN_CONS_BAT_ELEC := REAL_TO_INT(Val_Calcul1);
+		STOR_CMD_BAT_ELEC := Cmd_BatElec_Dem AND Info_Ma_Mot AND Info_Press_Sec AND Info_Defaut;
+	ELSE (* Gestion sortie TOR PWM *)
+		SAN_CONS_BAT_ELEC := 0;
+		STOR_CMD_BAT_ELEC :=  OUT_PWM AND Info_Ma_Mot AND Info_Press_Sec AND Info_Defaut;
+END_IF;
+
+IF(NOT Enable)
+	THEN
+	CONS_BAT_ELEC := 0.0;
+	SAN_CONS_BAT_ELEC := 0;
+	STOR_CMD_BAT_ELEC := FALSE;
+END_IF;
+
+(* Recopie pour lecture GTC *********************************************************)
+Tab_BatElec.Mot_Lecture.0	:= 	STOR_CMD_BAT_ELEC;
+Tab_BatElec.Mot_Lecture.1	:= 	Info_Defaut;
+Tab_BatElec.Mot_Lecture.2	:= 	Type_Commande;
+Tab_BatElec.R_Info_Cons		:= 	CONS_BAT_ELEC;
+Tab_BatElec.R_TempApresBat	:= 	Mes_Temp;
+
+(* Recopie pour lecture GTC *********************************************************)
+Tab_BatElec.Mot_Lecture.0	:= 	STOR_CMD_BAT_ELEC;
+Tab_BatElec.Mot_Lecture.1	:= 	Info_Defaut;
+Tab_BatElec.Mot_Lecture.2	:= 	Type_Commande;
+Tab_BatElec.R_Info_Cons		:= 	CONS_BAT_ELEC;
+Tab_BatElec.R_TempApresBat	:= 	Mes_Temp;]]></ST>
+    </Implementation>
+    <LineIds Name="BatElec">
+      <LineId Id="46" Count="97" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

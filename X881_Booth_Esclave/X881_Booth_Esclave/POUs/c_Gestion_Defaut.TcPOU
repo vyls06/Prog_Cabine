@@ -1,0 +1,363 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="c_Gestion_Defaut" Id="{31eb2d28-333e-4009-bed1-b87522912811}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM c_Gestion_Defaut
+VAR
+(*Gestion du defaut débordement du bac à douche*)
+	TON_1: TON;
+	RS_Def_Debord_Douche: RS;
+(*Gestion du defaut débordement du lavabo*)
+	TON_2: TON;
+	RS_Def_Debord_Lavabo: RS;
+(*Alarme Discordance débit d'eau de douche*)
+	TON_3: TON;
+	RS_Deb_Eau_Douche: RS;
+(*Alarme Discordance débit d'eau du lavabo*)
+	TON_4: TON;
+	RS_Deb_Eau_Lavabo: RS;
+(*Gestion du défaut de discordance de la prise de courant*)
+	TON_5: TON;
+	RS_Discord_Prise: RS;
+(*Gestion du défaut de discordance alimentation de la prise (si contacteur forcé manuellement)*)
+	TON_6: TON;
+	RS_Forcage_Prise: RS;
+(*Coupure prise en cas d'ouverture de la porte lors d'une recette en cours*)
+	Mode_Prise_En_Cours: BOOL;
+	RS_Porte_Ouv_Cycle: RS;
+(*Gestion du defaut pompe de relevage*)
+	TON_7: TON;
+(*Gestion du defaut ouverture de la porte trop longue*)
+	TON_8: TON;
+(*Gestion des défauts de communication du module dalcnet*)
+	TON_ComDalcnet :TON;
+	RS_Def_Com_Dalcnet: RS;
+(*Gestion des défauts de communication de la vanne thermostatique otpion sur chaque cabine*)
+	TON_Thermo :TON;
+	RS_Def_Com_Vanne_Thermo: RS;
+(*Gestion des défauts de communication de la vanne thermostatique otpion vanne general*)
+	TON_ThermoGen :TON;
+	RS_Def_Com_Vanne_General: RS;
+(*Gestion du defaut de communication*)
+	TON_Def_Client: TON;
+(*Gestion du défaut discordance débit Extraction*)
+	TON_9: TON;
+(*Gestion du défaut discordance débit Soufflage*)
+	TON_10: TON;
+(*Alarme Discordance débit soufflage quand le registre Fermé*)
+	TON_11: TON;
+(*Alarme Discordance débit extraction quand le registre Fermé*)
+	TON_12: TON;
+(*Gestion du défaut différentiel de la prise électrique*)
+	RS_Diff_Prise: RS;
+(*Gestion des défauts de communication registre soufflage*)
+	TON_ComSouf :TON;
+	RS_Def_Com_Souf: RS;
+(*Gestion des défauts de communication registre extraction*)
+	TON_ComExt :TON;
+	RS_Def_Com_Ext : RS;
+(*Gestion du défaut discordance de l'ensemble bas débit*)
+	TON_BasDeb :TON;
+(*Gestion du défaut discordance de l'ensemble bypass*)
+	TON_Bypass :TON;
+(*Gestion du défaut discordance régulation de pression*)
+	TON_Discord_Press: TON;
+(*Gestion du défaut du capteur de pression*)
+	TON_Def_Press: TON;
+(*Gestion du défaut du capteur de température*)
+	TON_Def_Temp: TON;
+(*Gestion du défaut du capteur de hygrometrie*)
+	TON_Def_Hygro: TON;
+(*Gestion du défaut du capteur de température de l'eau mitigée*)
+	TON_Def_Temp_Eau_Mitig: TON;
+(*Gestion du défaut du capteur de température de soufflage*)
+	TON_Def_Temp_Souf: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion du defaut débordement du bac à douche*)
+IF (Option_Niveau_Haut_Douche)(*Gestion de l'option de du niveau*)
+	THEN
+	TON_1(IN:= (NOT E_Info_Niveau_Haut_Douche) , PT:= t#2s ); (*Temporisation en cas de coupure d'alimentation armoire*)
+	RS_Def_Debord_Douche(SET:= TON_1.Q, RESET1:= Cmd_Rearmement);
+	Defaut_Debordement_Douche := RS_Def_Debord_Douche.Q1;
+	Defaut_Debordement_Lavabo := RS_Def_Debord_Douche.Q1;
+	ELSE
+	TON_1(IN:=FALSE);
+	RS_Def_Debord_Douche(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Debordement_Douche := FALSE;
+	Defaut_Debordement_Lavabo := FALSE;
+END_IF;
+
+(**********************************************Alarme Discordance débit d'eau de douche*)
+IF(Option_Debitmetre_Douche)
+	THEN
+	TON_3(IN:= (NOT EF_Cmd_ElectroValve_Alim_Douche AND S_Cmd_ElectroValve_Alim_Douche  AND (E_Sonde_Debit_Alim_Douche <= 1000)) , PT:= t#20s );
+	RS_Deb_Eau_Douche(SET:= TON_3.Q,
+		RESET1:= Cmd_Rearmement,
+		Q1=> Defaut_Discord_Deb_Eau_Douche);
+	ELSE
+	TON_3(IN:=FALSE);
+	RS_Deb_Eau_Douche(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Discord_Deb_Eau_Douche := FALSE;
+END_IF;
+
+(**********************************************Alarme Discordance débit d'eau du lavabo*)
+IF(Option_Debitmetre_Lavabo)
+	THEN
+	TON_4(IN:= (NOT EF_Cmd_ElectroValve_Alim_Lavabo AND S_Cmd_ElectroValve_Alim_Lavabo  AND (E_Sonde_Debit_Alim_Lavabo <= 1000)) , PT:= t#20s );
+	RS_Deb_Eau_Lavabo(SET:= TON_4.Q,
+		RESET1:= Cmd_Rearmement,
+		Q1=> Defaut_Discord_Deb_Eau_Lavabo);
+	ELSE
+	TON_4(IN:=FALSE);
+	RS_Deb_Eau_Lavabo(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Discord_Deb_Eau_Lavabo := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut de discordance de la prise de courant*)
+IF(Option_Prise)
+	THEN
+	TON_5(IN:= (S_Cmd_PC_Cab AND NOT E_Info_PC_Cab)  , PT:= t#1s );
+	RS_Discord_Prise(SET:= TON_5.Q, RESET1:= Cmd_Rearmement);
+	Defaut_Discord_PC_Cab := RS_Discord_Prise.Q1;
+	ELSE
+	TON_5(IN:=FALSE);
+	RS_Discord_Prise(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Discord_PC_Cab := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut de discordance alimentation de la prise (si contacteur forcé manuellement)*)
+IF(Option_Prise)
+	THEN
+	TON_6(IN:= (NOT S_Cmd_PC_Cab AND E_Info_PC_Cab)  , PT:= t#500ms );
+	RS_Forcage_Prise(SET:= (TON_6.Q), RESET1:= Cmd_Rearmement);
+	Def_Discord_Alim_Prise := RS_Forcage_Prise.Q1;
+	ELSE
+	TON_6(IN:=FALSE);
+	RS_Forcage_Prise(SET:=FALSE, RESET1:=TRUE);
+	Def_Discord_Alim_Prise := FALSE;
+END_IF;
+
+(**********************************************Coupure prise en cas d'ouverture de la porte lors d'une recette en cours*)
+IF(Option_Prise AND Option_Contact_Porte AND Option_Cabine_Humide AND FALSE)
+	THEN
+	Mode_Prise_En_Cours := Mode_Auto.Mode_6 OR Mode_Manu.Mode_6;
+	RS_Porte_Ouv_Cycle(	SET:= (S_Cmd_PC_Cab AND NOT E_Info_Contact_Porte AND Mode_Prise_En_Cours),
+						RESET1:= (Cmd_Rearmement OR NOT Mode_Prise_En_Cours),
+						Q1 => Def_Prise_Porte_Ouverte);
+	ELSE
+	Mode_Prise_En_Cours := FALSE;
+	RS_Porte_Ouv_Cycle(SET:=FALSE, RESET1:=TRUE);
+	Def_Prise_Porte_Ouverte := FALSE;
+END_IF;
+
+(**********************************************Gestion du defaut pompe de relevage*)
+IF(Option_Pompe_De_Relevage)
+	THEN
+	TON_7(IN:= (NOT E_Etat_Evac_SaniDouche) , PT:= t#2s ); (*Temporisation en cas de coupure d'alimentation armoire*)
+	Defaut_Pompe_Relevage := TON_7.Q;
+	ELSE
+	TON_7(IN:=FALSE);
+	Defaut_Pompe_Relevage := FALSE;
+END_IF
+
+(**********************************************Gestion du defaut ouverture de la porte trop longue*)
+IF(Option_Contact_Porte)
+	THEN
+	TON_8(IN:= (NOT E_Info_Contact_Porte) , PT:= t#1m );
+	Defaut_Porte_Ouverte := TON_8.Q;
+	ELSE
+	TON_8(IN:=FALSE);
+	Defaut_Porte_Ouverte := FALSE;
+END_IF;
+
+(**********************************************Gestion des défauts de communication de la vanne thermostatique otpion vanne general*)
+TON_ThermoGen(IN:= (Com_Ok_Vanne_Thermo) , PT:= t#2s );
+IF(Option_Vanne_Thermo_General)
+	THEN
+	RS_Def_Com_Vanne_General(	SET:= (Error_Vanne_Thermo),
+						RESET1:= (TON_ThermoGen.Q));
+	Defaut_Com_Vanne_General := RS_Def_Com_Vanne_General.Q1;
+	ELSE
+	RS_Def_Com_Vanne_General(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Com_Vanne_General := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut discordance débit Extraction*)
+S_Ecart_Regul_PID_Extraction := ABS(Tab_MES_Sonde_Gros_Debit_Extraction.R_MesCor - FCV_01_extraction.Cons_Pos_Dem);
+TON_9(IN:= ((S_Ecart_Regul_PID_Extraction > TOL_Debit_Extraction) AND NOT Enable_PID_Bas_Deb_Ext) , PT:= t#600s );
+IF(TON_9.Q AND Option_RegExt_Ultrason)
+	THEN
+	Defaut_Discord_Deb_Ext := TRUE;
+	ELSE
+	Defaut_Discord_Deb_Ext := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut discordance débit Soufflage*)
+S_Ecart_Regul_PID_Soufflage := ABS(Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor - FCV_02_soufflage.Cons_Pos_Dem);
+TON_10(IN:= ((S_Ecart_Regul_PID_Soufflage > TOL_Debit_Soufflage) AND NOT Enable_PID_Bas_Deb_Ext) , PT:= t#600s );
+IF(TON_10.Q AND Option_RegSouf_Ultrason)
+	THEN
+	Defaut_Discord_Deb_Souf := TRUE;
+	ELSE
+	Defaut_Discord_Deb_Souf := FALSE;
+END_IF;
+
+(**********************************************Alarme Discordance débit soufflage quand le registre Fermé*)
+TON_11(IN:= ((E_Sonde_Gros_Debit_Soufflage_1 > TOL_Deb_Souf_Reg_Ferm) AND Arret_Soufflage) , PT:= t#180s);
+IF(TON_11.Q)
+	THEN
+	Defaut_Discord_Reg_Souf_Ferm := TRUE;
+	ELSE
+	Defaut_Discord_Reg_Souf_Ferm := FALSE;
+END_IF;
+
+(**********************************************Alarme Discordance débit extraction quand le registre Fermé*)
+TON_12(IN:= ((E_Sonde_Gros_Debit_Extraction_1 > TOL_Deb_Ext_Reg_Ferm) AND Arret_Extraction) , PT:= t#180s );
+IF(TON_12.Q)
+	THEN
+	Defaut_Discord_Reg_Ext_Ferm := TRUE;
+	ELSE
+	Defaut_Discord_Reg_Ext_Ferm := FALSE;
+END_IF;
+
+
+(**********************************************Alarme klixon batterie électrique*)
+IF(Option_Batt_Elec)
+	THEN
+	Defaut_Klixon_BattElec := NOT E_Info_Klixon_BattElec;
+	ELSE
+	Defaut_Klixon_BattElec := FALSE;
+END_IF;
+
+(***********************************************Gestion du défaut qui coupe les alimentation d'eau*)
+Defaut_General_Alim_Eau := Def_Discord_Alim_Prise OR Defaut_Pompe_Relevage;
+
+(**********************************************Gestion du défaut différentiel de la prise électrique*)
+IF(Option_Prise AND Option_Defaut_Prise_Elec)
+	THEN
+	RS_Diff_Prise	(SET:= (E_Defaut_Prise_Elec),
+				RESET1:= (Cmd_Rearmement AND NOT E_Defaut_Prise_Elec),
+				Q1 => Defaut_Differentiel_Prise_Elec);
+	ELSE
+	RS_Diff_Prise(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Differentiel_Prise_Elec := FALSE;
+END_IF;
+
+(**********************************************Gestion des défauts de communication registre soufflage*)
+TON_ComSouf(IN:= (Com_Ok_Reg_Souf) , PT:= t#2s );
+IF(Option_Com_RegSouf_Ultrason)
+	THEN
+	RS_Def_Com_Souf(	SET:= (Error_Com_Reg_Souf),
+						RESET1:= (TON_ComSouf.Q));
+	Defaut_Com_Reg_Souf := RS_Def_Com_Souf.Q1;
+	ELSE
+	RS_Def_Com_Souf(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Com_Reg_Souf := FALSE;
+END_IF;
+
+(**********************************************Gestion des défauts de communication registre extraction*)
+TON_ComExt(IN:= (Com_Ok_Reg_Extraction) , PT:= t#2s );
+IF(Option_Com_RegExt_Ultrason)
+	THEN
+	RS_Def_Com_Ext(	SET:= (Error_RS485_Reg_Ext),
+						RESET1:= (TON_ComExt.Q));
+	Defaut_Com_Reg_Ext := RS_Def_Com_Ext.Q1;
+	ELSE
+	RS_Def_Com_Ext(SET:=FALSE, RESET1:=TRUE);
+	Defaut_Com_Reg_Ext := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut discordance de l'ensemble bas débit*)
+IF(Option_Bas_Debit)
+	THEN
+	TON_BasDeb(IN:= ((Cons_Actionneur_Moteur_BasDebit > 30.0) AND (Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor < 10.0)), PT:= T#60s, Q=> Defaut_Ensemble_Bas_Debit);
+	ELSE
+	Defaut_Ensemble_Bas_Debit := FALSE;
+	TON_BasDeb(IN:=FALSE);
+END_IF;
+
+(**********************************************Gestion du défaut discordance de l'ensemble bypass*)
+IF(Option_Mot_ByPass)
+	THEN
+	TON_Bypass(IN:= ((Cons_Actionneur_Moteur_ByPass > 30.0) AND (Tab_MES_Sonde_Press_ByPass.R_MesCor < 10.0)), PT:= T#60s, Q=> Defaut_Ensemble_Bypass);
+	ELSE
+	Defaut_Ensemble_Bypass := FALSE;
+	TON_Bypass(IN:=FALSE);
+END_IF;
+
+(**********************************************Gestion du défaut discordance régulation de pression*)
+TON_Discord_Press(IN:= ((S_Ecart_Regul_PID_Pression > TOL_Regul_Press) AND  Enable_PID_Press_Cab) , PT:= t#60s);
+IF(TON_Discord_Press.Q)
+	THEN
+	Defaut_Discord_Regul_Press_Cab := TRUE;
+	ELSE
+	Defaut_Discord_Regul_Press_Cab := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut du capteur de pression*)
+TON_Def_Press(IN:= ((-47.0 >= Tab_MES_Sonde_Press_Cab.R_MesBrut) AND  Option_Capteur_Press_Cab) , PT:= t#60s);
+IF(TON_Def_Press.Q AND NOT Mode_Cabine_Automatique)
+	THEN
+	Defaut_Sonde_Press_Cabine := TRUE;
+	ELSE
+	Defaut_Sonde_Press_Cabine := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut du capteur de température ambiance*)
+TON_Def_Temp(IN:= ((-17.0 >= Tab_MES_Sonde_Temp_Amb.R_MesBrut) AND ( Option_Sonde_Temp_Hygro_Amb OR Option_Sonde_Temp_Amb)) , PT:= t#60s);
+IF(TON_Def_Temp.Q)
+	THEN
+	Defaut_Sonde_Temp_Cabine := TRUE;
+	ELSE
+	Defaut_Sonde_Temp_Cabine := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut du capteur de hygrométrie *)
+TON_Def_Hygro(IN:= ((1.0 >= Tab_MES_Sonde_Hygro_Amb.R_MesBrut) AND ( Option_Sonde_Temp_Hygro_Amb)) , PT:= t#60s);
+IF(TON_Def_Hygro.Q)
+	THEN
+	Defaut_Sonde_Hygro_Cabine := TRUE;
+	ELSE
+	Defaut_Sonde_Hygro_Cabine := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut du capteur de température de l'eau mitigée*)
+TON_Def_Temp_Eau_Mitig(IN:= ((-17.0 >= Tab_MES_Sonde_Temp_Eau_Mitig.R_MesBrut) AND (Option_Sonde_Temp_EauMitig)) , PT:= t#60s);
+IF(TON_Def_Temp_Eau_Mitig.Q)
+	THEN
+	Defaut_Sonde_Temp_Eau_Mitig := TRUE;
+	ELSE
+	Defaut_Sonde_Temp_Eau_Mitig := FALSE;
+END_IF;
+
+(**********************************************Gestion du défaut du capteur de température de soufflage*)
+TON_Def_Temp_Souf(IN:= ((-17.0 >= Tab_Mes_Sonde_Temp_Souf.R_MesBrut)) , PT:= T#60S);
+IF(TON_Def_Temp_Souf.Q)
+	THEN
+	Defaut_Sonde_Temp_Souf := TRUE;
+	ELSE
+	Defaut_Sonde_Temp_Souf := FALSE;
+END_IF;
+
+(**********************************************Gestion du mode Cabine en défaut qui fait clignoter la cabine en rouge*)
+Mode_Cabine_Defaut :=(
+Defaut_Debordement_Douche OR Defaut_Debordement_Lavabo OR Defaut_Discord_Deb_Eau_Douche OR Defaut_Discord_Deb_Eau_Lavabo
+OR Defaut_Discord_PC_Cab OR Def_Discord_Alim_Prise OR Def_Prise_Porte_Ouverte OR Defaut_Pompe_Relevage
+OR Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm OR Defaut_Discord_Vanne_Vid_Lavabo_Ouv OR Defaut_Discord_Vanne_Vid_Lavabo_Ferm
+OR Defaut_Discord_Vanne_Alim_Douche_Ouv OR Defaut_Discord_Vanne_Alim_Douche_Ferm OR Defaut_Discord_Vanne_Alim_Lavabo_Ouv OR Defaut_Discord_Vanne_Alim_Lavabo_Ferm
+OR Defaut_Discord_Vanne_Alim_Douchette_Ouv OR Defaut_Discord_Vanne_Alim_Douchette_Ferm OR Defaut_Klixon_BattElec OR Defaut_Differentiel_Prise_Elec
+OR Defaut_Discord_Vanne_Souf_Bas_Deb_Ouv OR Defaut_Discord_Vanne_Souf_Bas_Deb_Ferm OR Defaut_Discord_Vanne_Ext_Bas_Deb_Ouv OR Defaut_Discord_Vanne_Ext_Bas_Deb_Ferm
+OR Defaut_Discord_Reg_Etanche_Ext OR Defaut_Discord_Reg_Etanche_Ext OR Defaut_Sonde_Press_Cabine OR Defaut_Sonde_Temp_Eau_Mitig
+OR Defaut_Discord_Vanne_Alim_NEP_Ouv OR Defaut_Discord_Vanne_Alim_NEP_Ferm OR Defaut_Arret_Mode25);]]></ST>
+    </Implementation>
+    <LineIds Name="c_Gestion_Defaut">
+      <LineId Id="446" Count="12" />
+      <LineId Id="471" Count="82" />
+      <LineId Id="572" Count="11" />
+      <LineId Id="594" Count="147" />
+      <LineId Id="822" Count="7" />
+      <LineId Id="821" Count="0" />
+      <LineId Id="742" Count="10" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1828 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="Mode" Id="{3f5bb4ec-5f6f-4786-8675-d22cac1f7f97}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Mode
+VAR_INPUT
+	Enable: BOOL;
+	Numero_Etape: REAL;		(*Numéro de l'étape*)
+
+(*Paramètre du tableau*)
+	Numero_Mode: REAL;		(*Numéro du mode*)
+	Tempo_Transition_seconde: REAL;
+	Tempo_Transition_Minute: REAL;
+	Tempo_Transition_Heure : REAL;
+	Cons_Volume_Eau_Douche: REAL;
+	Cons_Volume_Eau_Lavabo: REAL;
+	Cons_Deb_Soufflage: REAL;
+	Cons_Deb_Extraction: REAL;
+	Cons_Temperature_Eau: REAL;
+	Cons_Nbre_Chasse: REAL;
+	Cons_Para_11: REAL;
+	Cons_Para_12: REAL;
+	Cons_Para_13: REAL;
+	Cons_Para_14: REAL;
+	Cons_Para_15: REAL;
+
+END_VAR
+VAR_OUTPUT
+	Cmd_Douche: BOOL;
+	Cmd_Lavabo: BOOL;
+	Cmd_Douchette: BOOL;
+	Cmd_NEP: BOOL;
+	Cmd_Vidange_Douche: BOOL;
+	Cmd_Vidange_Lavabo: BOOL;
+	Cmd_Electrovanne_Douche :BOOL;
+	Cmd_Electrovanne_Lavabo :BOOL;
+	Cmd_Prise: BOOL;
+	Cmd_Verin_WC_GV: BOOL;
+	Cmd_Verin_WC_PV: BOOL;
+
+	Out_Texte_FR: STRING(139);
+	Out_Texte_ENG: STRING(139);
+
+	Out_Cons_Moteur_ByPass: REAL;
+	Out_Cons_V3V_Eau_Mitig: REAL;
+
+	Out_Restant_Seconde: REAL;
+	Out_Restant_Minute: REAL;
+	Out_Restant_Heure: REAL;
+
+	Out_Volume_Eau_Douche: REAL;
+	Out_Volume_Eau_Lavabo: REAL;
+	Out_Debit_Souf: REAL;
+	Out_Debit_Ext: REAL;
+	Out_Temp_Eau: REAL;
+	Out_Para_11: REAL;
+	Out_Para_12: REAL;
+	Out_Para_13: REAL;
+	Out_Para_14: REAL;
+	Out_Para_15: REAL;
+
+	Fin_Action: BOOL;
+	Mode_END: BOOL;
+END_VAR
+VAR
+(****************Autres****************)
+	TON_Secu_Douche: TON;
+	Temp_Secu_Douche: TIME;
+	TON_Secu_Lavabo: TON;
+	Temp_Secu_Lavabo: TIME;
+	Secu_Volume_Douche: BOOL;
+	Securite_Debord_Douche_Debit: BOOL;
+	Secu_Volume_Lavabo: BOOL;
+	Securite_Debord_Lavabo_Debit: BOOL;
+	RS_Fin_Mode_1: RS;
+	RS_Fin_Mode_2: RS;
+	RS_Fin_Mode_4: RS;
+	RS_Fin_Mode_5: RS;
+	RS_Fin_Mode_7: RS;
+	RS_Fin_Mode_18: RS;
+	RS_Fin_Mode_19: RS;
+	RS_Fin_Mode_27: RS;
+
+	Cpt_Chasse_GV: REAL;
+	Restart_Chasse_GV: BOOL;
+	Tp_ChasseEau_GV: TP;
+	Etp_Suiv_ChasseEau_GV: BOOL;
+	R_TRIG_Cpt_Chasse_GV: R_TRIG;
+
+	Cpt_Chasse_PV: REAL;
+	Restart_Chasse_PV: BOOL;
+	Tp_ChasseEau_PV: TP;
+	Etp_Suiv_ChasseEau_PV: BOOL;
+	R_TRIG_Cpt_Chasse_PV: R_TRIG;
+(****************Mode avec temporisation****************)
+	TON_Mode1: TON_V1;
+	Mode_1: BOOL;
+	TON_Mode2: TON_V1;
+	Mode_2: BOOL;
+	TON_Mode4: TON_V1;
+	Mode_4: BOOL;
+	TON_Mode5: TON_V1;
+	Mode_5: BOOL;
+	TON_Mode6: TON_V1;
+	Mode_6: BOOL;
+	TON_Mode7: TON_V1;
+	Mode_7: BOOL;
+	TON_Mode8: TON_V1;
+	Mode_8: BOOL;
+	TON_Mode9: TON_V1;
+	Mode_9: BOOL;
+	TON_Mode10: TON_V1;
+	Mode_10: BOOL;
+	TON_Mode11: TON_V1;
+	Mode_11: BOOL;
+	TON_Mode18: TON_V1;
+	Mode_18: BOOL;
+	TON_Mode19: TON_V1;
+	Mode_19: BOOL;
+	TON_Mode21: TON;
+	Mode_21: BOOL;
+	TON_Mode22: TON;
+	Mode_22: BOOL;
+	TON_Mode26: TON_V1;
+	Mode_26: BOOL;
+	TON_Mode27: TON_V1;
+	Mode_27: BOOL;
+(****************Mode Texte avec validation****************)
+	Mode_3: BOOL;
+	F_TRIG_Texte3: F_TRIG;
+	Mode_23: BOOL;
+	F_TRIG_Texte23: F_TRIG;
+	Mode_30: BOOL;
+	F_TRIG_Texte30: F_TRIG;
+	Mode_16: BOOL;
+	F_TRIG_Texte16: F_TRIG;
+	Mode_17: BOOL;
+	F_TRIG_Texte17: F_TRIG;
+	Mode_24: BOOL;
+	F_TRIG_Texte24: F_TRIG;
+(****************Mode Gestion volume****************)
+	Mode_12 :BOOL;
+	Integr_Vol_Eau_Mode12: Integr_Vol_Eau;
+	R_TRIG_Mode12: R_TRIG;
+	Calcul_Offset_Mode12: REAL;
+	Mode_13 :BOOL;
+	Integr_Vol_Eau_Mode13: Integr_Vol_Eau;
+	R_TRIG_Mode13: R_TRIG;
+	Calcul_Offset_Mode13: REAL;
+	Mode_14 :BOOL;
+	Integr_Vol_Eau_Mode14: Integr_Vol_Eau;
+	R_TRIG_Mode14: R_TRIG;
+	Calcul_Offset_Mode14: REAL;
+	Mode_15 :BOOL;
+	Integr_Vol_Eau_Mode15: Integr_Vol_Eau;
+	R_TRIG_Mode15: R_TRIG;
+	Calcul_Offset_Mode15: REAL;
+(****************Pour enceinte climatique****************)
+	Mode_25: BOOL;
+	F_TRIG_Mode25: F_TRIG;
+	TON_Temp_Ok: TON;
+	Temp_Ok: BOOL;
+	TON_Hygro_Ok: TON;
+	Hygro_Ok: BOOL;
+	Validation_Temp_Hygro: BOOL;
+	TP_RAZ_Mode25: TP;
+	R_TRIG_Valide_TempHygro: R_TRIG;
+	Mode_28: BOOL;
+	F_TRIG_Mode28: F_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[MEMSET(ADR(Out_Texte_FR),0,SIZEOF(Out_Texte_FR));
+MEMSET(ADR(Out_Texte_ENG),0,SIZEOF(Out_Texte_ENG));
+
+(****************************************************************Mode 1 : Mode douche avec vidange transition temporisation****************************************************************)
+Mode_1 := Numero_Mode = 1 AND Enable;
+IF(Mode_1  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET TEMPO';
+		Out_Texte_ENG := 'SHOWER WITH DRAIN AND DELAY';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET TEMPO - OUVERTURE BONDE';
+		Out_Texte_ENG :=  'SHOWER WITH DRAIN AND DELAY - OPENING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_1.Q1)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET TEMPO - FERMETURE DOUCHE';
+		Out_Texte_ENG := 'SHOWER WITH DRAIN AND DELAY - CLOSING SHOWER';
+	END_IF;
+
+	(*Gestion de la commande de la douche et de la vidange*)
+	Cmd_Vidange_Douche := TRUE;
+	IF( RS_Fin_Mode_1.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_Douche := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Douche_Ouv)
+			THEN
+			Cmd_Douche := TRUE;
+			Cmd_Electrovanne_Douche := TRUE;
+			ELSE
+			Cmd_Douche := FALSE;
+			Cmd_Electrovanne_Douche := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion de la commande pause*)
+	IF(Comande_Pause)
+		THEN
+		Cmd_Douche := FALSE;
+		Cmd_Electrovanne_Douche := FALSE;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode1.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode1.Minute_Restant;
+	Out_Restant_Heure := TON_Mode1.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode1(
+Enable:= (Mode_1 AND (E_Vanne_Vidange_Douche_Ouv OR Comande_Pause)),
+Pause:= Comande_Pause,
+In_Cons_Seconde:= Tempo_Transition_Seconde,
+In_Cons_Minute:= Tempo_Transition_Minute,
+In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_1(SET:= TON_Mode1.Q, RESET1:= NOT Mode_1);
+IF( RS_Fin_Mode_1.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(***************************************************************Mode 2 : Mode douche sans vidange transition temporisation****************************************************************)
+Mode_2 := Numero_Mode = 2 AND Enable;
+IF(Mode_2  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ferm)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE FERMEE ET TEMPO';
+		Out_Texte_ENG := 'SHOWER WITHOUT DRAIN AND DELAY';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE FERMEE ET TEMPO - FERMETURE BONDE';
+		Out_Texte_ENG := 'SHOWER WITHOUT DRAIN AND DELAY - CLOSING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_2.Q1)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE FERMEE ET TEMPO - FERMETURE DOUCHE';
+		Out_Texte_ENG := 'SHOWER WITHOUT DRAIN AND DELAY - CLOSING SHOWER';
+	END_IF;
+
+	(*Gestion de la commande de la douche*)
+	Cmd_Vidange_Douche := FALSE;
+	IF( RS_Fin_Mode_2.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_Douche := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Douche_Ferm)
+			THEN
+			Cmd_Douche := TRUE;
+			Cmd_Electrovanne_Douche := TRUE;
+			ELSE
+			Cmd_Douche := FALSE;
+			Cmd_Electrovanne_Douche := FALSE;
+		END_IF;
+	
+		IF(Comande_Pause)
+			THEN
+			Cmd_Douche := FALSE;
+			Cmd_Electrovanne_Douche := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode2.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode2.Minute_Restant;
+	Out_Restant_Heure := TON_Mode2.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode2(
+	Enable:= (Mode_2 AND ((E_Vanne_Vidange_Douche_Ferm) OR Comande_Pause)),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_2(SET:= TON_Mode2.Q, RESET1:= NOT Mode_2);
+IF( RS_Fin_Mode_2.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 3 : Mode douchette avec vidanges****************************************************************)
+Mode_3 := Numero_Mode = 3 AND Enable;
+(*Validation de l'étape suivante*)
+F_TRIG_Texte3(CLK:= (Valid_Texte AND Mode_3));
+IF(Mode_3 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv OR E_Vanne_Alim_Lavabo_Ouv)
+		THEN
+		Out_Texte_FR := 'DOUCHETTE';
+		Out_Texte_ENG := 'HANDSPRAY WITH DRAIN';
+		ELSE
+		Out_Texte_FR := 'DOUCHETTE - OUVERTURE BONDE';
+		Out_Texte_ENG := 'HANDSPRAY WITH DRAIN - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de la douchette avec vidange douche et lavabo*)
+	Cmd_Vidange_Douche := TRUE;
+	Cmd_Vidange_Lavabo := TRUE;
+	IF(E_Vanne_Vidange_Douche_Ouv OR E_Vanne_Alim_Lavabo_Ouv)
+		THEN
+		Cmd_Douchette := TRUE;
+		ELSE
+		Cmd_Douchette := FALSE;
+	END_IF;
+
+	IF(Comande_Pause)
+		THEN
+		Cmd_Douchette := FALSE;
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Souf_Etat_Nettoyage;
+	Out_Debit_Ext 			:= Cons_Deb_Souf_Etat_Nettoyage;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 4 : Mode Lavabo avec vidange transition temporisation****************************************************************)
+Mode_4 := Numero_Mode = 4 AND Enable;
+IF(Mode_4 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE OUVERTE ET TEMPO';
+		Out_Texte_ENG := 'SINK WITH DRAIN AND DELAY';
+		ELSE
+		Out_Texte_FR := 'LAVABO BONDE OUVERTE ET TEMPO - OUVERTURE BONDE';
+		Out_Texte_ENG := 'SINK WITH DRAIN AND DELAY - OPENING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_4.Q1)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE OUVERTE ET TEMPO - FERMETURE LAVABO';
+		Out_Texte_ENG := 'SINK WITH DRAIN AND DELAY - CLOSING SINK';
+	END_IF;
+
+	(*Gestion de la commande du lavabo avec la vidange*)
+	Cmd_Vidange_Lavabo := TRUE;
+	IF( RS_Fin_Mode_4.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_Lavabo := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Lavabo_Ouv)
+			THEN
+			Cmd_Lavabo := TRUE;
+			Cmd_Electrovanne_Lavabo := TRUE;
+			ELSE
+			Cmd_Lavabo := FALSE;
+			Cmd_Electrovanne_Lavabo := FALSE;
+		END_IF;
+	
+		IF(Comande_Pause)
+			THEN
+			Cmd_Lavabo := FALSE;
+			Cmd_Electrovanne_Lavabo := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode4.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode4.Minute_Restant;
+	Out_Restant_Heure := TON_Mode4.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode4(
+	Enable:= (Mode_4 AND (E_Vanne_Vidange_Lavabo_Ouv OR Comande_Pause)),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_4(SET:= TON_Mode4.Q, RESET1:= NOT Mode_4);
+IF( RS_Fin_Mode_4.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 5 : Mode Lavabo sans vidange transition temporisation****************************************************************)
+Mode_5 := Numero_Mode = 5 AND Enable;
+IF(Mode_5 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Lavabo_Ferm)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE FERMEE ET TEMPO';
+		Out_Texte_ENG := 'SINK WITHOUT DRAIN AND DELAY';
+		ELSE
+		Out_Texte_FR := 'LAVABO BONDE FERMEE ET TEMPO - FERMETURE BONDE';
+		Out_Texte_ENG := 'SINK WITHOUT DRAIN AND DELAY - CLOSING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_5.Q1)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE FERMEE ET TEMPO - FERMETURE LAVABO';
+		Out_Texte_ENG := 'SINK WITHOUT DRAIN AND DELAY - CLOSING SINK';
+	END_IF;
+
+	(*Gestion de la commande du lavabo*)
+	Cmd_Vidange_Lavabo := FALSE;
+	IF( RS_Fin_Mode_5.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_Lavabo := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Lavabo_Ferm)
+			THEN
+			Cmd_Lavabo := TRUE;
+			Cmd_Electrovanne_Lavabo := TRUE;
+			ELSE
+			Cmd_Lavabo := FALSE;
+			Cmd_Electrovanne_Lavabo := FALSE;
+		END_IF;
+	
+		IF(Comande_Pause)
+			THEN
+			Cmd_Lavabo := FALSE;
+			Cmd_Electrovanne_Lavabo := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode5.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode5.Minute_Restant;
+	Out_Restant_Heure := TON_Mode5.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode5(
+	Enable:= (Mode_5 AND ((E_Vanne_Vidange_Lavabo_Ferm) OR Comande_Pause)),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_5(SET:= TON_Mode5.Q, RESET1:= NOT Mode_5);
+IF( RS_Fin_Mode_5.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 6 : Mode activation prise****************************************************************)
+Mode_6 := Numero_Mode = 6 AND Enable;
+IF(Mode_6 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	Out_Texte_FR := 'PRISE ELECTRIQUE';
+	Out_Texte_ENG := 'PLUG ACTIVATED';
+
+	(*Gestion de la commande de la prise*)
+	Cmd_Prise := TRUE;
+
+	IF(Comande_Pause)
+		THEN
+		Cmd_Prise := TRUE;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode6.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode6.Minute_Restant;
+	Out_Restant_Heure := TON_Mode6.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douchette := FALSE;
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	//Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode6(
+	Enable:= ((Mode_6 OR Comande_Pause)),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(****************************************************************Mode 7 : Mode  vidanges****************************************************************)
+Mode_7 := Numero_Mode = 7 AND Enable;
+IF(Mode_7 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv OR E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Out_Texte_FR := 'VIDANGE(S)';
+		Out_Texte_ENG := 'DRAIN';
+		ELSE
+		Out_Texte_FR := 'VIDANGE(S) - OUVERTURE BONDE(S)';
+		Out_Texte_ENG := 'DRAIN - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande des vidanges douche et lavabo*)
+	Cmd_Vidange_Douche := TRUE;
+	Cmd_Vidange_Lavabo := TRUE;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode7.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode7.Minute_Restant;
+	Out_Restant_Heure := TON_Mode7.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode7(
+	Enable:= ((Mode_7 AND (E_Vanne_Vidange_Douche_Ouv AND E_Vanne_Vidange_Lavabo_Ouv AND Option_Douche AND Option_Lavabo) (*Option douche + Lavabo*)
+			OR (E_Vanne_Vidange_Douche_Ouv AND Option_Douche AND NOT Option_Lavabo) (*Option douche*)
+			OR (E_Vanne_Vidange_Lavabo_Ouv AND Option_Lavabo AND NOT Option_Douche)) (*Option lavabo*)
+			OR Comande_Pause),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+(*Activation de la fin du mode*)
+RS_Fin_Mode_7(SET:= TON_Mode7.Q, RESET1:= NOT Mode_7);
+IF( RS_Fin_Mode_7.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 8 : Mode Neutre****************************************************************)
+Mode_8 := Numero_Mode = 8 AND Enable;
+IF(Mode_8 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	Out_Texte_FR := 'NEUTRE';
+	Out_Texte_ENG := 'NEUTRAL';
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode8.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode8.Minute_Restant;
+	Out_Restant_Heure := TON_Mode8.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= 0.0;
+	Out_Debit_Ext 			:= 0.0;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	//Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode8(
+	Enable:= (Mode_8 OR Comande_Pause),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(****************************************************************Mode 9 : Mode chasse d'eau Grand volume****************************************************************)
+Mode_9 := Numero_Mode = 9 AND Enable;
+IF(Mode_9 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	Out_Texte_FR := 'CHASSE D EAU GRAND VOLUME';
+	Out_Texte_ENG := 'LARGE VOLUME TOILET FLUSH';
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode9.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode9.Minute_Restant;
+	Out_Restant_Heure := TON_Mode9.Heure_Restant;
+
+	(*Démarrage du premier cycle de chasse avant la temporisation*)
+	R_TRIG_Cpt_Chasse_GV(CLK:= (Mode_9));
+
+	(*Comptage du nombre de cycle x*)
+	IF (TON_Mode9.Q OR R_TRIG_Cpt_Chasse_GV.Q)
+		THEN
+		Cpt_Chasse_GV := Cpt_Chasse_GV + 1;
+		Restart_Chasse_GV := TRUE;
+	END_IF;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode9(
+	Enable:= ((Mode_9 OR Comande_Pause OR Tp_ChasseEau_GV.Q) AND NOT Restart_Chasse_GV),
+	Pause:= Comande_Pause OR Tp_ChasseEau_GV.Q,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+Restart_Chasse_GV := FALSE;
+(*Commande de la chasse d'eau pendant x secondes*)
+Tp_ChasseEau_GV(IN:= TON_Mode9.Q OR R_TRIG_Cpt_Chasse_GV.Q, PT:= T#2s);
+IF (Tp_ChasseEau_GV.Q AND Mode_9) THEN Cmd_Verin_WC_GV := TRUE; ELSE Cmd_Verin_WC_GV := FALSE; END_IF;
+(*FIn du mode quand le nombre de cycle est atteint*)
+IF ((Cpt_Chasse_GV >= Cons_Nbre_Chasse) AND Mode_9 AND NOT Tp_ChasseEau_GV.Q)
+	THEN Etp_Suiv_ChasseEau_GV := TRUE; Cpt_Chasse_GV := 0.0;
+	ELSE Etp_Suiv_ChasseEau_GV := FALSE; END_IF;
+
+(****************************************************************Mode 10 : Mode Depollution****************************************************************)
+Mode_10 := Numero_Mode = 10 AND Enable;
+IF(Mode_10 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	Out_Texte_FR := 'DEPOLLUTION';
+	Out_Texte_ENG := 'DECONTAMINATION';
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode10.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode10.Minute_Restant;
+	Out_Restant_Heure := TON_Mode10.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	IF(Dmd_Post_Ventilation)
+		THEN
+		Out_Debit_Souf 			:= 0.0;
+		Out_Debit_Ext 			:= 0.0;
+		ELSE
+		Out_Debit_Souf 			:= Cons_Deb_Souf_Etat_Depol;
+		Out_Debit_Ext 			:= Cons_Deb_Souf_Etat_Depol;
+	END_IF;
+		Out_Volume_Eau_Douche 	:= Cons_Volume_Eau_Douche;
+		Out_Volume_Eau_Lavabo 	:= Cons_Volume_Eau_Lavabo;
+		Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode10(
+	Enable:= (Mode_10 OR Comande_Pause),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(****************************************************************Mode 11 : Neutre avec bas débit****************************************************************)
+Mode_11 := Numero_Mode = 11 AND Enable;
+IF(Mode_11  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Souf_Bas_Deb_Ouv AND E_Vanne_Ext_Bas_Deb_Ouv)
+		THEN
+		Out_Texte_FR := 'NEUTRE AVEC  BAS DEBIT';
+		Out_Texte_ENG := 'NEUTRAL WITH LOW FLOW';
+		ELSE
+		Out_Texte_FR := 'NEUTRE AVEC  BAS DEBIT - OUVERTURE';
+		Out_Texte_ENG :=  'SHOWER WITH DRAIN AND DELAY - OPENING';
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode11.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode11.Minute_Restant;
+	Out_Restant_Heure := TON_Mode11.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= LIMIT(Cons_Min_Bas_Deb_Ext, Cons_Deb_Soufflage, Cons_Max_Bas_Deb_Ext);
+	Out_Debit_Ext 			:= LIMIT(Cons_Min_Bas_Deb_Ext, Cons_Deb_Extraction, Cons_Max_Bas_Deb_Ext);
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode11(
+	Enable:= (Mode_11 AND ((E_Vanne_Souf_Bas_Deb_Ouv AND E_Vanne_Ext_Bas_Deb_Ouv) OR Comande_Pause)),
+	Pause:= Comande_Pause,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+
+(***************************************************************Mode 12 : Mode douche avec vidange transition volume d'eau****************************************************************)
+Mode_12 := Numero_Mode = 12 AND Enable;
+IF(Mode_12  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET VOLUME';
+		Out_Texte_ENG := 'SHOWER WITH DRAIN AND VOLUME';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET VOLUME - OUVERTURE BONDE';
+		Out_Texte_ENG :=  'SHOWER WITH DRAIN AND VOLUME - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de l'électrovanne et de la vidange*)
+	Cmd_Vidange_Douche := TRUE;
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Cmd_Electrovanne_Douche := TRUE;
+		ELSE
+		Cmd_Electrovanne_Douche := FALSE;
+	END_IF;
+
+	(*Gestion de l'offset*)
+	Calcul_Offset_Mode12 := (Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor  / 60.0) + Garde_Deau_Douche;
+
+	(*Gestion du volume d'eau dans la cabine*)
+	Integr_Vol_Eau_Mode12(Enable:= Cmd_Electrovanne_Douche,
+	Mes_Debit_Eau:= Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor );
+	IF((Integr_Vol_Eau_Mode12.Volume_Eau)  >= (Cons_Volume_Eau_Douche + Trop_Plein_Douche - Garde_Deau_Douche))
+		THEN
+		Cmd_Electrovanne_Douche := FALSE;
+		R_TRIG_Mode12(CLK := TRUE);
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Volume_Eau_Douche := Integr_Vol_Eau_Mode12.Volume_Eau;
+	Out_Volume_Eau_Lavabo := 0.0;
+	Out_Debit_Souf := Cons_Deb_Soufflage;
+	Out_Debit_Ext := Cons_Deb_Extraction;
+	Out_Temp_Eau := Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	ELSE
+	R_TRIG_Mode12(CLK := FALSE);
+	Integr_Vol_Eau_Mode12(Enable:= FALSE,
+	Mes_Debit_Eau:= E_Sonde_Debit_Alim_Douche);
+END_IF;
+
+(***************************************************************Mode 13 : Mode douche sans vidange transition volume d'eau****************************************************************)
+Mode_13 := Numero_Mode = 13 AND Enable;
+IF(Mode_13  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ferm)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE FERMEE ET VOLUME';
+		Out_Texte_ENG := 'SHOWER WITHOUT DRAIN AND VOLUME';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE FERMEE ET VOLUME - FERMETURE BONDE';
+		Out_Texte_ENG := 'SHOWER WITHOUT DRAIN AND VOLUME - CLOSING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de l'électrovanne*)
+	Cmd_Vidange_Douche := FALSE;
+	IF(E_Vanne_Vidange_Douche_Ferm)
+		THEN
+		Cmd_Electrovanne_Douche := TRUE;
+		ELSE
+		Cmd_Electrovanne_Douche := FALSE;
+	END_IF;
+
+	(*Gestion de l'offset*)
+	Calcul_Offset_Mode13 := (Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor  / 60.0) + Garde_Deau_Douche;
+
+	(*Gestion du volume d'eau dans la cabine*)
+	Integr_Vol_Eau_Mode13(Enable:= Cmd_Electrovanne_Douche,
+	Mes_Debit_Eau:= Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor );
+	IF((Integr_Vol_Eau_Mode13.Volume_Eau)  >= (Cons_Volume_Eau_Douche + Trop_Plein_Douche - Garde_Deau_Douche))
+		THEN
+		Cmd_Electrovanne_Douche := FALSE;
+		R_TRIG_Mode13(CLK := TRUE);
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Volume_Eau_Douche := Integr_Vol_Eau_Mode13.Volume_Eau;
+	Out_Volume_Eau_Lavabo := 0.0;
+	Out_Debit_Souf := Cons_Deb_Soufflage;
+	Out_Debit_Ext := Cons_Deb_Extraction;
+	Out_Temp_Eau := Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	ELSE
+	R_TRIG_Mode13(CLK := FALSE);
+	Integr_Vol_Eau_Mode13(Enable:= FALSE,
+	Mes_Debit_Eau:= E_Sonde_Debit_Alim_Douche);
+END_IF;
+
+(***************************************************************Mode 14 : Mode lavabo avec vidange transition volume d'eau****************************************************************)
+Mode_14 := Numero_Mode = 14 AND Enable;
+IF(Mode_14  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE OUVERTE ET VOLUME';
+		Out_Texte_ENG := 'SINK WITH DRAIN ET VOLUME';
+		ELSE
+		Out_Texte_FR := 'LAVABO BONDE OUVERTE ET VOLUME - OUVERTURE BONDE';
+		Out_Texte_ENG := 'SINK WITH DRAIN AND VOLUME - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de l'électrovanne et de la vidange*)
+	Cmd_Vidange_Lavabo := TRUE;
+	IF(E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Cmd_Electrovanne_Lavabo := TRUE;
+		ELSE
+		Cmd_Electrovanne_Lavabo := FALSE;
+	END_IF;
+
+	(*Gestion de l'offset*)
+	Calcul_Offset_Mode14 := (Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor  / 60.0) + Garde_Deau_Lavabo;
+
+	(*Gestion du volume d'eau dans la cabine*)
+	Integr_Vol_Eau_Mode14(Enable:= Cmd_Electrovanne_Lavabo,
+	Mes_Debit_Eau := Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor );
+	IF((Integr_Vol_Eau_Mode14.Volume_Eau)  >= (Cons_Volume_Eau_Lavabo + Trop_Plein_Lavabo - Garde_Deau_Lavabo))
+		THEN
+		Cmd_Electrovanne_Lavabo := FALSE;
+		R_TRIG_Mode14(CLK := TRUE);
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Volume_Eau_Douche := 0.0;
+	Out_Volume_Eau_Lavabo := Integr_Vol_Eau_Mode14.Volume_Eau;
+	Out_Debit_Souf := Cons_Deb_Soufflage;
+	Out_Debit_Ext := Cons_Deb_Extraction;
+	Out_Temp_Eau := Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	ELSE
+	R_TRIG_Mode14(CLK := FALSE);
+	Integr_Vol_Eau_Mode14(Enable:= FALSE,
+	Mes_Debit_Eau := E_Sonde_Debit_Alim_Lavabo);
+END_IF;
+
+(***************************************************************Mode 15 : Mode lavabo sans vidange transition volume d'eau****************************************************************)
+Mode_15 := Numero_Mode = 15 AND Enable;
+IF(Mode_15  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Lavabo_Ferm)
+		THEN
+		Out_Texte_FR := 'LAVABO BONDE FERMEE ET VOLUME';
+		Out_Texte_ENG := 'SINK WITHOUT DRAIN AND VOLUME';
+		ELSE
+		Out_Texte_FR := 'LAVABO BONDE FERMEE ET VOLUME - FERMETURE BONDE';
+		Out_Texte_ENG := 'SINK WITHOUT DRAIN AND VOLUME - CLOSING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de l'électrovanne*)
+	Cmd_Vidange_Lavabo := FALSE;
+	IF(E_Vanne_Vidange_Lavabo_Ferm)
+		THEN
+		Cmd_Electrovanne_Lavabo := TRUE;
+		ELSE
+		Cmd_Electrovanne_Lavabo := FALSE;
+	END_IF;
+
+	(*Gestion de l'offset*)
+	Calcul_Offset_Mode15 := (Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor  / 60.0) + Garde_Deau_Lavabo;
+
+	(*Gestion du volume d'eau dans la cabine*)
+	Integr_Vol_Eau_Mode15(Enable:= Cmd_Electrovanne_Lavabo,
+	Mes_Debit_Eau:= Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor );
+	IF((Integr_Vol_Eau_Mode15.Volume_Eau)  >= (Cons_Volume_Eau_Lavabo + Trop_Plein_Lavabo - Garde_Deau_Lavabo))
+		THEN
+		Cmd_Electrovanne_Lavabo := FALSE;
+		R_TRIG_Mode15(CLK := TRUE);
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Volume_Eau_Douche := 0.0;
+	Out_Volume_Eau_Lavabo := Integr_Vol_Eau_Mode15.Volume_Eau;
+	Out_Debit_Souf := Cons_Deb_Soufflage;
+	Out_Debit_Ext := Cons_Deb_Extraction;
+	Out_Temp_Eau := Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	ELSE
+	R_TRIG_Mode15(CLK := FALSE);
+	Integr_Vol_Eau_Mode15(Enable:= FALSE,
+	Mes_Debit_Eau:= E_Sonde_Debit_Alim_Lavabo);
+END_IF;
+
+(****************************************************************Mode 16 : Mode Douche avec vidange transition BP****************************************************************)
+Mode_16 := Numero_Mode = 16 AND Enable;
+(*Validation de l'étape suivante*)
+F_TRIG_Texte16(CLK:= (Valid_Texte AND Mode_16));
+IF(Mode_16 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET BOUTON';
+		Out_Texte_ENG := 'SHOWER WITH DRAIN WITH BUTTON';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET BOUTON - OUVERTURE BONDE';
+		Out_Texte_ENG := 'SHOWER WITH DRAIN WITH BUTTON - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande de la douche avec vidange douche*)
+	Cmd_Vidange_Douche := TRUE;
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Cmd_Douche := TRUE;
+		IF(Option_Debitmetre_Douche)
+			THEN
+				Cmd_Electrovanne_Douche := TRUE;
+			ELSE
+				Cmd_Electrovanne_Douche := FALSE;
+		END_IF;
+		ELSE
+		Cmd_Douche := FALSE;
+		Cmd_Electrovanne_Douche := FALSE;
+	END_IF;
+
+	IF(Comande_Pause)
+		THEN
+		Cmd_Douche := FALSE;
+		Cmd_Electrovanne_Douche := FALSE;
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 17 : Mode Lavabo avec vidange transition BP****************************************************************)
+Mode_17 := Numero_Mode = 17 AND Enable;
+(*Validation de l'étape suivante*)
+F_TRIG_Texte17(CLK:= (Valid_Texte AND Mode_17));
+IF(Mode_17 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET BOUTON';
+		Out_Texte_ENG := 'SINK WITH DRAIN WITH BUTTON';
+		ELSE
+		Out_Texte_FR := 'DOUCHE BONDE OUVERTE ET BOUTON - OUVERTURE BONDE';
+		Out_Texte_ENG := 'SINK WITH DRAIN WITH BUTTON - OPENING DRAIN';
+	END_IF;
+
+	(*Gestion de la commande du lavabo avec vidange lavabo*)
+	Cmd_Vidange_Lavabo := TRUE;
+	IF(E_Vanne_Vidange_Lavabo_Ouv)
+		THEN
+		Cmd_Lavabo := TRUE;
+		IF(Option_Debitmetre_Lavabo)
+			THEN
+				Cmd_Electrovanne_Lavabo := TRUE;
+			ELSE
+				Cmd_Electrovanne_Lavabo := FALSE;
+		END_IF;
+		ELSE
+		Cmd_Lavabo := FALSE;
+		Cmd_Electrovanne_Lavabo := FALSE;
+	END_IF;
+
+	IF(Comande_Pause)
+		THEN
+		Cmd_Lavabo := FALSE;
+		Cmd_Electrovanne_Lavabo := FALSE;
+	END_IF;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 18 : Mode lavage NEP eau chaude****************************************************************)
+Mode_18 := Numero_Mode = 18 AND Enable;
+IF(Mode_18  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'LAVAGE EAU CHAUDE';
+		Out_Texte_ENG := 'HOT WATER CLEANING';
+		ELSE
+		Out_Texte_FR := 'LAVAGE EAU CHAUDE - OUVERTURE BONDE';
+		Out_Texte_ENG :=  'HOT WATER CLEANING - OPENING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_18.Q1)
+		THEN
+		Out_Texte_FR := 'LAVAGE EAU CHAUDE - ARRET LAVAGE';
+		Out_Texte_ENG := 'HOT WATER CLEANING - STOPING CLEANING';
+	END_IF;
+
+	(*Gestion de la commande de la NEP et de la vidange*)
+	Cmd_Vidange_Douche := TRUE;
+	(*Ouverture à 100% de la vanne 3 voies pour le mode chaud*)
+	Out_Cons_V3V_Eau_Mitig := 100.0;
+	IF( RS_Fin_Mode_18.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_NEP := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Douche_Ouv)
+			THEN
+			Cmd_NEP := TRUE;
+			ELSE
+			Cmd_NEP := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion de la commande pause*)
+	IF(Comande_Pause)
+		THEN
+		Cmd_NEP := FALSE;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode18.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode18.Minute_Restant;
+	Out_Restant_Heure := TON_Mode18.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode18(
+Enable:= (Mode_18 AND ((E_Vanne_Vidange_Douche_Ouv AND E_Vanne_Alim_NEP_Ouv) OR Comande_Pause)),
+Pause:= Comande_Pause,
+In_Cons_Seconde:= Tempo_Transition_Seconde,
+In_Cons_Minute:= Tempo_Transition_Minute,
+In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_18(SET:= TON_Mode18.Q, RESET1:= NOT Mode_18);
+IF( RS_Fin_Mode_18.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 19 : Mode lavage NEP eau froide****************************************************************)
+Mode_19 := Numero_Mode = 19 AND Enable;
+IF(Mode_19  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'LAVAGE EAU FROIDE';
+		Out_Texte_ENG := 'COLD WATER CLEANING';
+		ELSE
+		Out_Texte_FR := 'LAVAGE EAU FROIDE - OUVERTURE BONDE';
+		Out_Texte_ENG :=  'COLD WATER CLEANING - OPENING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_19.Q1)
+		THEN
+		Out_Texte_FR := 'LAVAGE EAU FROIDE - ARRET LAVAGE';
+		Out_Texte_ENG := 'COLD WATER CLEANING - STOPING CLEANING';
+	END_IF;
+
+	(*Gestion de la commande de la NEP et de la vidange*)
+	Cmd_Vidange_Douche := TRUE;
+	(*Ouverture à 0% de la vanne 3 voies pour le mode froid*)
+	Out_Cons_V3V_Eau_Mitig := 0.0;
+	IF( RS_Fin_Mode_19.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_NEP := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Douche_Ouv)
+			THEN
+			Cmd_NEP := TRUE;
+			ELSE
+			Cmd_NEP := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion de la commande pause*)
+	IF(Comande_Pause)
+		THEN
+		Cmd_NEP := FALSE;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode19.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode19.Minute_Restant;
+	Out_Restant_Heure := TON_Mode19.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode19(
+Enable:= (Mode_19 AND ((E_Vanne_Vidange_Douche_Ouv AND E_Vanne_Alim_NEP_Ouv) OR Comande_Pause)),
+Pause:= Comande_Pause,
+In_Cons_Seconde:= Tempo_Transition_Seconde,
+In_Cons_Minute:= Tempo_Transition_Minute,
+In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_19(SET:= TON_Mode19.Q, RESET1:= NOT Mode_19);
+IF( RS_Fin_Mode_19.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 21 : Mode alerte préparateur****************************************************************)
+Mode_21 := Numero_Mode = 21 AND Enable;
+TON_Mode21(IN:=(Mode_21 AND NOT Fin_Action), PT:= T#10s);
+IF(Mode_21)
+	THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'ALERTE PREPARATEUR';
+	Out_Texte_ENG := 'PREPARATOR ALERT';
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 22 : Mode alerte évaluateur****************************************************************)
+Mode_22 := Numero_Mode = 22 AND Enable;
+TON_Mode22(IN:=(Mode_22 AND NOT Fin_Action), PT:= T#10s);
+IF(Mode_22)
+	THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'ALERTE EVALUATEUR';
+	Out_Texte_ENG := 'EVALUATOR ALERT';
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 23 : Mode évaluation (sans moteur bypass)****************************************************************)
+Mode_23 := Numero_Mode = 23 AND Enable;
+F_TRIG_Texte23(CLK:= (Valid_Texte AND Mode_23));
+IF(Mode_23)
+	THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'EVALUATION';
+	Out_Texte_ENG := 'EVALUATION';
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	//Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 24 : Mode évaluation (avec moteur bypass)****************************************************************)
+Mode_24 := Numero_Mode = 24 AND Enable;
+F_TRIG_Texte24(CLK:= (Valid_Texte AND Mode_24));
+IF(Mode_24)
+	THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'EVALUATION AVEC AIR';
+	Out_Texte_ENG := 'EVALUATION WITH AIR FLOW';
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= 0.0;
+	Out_Debit_Ext 			:= 0.0;
+	Out_Temp_Eau 			:= Cons_Temperature_Eau;
+	Out_Cons_Moteur_ByPass := REAL_TO_INT(Cons_Moteur_ByPass);
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	ELSE
+	Out_Cons_Moteur_ByPass := 0;
+END_IF;
+
+(****************************************************************Mode 25 : Mode Mise en condition****************************************************************)
+Mode_25 := Numero_Mode = 25 AND Enable;
+F_TRIG_Mode25(CLK:= ((Valid_Texte OR R_TRIG_Valide_TempHygro.Q) AND Mode_25));
+IF(Mode_25  AND NOT Fin_Action)
+THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'MISE EN CONDITION';
+	Out_Texte_ENG := 'CONDITIONING BOOTH';
+	
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	//Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Para_11				:= Cons_Para_11;
+	Out_Para_12				:= Cons_Para_12;
+END_IF;
+(*Validation de la régulation de la température pour passer en mode 13*)
+(*Température*)
+IF ((S_Ecart_Regul_PID_Temp >= 0.0) AND (S_Ecart_Regul_PID_Temp <= 2.0) AND Mode_25) THEN Temp_Ok := TRUE; ELSE Temp_Ok := FALSE; END_IF;
+TON_Temp_Ok(IN:= Temp_Ok, PT:= T#15M);
+(*Hygrométrie*)
+IF ((S_Ecart_Regul_PID_Hygro >= 0.0) AND (S_Ecart_Regul_PID_Hygro <= 5.0) AND Mode_25) THEN Hygro_Ok := TRUE; ELSE Hygro_Ok := FALSE; END_IF;
+TON_Hygro_Ok(IN:= Hygro_Ok, PT:= T#15M);
+Validation_Temp_Hygro := TON_Temp_Ok.Q AND TON_Hygro_Ok.Q;
+R_TRIG_Valide_TempHygro(CLK:= Validation_Temp_Hygro);
+
+(*TP_RAZ_Mode25(IN:= Validation_Temp_Hygro, PT:= T#1s);
+Validation_Temp_Hygro := (SEL(Validation_Temp_Hygro, Validation_Temp_Hygro, FALSE) OR TP_RAZ_Mode25.Q);*)
+
+(****************************************************************Mode 26 : Mode chasse d'eau petit volume****************************************************************)
+Mode_26 := Numero_Mode = 26 AND Enable;
+IF(Mode_26 AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	Out_Texte_FR := 'CHASSE D EAU PETIT VOLUME';
+	Out_Texte_ENG := 'SMALL VOLUME TOILET FLUSH';
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode26.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode26.Minute_Restant;
+	Out_Restant_Heure := TON_Mode26.Heure_Restant;
+
+	(*Démarrage du premier cycle de chasse avant la temporisation*)
+	R_TRIG_Cpt_Chasse_PV(CLK:= (Mode_26));
+
+	(*Comptage du nombre de cycle x*)
+	IF (TON_Mode26.Q OR R_TRIG_Cpt_Chasse_PV.Q)
+		THEN
+		Cpt_Chasse_PV := Cpt_Chasse_PV + 1;
+		Restart_Chasse_PV := TRUE;
+	END_IF;
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode26(
+	Enable:= ((Mode_26 OR Comande_Pause OR Tp_ChasseEau_PV.Q) AND NOT Restart_Chasse_PV),
+	Pause:= Comande_Pause OR Tp_ChasseEau_PV.Q,
+	In_Cons_Seconde:= Tempo_Transition_Seconde,
+	In_Cons_Minute:= Tempo_Transition_Minute,
+	In_Cons_Heure:= Tempo_Transition_Heure);
+Restart_Chasse_PV := FALSE;
+(*Commande de la chasse d'eau pendant x secondes*)
+Tp_ChasseEau_PV(IN:= TON_Mode26.Q OR R_TRIG_Cpt_Chasse_PV.Q, PT:= T#2s);
+IF (Tp_ChasseEau_PV.Q AND Mode_26) THEN Cmd_Verin_WC_PV := TRUE; ELSE Cmd_Verin_WC_PV := FALSE; END_IF;
+(*FIn du mode quand le nombre de cycle est atteint*)
+IF ((Cpt_Chasse_PV >= Cons_Nbre_Chasse) AND Mode_26 AND NOT Tp_ChasseEau_PV.Q)
+	THEN Etp_Suiv_ChasseEau_PV := TRUE; Cpt_Chasse_PV := 0.0;
+	ELSE Etp_Suiv_ChasseEau_PV := FALSE; END_IF;
+	
+(****************************************************************Mode 27 : Mode lavage NEP ****************************************************************)
+Mode_27 := Numero_Mode = 27 AND Enable;
+IF(Mode_27  AND NOT Fin_Action)
+	THEN
+	(*Gestion du texte*)
+	IF(E_Vanne_Vidange_Douche_Ouv)
+		THEN
+		Out_Texte_FR := 'LAVAGE NEP';
+		Out_Texte_ENG := 'CLEANING';
+		ELSE
+		Out_Texte_FR := 'LAVAGE NEP - OUVERTURE BONDE';
+		Out_Texte_ENG :=  'CLEANING - OPENING DRAIN';
+	END_IF;
+	IF(RS_Fin_Mode_27.Q1)
+		THEN
+		Out_Texte_FR := 'LAVAGE NEP - ARRET LAVAGE';
+		Out_Texte_ENG := 'CLEANING - STOPING CLEANING';
+	END_IF;
+
+	(*Gestion de la commande de la NEP et de la vidange*)
+	Cmd_Vidange_Douche := TRUE;
+	
+	IF( RS_Fin_Mode_27.Q1)
+		THEN
+		Out_Restant_Seconde := 0.0;
+		Out_Restant_Minute := 0.0;
+		Out_Restant_Heure := 0.0;
+		Cmd_NEP := FALSE;
+		ELSE
+		IF(E_Vanne_Vidange_Douche_Ouv)
+			THEN
+			Cmd_NEP := TRUE;
+			ELSE
+			Cmd_NEP := FALSE;
+		END_IF;
+	END_IF;
+
+	(*Gestion de la commande pause*)
+	IF(Comande_Pause)
+		THEN
+		Cmd_NEP := FALSE;
+	END_IF;
+
+	(*Gestion du décompte de la temporisation du mode*)
+	Out_Restant_Seconde := TON_Mode27.Seconde_Restant;
+	Out_Restant_Minute := TON_Mode27.Minute_Restant;
+	Out_Restant_Heure := TON_Mode27.Heure_Restant;
+
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	(*Out_Temp_Eau 			:= Cons_Temperature_Eau;*)
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+(*************************************Temporisation du décompte du mode*************************************)
+TON_Mode27(
+Enable:= (Mode_27 AND ((E_Vanne_Vidange_Douche_Ouv AND E_Vanne_Alim_NEP_Ouv) OR Comande_Pause)),
+Pause:= Comande_Pause,
+In_Cons_Seconde:= Tempo_Transition_Seconde,
+In_Cons_Minute:= Tempo_Transition_Minute,
+In_Cons_Heure:= Tempo_Transition_Heure);
+
+(*Activation de la fin du mode*)
+RS_Fin_Mode_27(SET:= TON_Mode27.Q, RESET1:= NOT Mode_27);
+IF( RS_Fin_Mode_27.Q1)
+	THEN
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+END_IF;
+
+(****************************************************************Mode 28 : Mode en fonctionnement****************************************************************)
+Mode_28 := Numero_Mode = 28 AND Enable;
+F_TRIG_Mode28(CLK:= (Valid_Texte AND Mode_28));
+IF(Mode_28 AND NOT Fin_Action)
+THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := 'CABINE EN CONDITION';
+	Out_Texte_ENG := 'BOOTH IN CONDITION';
+	
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	//Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+	
+	(*Gestion des lectures consignes du mode*)
+	Out_Debit_Souf 			:= Cons_Deb_Soufflage;
+	Out_Debit_Ext 			:= Cons_Deb_Extraction;
+	Out_Para_11				:= Cons_Para_11;
+	Out_Para_12				:= Cons_Para_12;
+END_IF;
+
+(****************************************************************Mode 30 à 59 : Mode Texte 1 à 30****************************************************************)
+Mode_30 := ((Numero_Mode >= 30) AND (Numero_Mode <= 59)) AND Enable;
+F_TRIG_Texte30(CLK:= (Valid_Texte AND Mode_30));
+IF(Mode_30)
+THEN
+	(*Gestion du texte du mode*)
+	Out_Texte_FR := Tab_Mode_Texte[1, (REAL_TO_INT(Numero_Mode))];
+	Out_Texte_ENG := Tab_Mode_Texte[2, (REAL_TO_INT(Numero_Mode))];
+
+	(*Initialisation des actionneurs non utilisés*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+END_IF;
+
+(****************************************************************Mode 99 : Mode END****************************************************************)
+IF(Numero_Mode = 99 AND Enable)
+	THEN
+	Mode_END := TRUE;
+	ELSE
+	Mode_END := FALSE;
+END_IF;
+
+(****************************************************************Sécurité de débordement de la douche****************************************************************)
+(*Sécurité douche version temporisation pour le mode 2*)
+Temp_Secu_Douche := TO_TIME((TO_DINT(Temp_Secu_Debord_Douche + 5)) * 1000);
+Temp_Secu_Debord_Douche_Int := (Temp_Secu_Debord_Douche); (*Pour lecture IHM*)
+TON_Secu_Douche(IN:= ((Mode_2 AND (Cmd_Douche OR Cmd_Electrovanne_Douche)) AND NOT Cmd_Vidange_Douche), PT:= Temp_Secu_Douche);
+IF(TON_Secu_Douche.Q)
+	THEN
+	Securite_Debord_Douche := TRUE;
+	Cmd_Douche := FALSE;
+	ELSE
+	Securite_Debord_Douche := FALSE;
+END_IF;
+
+(*Sécurité lavabo version temporisation pour le mode 5*)
+Temp_Secu_Lavabo := TO_TIME((TO_DINT(Temp_Secu_Debord_Lavabo + 5)) * 1000);
+Temp_Secu_Debord_Lavabo_Int := (Temp_Secu_Debord_Lavabo); (*Pour lecture IHM*)
+TON_Secu_Lavabo(IN:= ((Mode_5 AND (Cmd_Lavabo OR Cmd_Electrovanne_Lavabo)) AND NOT Cmd_Vidange_Lavabo) , PT:= Temp_Secu_Lavabo);
+IF(TON_Secu_Lavabo.Q)
+	THEN
+	Securite_Debord_Lavabo := TRUE;
+	Cmd_Lavabo := FALSE;
+	ELSE
+	Securite_Debord_Lavabo := FALSE;
+END_IF;
+
+(*Sécurité douche version débitmétre pour le mode 13*)
+Secu_Volume_Douche := (((Cmd_Electrovanne_Douche AND Option_Debitmetre_Douche) AND NOT Cmd_Vidange_Douche)
+						AND (Out_Volume_Eau_Douche > Volume_Secu_Debord_Douche + 0.5));
+IF(Mode_13 AND Secu_Volume_Douche)
+	THEN
+	Securite_Debord_Douche_Debit := TRUE;
+	Cmd_Electrovanne_Douche := FALSE;
+	ELSE
+	Securite_Debord_Douche_Debit := FALSE;
+END_IF;
+
+(*Sécurité lavabo version débitmétre pour le mode 15*)
+Secu_Volume_Lavabo := (((Cmd_Electrovanne_Lavabo AND Option_Debitmetre_Lavabo) AND NOT Cmd_Vidange_Lavabo)
+						AND (Out_Volume_Eau_Lavabo > Volume_Secu_Debord_Lavabo + 0.5));
+IF(Mode_15 AND Secu_Volume_Lavabo)
+	THEN
+	Securite_Debord_Lavabo_Debit := TRUE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	ELSE
+	Securite_Debord_Lavabo_Debit := FALSE;
+END_IF;
+
+(****************************************************************Gestion initialisation des variables****************************************************************)
+IF(Numero_Mode = 0 OR Numero_Etape = 0)
+	THEN
+	(*Initialisation des actionneurs*)
+	Cmd_Douche := FALSE;
+	Cmd_Lavabo := FALSE;
+	Cmd_Douchette := FALSE;
+	Cmd_NEP := FALSE;
+	Cmd_Vidange_Douche := FALSE;
+	Cmd_Vidange_Lavabo := FALSE;
+	Cmd_Electrovanne_Douche := FALSE;
+	Cmd_Electrovanne_Lavabo := FALSE;
+	Cmd_Prise := FALSE;
+	Cmd_Verin_WC_GV := FALSE;
+	Cmd_Verin_WC_PV := FALSE;
+
+	Out_Restant_Seconde := 0.0;
+	Out_Restant_Minute := 0.0;
+	Out_Restant_Heure := 0.0;
+
+	Out_Volume_Eau_Douche := 0.0;
+	Out_Volume_Eau_Lavabo := 0.0;
+	Out_Debit_Souf := 0.0;
+	Out_Debit_Ext := 0.0;
+	Out_Temp_Eau := 0.0;
+	Out_Cons_V3V_Eau_Mitig := 0.0;
+	Cpt_Chasse_GV := 0.0;
+	Restart_Chasse_GV := FALSE;
+	Etp_Suiv_ChasseEau_GV := FALSE;
+	Cpt_Chasse_PV := 0.0;
+	Restart_Chasse_PV := FALSE;
+	Etp_Suiv_ChasseEau_PV := FALSE;
+	Out_Para_11 := 0.0;
+	Out_Para_12 := 0.0;
+	Out_Para_13 := 0.0;
+	Out_Para_14 := 0.0;
+	Out_Para_15 := 0.0;
+
+	Out_Texte_FR := '';
+	Out_Texte_ENG := '';
+
+	R_TRIG_Mode12(CLK := FALSE);
+	Integr_Vol_Eau_Mode12(Enable:= FALSE);
+	R_TRIG_Mode13(CLK := FALSE);
+	Integr_Vol_Eau_Mode13(Enable:= FALSE);
+	R_TRIG_Mode14(CLK := FALSE);
+	Integr_Vol_Eau_Mode14(Enable:= FALSE);
+	R_TRIG_Mode15(CLK := FALSE);
+	Integr_Vol_Eau_Mode15(Enable:= FALSE);
+	R_TRIG_Cpt_Chasse_GV(CLK:= FALSE);
+	R_TRIG_Cpt_Chasse_PV(CLK:= FALSE);
+
+	TON_Temp_Ok(IN:= FALSE);
+	TON_Hygro_Ok(IN:= FALSE);
+	TP_RAZ_Mode25(IN:= FALSE);
+	F_TRIG_Mode25(CLK:= FALSE);
+	F_TRIG_Mode28(CLK:= FALSE);
+	Temp_Ok := FALSE;
+	Hygro_Ok := FALSE;
+	Validation_Temp_Hygro := FALSE;
+END_IF;
+
+(****************************************************************Gestion du passage entre chaque mode****************************************************************)
+				(*Mode temporisé*)
+Fin_Action := 		(RS_Fin_Mode_1.Q1 AND (E_Vanne_Alim_Douche_Ferm OR Option_Debitmetre_Douche)) (*Mode douche avec vidange*)
+				OR ((RS_Fin_Mode_2.Q1 AND (E_Vanne_Alim_Douche_Ferm OR Option_Debitmetre_Douche) OR Securite_Debord_Douche)) (*Mode douche sans vidange*)
+				OR (RS_Fin_Mode_4.Q1 AND (E_Vanne_Alim_Lavabo_Ferm OR Option_Debitmetre_Lavabo)) (*Mode lavabo avec vidange*)
+				OR ((RS_Fin_Mode_5.Q1 AND (E_Vanne_Alim_Lavabo_Ferm OR Option_Debitmetre_Lavabo) OR Securite_Debord_Lavabo)) (*Mode lavabo sans vidange*)
+				OR (RS_Fin_Mode_7.Q1) (*Mode vidange*)
+				OR (RS_Fin_Mode_18.Q1 AND E_Vanne_Alim_NEP_Ferm) (*Mode lavage eau chaude*)
+				OR (RS_Fin_Mode_19.Q1 AND E_Vanne_Alim_NEP_Ferm) (*Mode lavage eau froide*)
+				OR (RS_Fin_Mode_27.Q1 AND E_Vanne_Alim_NEP_Ferm) (*Mode lavage*)
+				(*Mode Gestion volume*)
+				OR R_TRIG_Mode12.Q OR R_TRIG_Mode13.Q OR R_TRIG_Mode14.Q OR R_TRIG_Mode15.Q
+				 (*Gestion des modes sans validation*)
+				OR TON_Mode8.Q OR TON_Mode22.Q OR TON_Mode21.Q OR TON_Mode10.Q OR TON_Mode6.Q OR TON_Mode11.Q
+				(*Mode texte*)
+				OR F_TRIG_Texte3.Q OR F_TRIG_Texte23.Q OR F_TRIG_Texte30.Q OR F_TRIG_Texte16.Q OR F_TRIG_Texte17.Q OR F_TRIG_Texte24.Q
+				(*Mode chasse d'eau*)
+				OR Etp_Suiv_ChasseEau_GV OR Etp_Suiv_ChasseEau_PV
+				(*Mode pour enceintes climatiques*)
+				OR F_TRIG_Mode25.Q OR F_TRIG_Mode28.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="Mode">
+      <LineId Id="1985" Count="1268" />
+      <LineId Id="3898" Count="0" />
+      <LineId Id="3900" Count="10" />
+      <LineId Id="3899" Count="0" />
+      <LineId Id="4422" Count="0" />
+      <LineId Id="4424" Count="1" />
+      <LineId Id="4423" Count="0" />
+      <LineId Id="4426" Count="1" />
+      <LineId Id="3254" Count="61" />
+      <LineId Id="3628" Count="0" />
+      <LineId Id="3630" Count="20" />
+      <LineId Id="3711" Count="0" />
+      <LineId Id="3653" Count="56" />
+      <LineId Id="3629" Count="0" />
+      <LineId Id="3888" Count="8" />
+      <LineId Id="3911" Count="0" />
+      <LineId Id="3913" Count="10" />
+      <LineId Id="3912" Count="0" />
+      <LineId Id="4428" Count="0" />
+      <LineId Id="4430" Count="3" />
+      <LineId Id="4429" Count="0" />
+      <LineId Id="3887" Count="0" />
+      <LineId Id="3316" Count="30" />
+      <LineId Id="4255" Count="0" />
+      <LineId Id="3348" Count="10" />
+      <LineId Id="4256" Count="0" />
+      <LineId Id="3360" Count="63" />
+      <LineId Id="4435" Count="3" />
+      <LineId Id="4434" Count="0" />
+      <LineId Id="3424" Count="18" />
+      <LineId Id="4089" Count="0" />
+      <LineId Id="3443" Count="13" />
+      <LineId Id="3712" Count="0" />
+      <LineId Id="3457" Count="8" />
+      <LineId Id="1667" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

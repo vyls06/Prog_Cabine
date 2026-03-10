@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="l_Cons_LED" Id="{d3759834-674d-463c-b8af-5130e21acfc2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM l_Cons_LED
+VAR
+	Pulse_Defaut_Led_Cabine:BOOL;
+	BLINK_Defaut: BLINK;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*********************************Gestion du clignotement lors d'un défaut**********************************)
+BLINK_Defaut(ENABLE:= (Mode_Cabine_Defaut), TIMELOW:= T#2s, TIMEHIGH:= T#2s, OUT=> Pulse_Defaut_Led_Cabine);
+
+(******************************************Mode Maintenance (orange)*****************************************)
+IF(Mode_Maintenance)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= 254;
+	Cde_Vert_Cabine			:= 127;
+	Cde_Bleu_Cabine			:= 0;
+	Cde_Blanc_Cabine		:= 0;
+END_IF;
+
+(*******************************************Mode cabine libre (Vert)********************************************)
+IF(Mode_Cabine_Libre)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= WORD_TO_INT(Cde_Rouge_Cabine_Libre);
+	Cde_Vert_Cabine			:= WORD_TO_INT(Cde_Vert_Cabine_Libre);
+	Cde_Bleu_Cabine			:= WORD_TO_INT(Cde_Bleu_Cabine_Libre);
+	Cde_Blanc_Cabine		:= WORD_TO_INT(Cde_Blanc_Cabine_Libre);
+END_IF;
+
+(*****************************************Mode cabine manuel (Bleu)******************************************)
+IF(Mode_Cabine_Manuel)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= 0;
+	Cde_Vert_Cabine			:= 0;
+	Cde_Bleu_Cabine			:= 254;
+	Cde_Blanc_Cabine		:= 0;
+END_IF;
+
+(***************************Mode cabine automatique (Utilisateur)***************************)
+IF(Mode_Cabine_Automatique)
+	THEN
+	Cde_Dimmer_Cabine		:= Cons_Dimmer_Auto;
+	Cde_Rouge_Cabine		:= Cons_Appl_Rouge_Auto;
+	Cde_Vert_Cabine			:= Cons_Appl_Vert_Auto;
+	Cde_Bleu_Cabine			:= Cons_Appl_Bleu_Auto;
+	Cde_Blanc_Cabine		:= Cons_Appl_Blanc_Auto;
+END_IF;
+
+(**************************************Mode cabine dépollution (Rouge)***************************************)
+IF(Mode_Cabine_Depollution)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= 254;
+	Cde_Vert_Cabine			:= 0;
+	Cde_Bleu_Cabine			:= 0;
+	Cde_Blanc_Cabine		:= 0;
+END_IF;
+
+(**************************************Mode cabine en défaut (rouge clignotant)*******************************)
+IF(Mode_Cabine_Defaut AND Pulse_Defaut_Led_Cabine)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= 254;
+	Cde_Vert_Cabine			:= 0;
+	Cde_Bleu_Cabine			:= 0;
+	Cde_Blanc_Cabine		:= 0;
+END_IF;
+IF(Mode_Cabine_Defaut AND NOT Pulse_Defaut_Led_Cabine)
+	THEN
+	Cde_Dimmer_Cabine		:= 0;
+	Cde_Rouge_Cabine		:= 0;
+	Cde_Vert_Cabine			:= 0;
+	Cde_Bleu_Cabine			:= 0;
+	Cde_Blanc_Cabine		:= 0;
+END_IF;
+
+(*************************************************Mode éclairage (blanc)******************************************)
+IF(Mode_Cabine_Eclairage OR Mode_Cabine_Nettoyage)
+	THEN
+	Cde_Dimmer_Cabine		:= 254;
+	Cde_Rouge_Cabine		:= 254;
+	Cde_Vert_Cabine			:= 254;
+	Cde_Bleu_Cabine			:= 254;
+	Cde_Blanc_Cabine		:= 254;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="l_Cons_LED">
+      <LineId Id="5" Count="79" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

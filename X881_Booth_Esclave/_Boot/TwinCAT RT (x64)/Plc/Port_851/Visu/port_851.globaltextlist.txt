@@ -1,0 +1,29 @@
+Id;Default;En
+238;   Maintenance;
+243;  Maintenance;
+348;%.2f;
+938;%d;
+52;%s;
+174;Admin;
+619;Connexion;
+553;Consigne Offset : %5.1f °C;
+747;Depol;
+255;Depollution;Decontamination
+279;Fermer;
+112;Hygro : %5.1f %Hr;
+771;Hygrométrie cabine : %5.1f %Hr;
+621;Log off;
+154;Log on;
+542;Maintenance;
+218;Mesure corrigée : %5.1f °C;
+59;Mesures;
+160;Mode MANUEL;
+977;Mode manuel;
+923;None;
+565;Operator;
+216;Push To$R$Nchange$R$NState;
+964;Recettes;
+877;Retour;
+369;Service;
+80;Temp : %5.1f °C;
+858;Température cabine : %5.1f °C;

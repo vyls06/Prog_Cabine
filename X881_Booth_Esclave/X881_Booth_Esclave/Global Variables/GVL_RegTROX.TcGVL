@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_RegTROX" Id="{40d2dfc6-0807-49a4-89c0-475d2280da08}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL PERSISTENT
+	//Déclaration des tables de structure des sondes
+	TAB_Sonde_RegSouf_GD_FCVT01			AT %MW8070:Objet_Sonde;
+	TAB_Sonde_RegSouf_PD_FCVT02			AT %MW8082:Objet_Sonde;
+	TAB_Sonde_RegSouf_Cabine_FCVT03		AT %MW8094:Objet_Sonde;
+	TAB_Sonde_RegBypass_FCVT04			AT %MW8106:Objet_Sonde;
+	TAB_Sonde_RegSouf_CabGD_FCVT05		AT %MW8118:Objet_Sonde;
+	TAB_Sonde_RegSouf_CabPD_FCVT06		AT %MW8130:Objet_Sonde;
+	TAB_Sonde_RegRep_FCVT07				AT %MW8142:Objet_Sonde;
+	
+	//Déclaration des tables de structure des registres
+	TAB_Reg_RegSouf_GD_FCVT01			AT %MW8154:Objet_Registre;
+	TAB_Reg_RegSouf_PD_FCVT02			AT %MW8166:Objet_Registre;
+	TAB_Reg_RegSouf_Cabine_FCVT03		AT %MW8178:Objet_Registre;
+	TAB_Reg_RegBypass_FCVT04			AT %MW8190:Objet_Registre;
+	TAB_Reg_RegSouf_CabGD_FCVT05		AT %MW8202:Objet_Registre;	
+	TAB_Reg_RegSouf_CabPD_FCVT06		AT %MW8214:Objet_Registre;
+	TAB_Reg_RegRep_FCVT07				AT %MW8226:Objet_Registre;
+
+	//Consigne ades seuils de débit des registres
+	ConsMax_FCVT01						AT %MW9092:REAL;
+	ConsMin_FCVT01						AT %MW9094:REAL;
+	
+	ConsMax_FCVT02						AT %MW9096:REAL;
+	ConsMin_FCVT02						AT %MW9098:REAL;
+	
+	ConsMax_FCVT03						AT %MW9100:REAL;
+	ConsMin_FCVT03						AT %MW9102:REAL;
+	
+	ConsMax_FCVT04						AT %MW9104:REAL;
+	ConsMin_FCVT04						AT %MW9106:REAL;
+	
+	ConsMax_FCVT05						AT %MW9108:REAL;
+	ConsMin_FCVT05						AT %MW9110:REAL;
+	
+	ConsMax_FCVT06						AT %MW9112:REAL;
+	ConsMin_FCVT06						AT %MW9114:REAL;
+	
+	ConsMax_FCVT07						AT %MW9116:REAL;
+	ConsMin_FCVT07						AT %MW9118:REAL;
+END_VAR
+
+VAR_GLOBAL	
+	//Déclaration des objets de mesure de débit
+	MES_RegSouf_GD_FCVT01				:Objet_Sonde_V1;
+	MES_RegSouf_PD_FCVT02				:Objet_Sonde_V1;
+	MES_RegSouf_Cabine_FCVT03			:Objet_Sonde_V1;
+	MES_RegBypass_FCVT04				:Objet_Sonde_V1;
+	MES_RegSouf_CabGD_FCVT05			:Objet_Sonde_V1;
+	MES_RegSouf_CabPD_FCVT06			:Objet_Sonde_V1;
+	MES_RegRep_FCVT07					:Objet_Sonde_V1;
+	
+	//Déclaration des objets des registres
+	RegSouf_GD_FCVT01					:Objet_Registre_V1;
+	RegSouf_PD_FCVT02					:Objet_Registre_V1;
+	RegSouf_Cabine_FCVT03				:Objet_Registre_V1;
+	RegBypass_FCVT04					:Objet_Registre_V1;
+	RegSouf_CabGD_FCVT05				:Objet_Registre_V1;
+	RegSouf_CabPD_FCVT06				:Objet_Registre_V1;
+	RegRep_FCVT07						:Objet_Registre_V1;
+	
+	//Déclaration des objets de la communication des registres
+	Com_RegSouf_GD_FCVT01				:Com485_RegTROX;
+	Com_RegSouf_PD_FCVT02				:Com485_RegTROX;
+	Com_RegSouf_Cabine_FCVT03			:Com485_RegTROX;
+	Com_Reg_Bypass_FCVT04				:Com485_RegTROX;
+	Com_RegSouf_CabGD_FCVT05			:Com485_RegTROX;
+	Com_RegSouf_CabPD_FCVT06			:Com485_RegTROX;
+	Com_RegRep_FCVT07					:Com485_RegTROX;
+	
+	//Consigne appliquée de débit sur les registres
+	ConsAppliDeb_RegSouf_GD_FCVT01		AT %MW9078:REAL;
+	ConsAppliDeb_RegSouf_PD_FCVT02		AT %MW9080:REAL;
+	ConsAppliDeb_RegSouf_Cabine_FCVT03	AT %MW9082:REAL;
+	ConsAppliDeb_Reg_Bypass_FCVT04		AT %MW9084:REAL;
+	ConsAppliDeb_RegSouf_CabGD_FCVT05	AT %MW9086:REAL;
+	ConsAppliDeb_RegSouf_CabPD_FCVT06	AT %MW9088:REAL;
+	ConsAppliDeb_RegRep_FCVT07			AT %MW9090:REAL;
+	
+	//Gestion des défauts
+	RegSouf_GD_FCVT01_DefCom			:BOOL;
+	RegSouf_GD_FCVT01_Def_DiscordDeb	:BOOL;
+	
+	RegSouf_PD_FCVT02_DefCom			:BOOL;
+	RegSouf_PD_FCVT02_Def_DiscordDeb	:BOOL;
+	
+	RegSouf_Cabine_FCVT03_DefCom		:BOOL;
+	RegSouf_Cabine_FCVT03_Def_DiscordDeb:BOOL;
+	
+	Reg_Bypass_FCVT04_DefCom			:BOOL;
+	Reg_Bypass_FCVT04_Def_DiscordDeb	:BOOL;
+	
+	RegSouf_CabGD_FCVT05_DefCom			:BOOL;
+	RegSouf_CabGD_FCVT05_Def_DiscordDeb	:BOOL;
+	
+	RegSouf_CabPD_FCVT06_DefCom			:BOOL;
+	RegSouf_CabPD_FCVT06_Def_DiscordDeb	:BOOL;
+	
+	RegRep_FCVT07_DefCom				:BOOL;
+	RegRep_FCVT07_Def_DiscordDeb		:BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

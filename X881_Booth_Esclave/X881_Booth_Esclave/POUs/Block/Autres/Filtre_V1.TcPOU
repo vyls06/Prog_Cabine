@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Filtre_V1" Id="{0df3148f-614b-40de-a71d-e1a83cfaded1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Filtre_V1
+VAR_INPUT
+	Mesure: REAL;
+	Temps_Echantillonage: TIME;
+END_VAR
+VAR_OUTPUT
+	Mesure_Echantillonner: REAL;
+END_VAR
+VAR
+	Diff_Mesure: REAL;
+	Incremment_Mesure: REAL;
+	Incremment_Temps: TIME;
+	DINT_Temps_Echantillonage: DINT;
+	DINT_Incremment_Temps: DINT;
+	TON_1: TON;
+	TP_1: TP;
+	R_TRIG_1: R_TRIG;
+	TON_2: TON;
+	TP_2: TP;
+	R_TRIG_2: R_TRIG;
+	Temps_Ecoule: TIME;
+	Temps_Incremment: TIME;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Fonction échantillonnage ***************)
+TON_1(IN := NOT(TP_1.Q), PT := Temps_Echantillonage);
+Temps_Ecoule := TON_1.ET;
+TP_1(IN := TON_1.Q , PT := T#500ms);
+
+(* Calcule de l'éccart entre la mesure et mesure T-1 ***************)
+R_TRIG_1(CLK := TP_1.Q);
+IF R_TRIG_1.Q
+	THEN
+		Diff_Mesure := Mesure - Mesure_Echantillonner;
+END_IF;
+
+(* Détermination de l'incremment ***************) 
+Incremment_Mesure := Diff_Mesure / 10.0;
+
+(* Détermination du temps entre chaque incremmentation ***************) 
+DINT_Temps_Echantillonage := TIME_TO_DINT(Temps_Echantillonage) / 1000;
+DINT_Incremment_Temps := DINT_Temps_Echantillonage;
+Incremment_Temps := DINT_TO_TIME(DINT_Incremment_Temps * 1000);
+
+(* Echantillonage de la mesure ***************) 
+(* Temporisation d'incrementation *)
+TON_2(IN := NOT(TP_2.Q), PT := Incremment_Temps);
+Temps_Incremment := TON_2.ET;
+TP_2(IN := TON_2.Q , PT := T#100ms);
+
+R_TRIG_2(CLK := TP_2.Q);
+IF R_TRIG_2.Q
+	THEN
+		Mesure_Echantillonner := Mesure_Echantillonner + Incremment_Mesure;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Filtre_V1">
+      <LineId Id="23" Count="30" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

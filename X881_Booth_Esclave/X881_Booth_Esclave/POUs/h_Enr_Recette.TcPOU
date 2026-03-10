@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="h_Enr_Recette" Id="{9fb0a012-2593-4be7-b55e-1c77c01c4015}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM h_Enr_Recette
+VAR
+	i: INT;
+	F_TRIG_Reset: F_TRIG;
+	j: INT;
+	R_TRIG_Enr: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[R_TRIG_Enr(CLK:= Cmd_Enr_Recette AND NOT Mode_Cabine_Automatique AND NOT Validation_Recette_Auto AND NOT Start_Recette_Mode_Auto);
+IF(R_TRIG_Enr.Q)
+	THEN
+	(*Transfert dans la recette à enregistrée dans le tableau recette automatique*)
+	FOR i := 1 TO 29 BY 1 DO
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 1] := Tab_Enr_Recette[0, i, 1];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 2] := Tab_Enr_Recette[0, i, 2];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 3] := Tab_Enr_Recette[0, i, 3];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 4] := Tab_Enr_Recette[0, i, 4];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 5] := Tab_Enr_Recette[0, i, 5];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 6] := Tab_Enr_Recette[0, i, 6];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 7] := Tab_Enr_Recette[0, i, 7];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 8] := Tab_Enr_Recette[0, i, 8];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 9] := Tab_Enr_Recette[0, i, 9];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 10] := Tab_Enr_Recette[0, i, 10];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 11] := Tab_Enr_Recette[0, i, 11];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 12] := Tab_Enr_Recette[0, i, 12];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 13] := Tab_Enr_Recette[0, i, 13];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 14] := Tab_Enr_Recette[0, i, 14];
+		Tab_Recette_Auto[Numero_Recette_Sel, i, 15] := Tab_Enr_Recette[0, i, 15];
+	END_FOR;
+END_IF;
+(*Reset du tableau sur le front descendant*)
+F_TRIG_Reset(CLK:= Cmd_Enr_Recette);
+IF(F_TRIG_Reset.Q)
+	THEN
+	FOR j := 1 TO 29 BY 1 DO
+		Tab_Enr_Recette[0, j, 1] := 0;
+		Tab_Enr_Recette[0, j, 2] := 0;
+		Tab_Enr_Recette[0, j, 3] := 0;
+		Tab_Enr_Recette[0, j, 4] := 0;
+		Tab_Enr_Recette[0, j, 5] := 0;
+		Tab_Enr_Recette[0, j, 6] := 0;
+		Tab_Enr_Recette[0, j, 7] := 0;
+		Tab_Enr_Recette[0, j, 8] := 0;
+		Tab_Enr_Recette[0, j, 9] := 0;
+		Tab_Enr_Recette[0, j, 10] := 0;
+		Tab_Enr_Recette[0, j, 11] := 0;
+		Tab_Enr_Recette[0, j, 12] := 0;
+		Tab_Enr_Recette[0, j, 13] := 0;
+		Tab_Enr_Recette[0, j, 14] := 0;
+		Tab_Enr_Recette[0, j, 15] := 0;
+	END_FOR;
+	ELSE
+	j := 1;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="h_Enr_Recette">
+      <LineId Id="59" Count="44" />
+      <LineId Id="52" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,173 @@
+Id;Default;En
+238;   Maintenance;   Maintenance
+661;%.0f;%.0f
+215;%.0f ;%.0f
+648;%.0f /;%.0f /
+1018;%.0f heure(s);%.0f hour(s)
+1709;%.0f hrs;%.0f hrs
+1058;%.0f min;%.0f min
+528;%.0f minute(s);%.0f minute(s)
+48;%.0f sec;%.0f sec
+13;%.0f seconde(s);%.0f second(s)
+513;%.0f Vol/h;%.0f Vol/h
+748;%.0f °C;%.0f °C
+97;%.1f L;%.1f L
+943;%d;%d
+52;%s;%s
+160;- Douchette alimentée;- Handspray supply
+584;- Vidange(s) ouverte(s);- Drain(s) opened
+174;Admin;Admin
+997;Air : %.0f Vol/h;Air : %0f Vol/h
+56;Air : %.1f Vol/h;Air : %.1f Vol/h
+636;ALERTE NIVEAU HAUT BAC A DOUCHE;HIGH WATER LEVEL IN SHOWER TRAY ALERT
+1381;Appli : %.0f %%;Apply : %.0f %%
+1516;Appli : %.0f m3/h;Apply : %.0f m3/h
+10;APPUYER SUR LA DOUCHETTE POUR L$'UTILISER !;- PUSH ON HANDSPRAY TO USE IT !
+305;APPUYER SUR LE BOUTON REARMEMENT;PUSH THE REARM BUTTON TO CONTINUE
+1147;Blow Temp : %.1f °C;
+882;Bow Temp : %.1f °C;
+292;Cabine;Booth
+491;CABINE EN PAUSE;BOOTH ON PAUSE
+99;Chasse WC gros volume;Large-volume flush toilet
+158;Chasse WC petit volume;Low-volume flush toilet
+772;Chasse(s) restante(s) :;Remaining flush(s) :
+31;CHWS Temp : %.1f °C;
+1236;COM Registre soufflage;Supply air damper com.
+230;Connecté;Connected
+619;Connexion;Connection
+912;Cons. Hygro. : %.1f %%Hr;Set. Hygro. : %.1f %%Hr
+225;Cons. Temp. : %.1f °C;Set. Temp. : %.1f °C
+1388;Cons. Temp. eau : %.1f °C;Set. Temp. Wat. : %.1f °C
+117;Consigne : %.0f Vol/h;Setpoint : %.0f Vol/h
+340;Consigne : %.1f L;Setpoint : %.1f L
+894;Consigne(s) : %.1f L;Setpoint : %.1f L
+886;Contact;Contact
+458;Debit Max : %d Vol/h;Flow max : %d Vol/h
+195;Debit Min : %d Vol/h;Flow min : %d Vol/h
+734;Deconnecté;Disconnected
+821;Deconnexion;Deconnection
+255;Depollution;Decontamination
+975;Douchette;Hand Spray
+617;Drain douche;Shower drain
+469;Drain lavabo;Sink drain
+784;Débit : %.1f l/min;Flow : %.1f l/min
+1121;Débit : %d m3/h;Flow : %d m3/h
+1233;Défaut différentiel prise électrique;Differential fault in electrical outlet
+478;Défaut discordance débit d’eau de la douche;Mismatch in shower water flow rate
+799;Défaut discordance débit d’eau du lavabo;Mismatch in sink water flow rate
+633;Défaut discordance prise de courant;Power plug supply mismatch
+514;Défaut prise forcée manuellement;Manually forced power plug
+1537;Défaut prise lors de l’ouverture porte;Door open during a power plug cycle
+801;Défaut temperature de soufflage CTA climatique trop haute;Faulty supply air temperature AHU climatic too high
+586;Détail de la recette sélectionnée;Details of the selected protocol
+1156;Eau : %.1f °C;Wat : %.1f °C
+1560;Ecr paramètres;Wrt Settings
+844;Electrovanne douche;Shower solenoid valve
+684;Electrovanne lavabo;Sink solenoid valve
+415;Etape : %d /;Step : %d /
+318;Etats des E/S TOR;States of I/O
+1440;ETOR10_Hygrostat_Souf_CT;
+1495;ETOR11_Pressostat_Secu;
+1076;ETOR12_Thermostat_Secu;
+493;ETOR13_Marche_BatElec_CTA;
+273;ETOR1_Fdc_Va_Vid_Lavabo_Ouv;
+949;ETOR2_Fdc_Va_Vid_Lavabo_Ferm;
+1342;ETOR3_Info_Ma_Prise;
+829;ETOR3_Reg_BasDebit_Souf_Ouv;
+1108;ETOR4_RegBasDebit_Souf_Ferm;
+1346;ETOR4_Service_Humi_CTA;
+275;ETOR5_Def_Humi_CTA;
+82;ETOR5_Reg_BasDebit_Ext_Ouv;
+892;ETOR6_Info_Contact_Porte;
+1455;ETOR6_Reg_BasDebit_Ext_Ferm;
+926;ETOR7_Def_MotRep_Souf_CTA;
+1403;ETOR7_Info_Ma_Prise;
+258;ETOR8_Def_MotSouf_Souf_CTA;
+401;ETOR8_Info_Contact_Porte;
+1031;ETOR9_Def_Alim_BatElec_CTA;
+665;EXTRACTION;EXHAUST
+566;Extraction;Exhaust
+164;Extraction bas débit;Low- flow exhaust
+519;FDC :;LS
+168;FERM;CLS
+279;Fermer;Closed
+779;Fermé;Close
+773;FORCE;FORCE
+223;Heure(s) :;Hour(s) :
+670;Heure(s) restante(s) :;Remaining hour(s) :
+936;Hygro : %.1f %Hr;Hygro : %.1f %Hr
+126;LED;LED
+1475;Mail : Smartbooth@osmose06.com;Mail : Smartbooth@osmose06.com
+581;Mesure : %.0f %%;Measure : %.0f %%
+434;Mesure : %.0f m3/h;Measure : %.0f m3/h
+1096;Mesure : %.0f Vol/h;Measure : %.0f Vol/h
+887;Minute(s) :;Minute(s) :
+797;Minute(s) restante(s) :;Remaining minute(s) :
+354;MODE;MODE
+885;MODE DEPOLLUTION EN COURS;DECONTAMINATION IN PROGRESS
+346;Mode maintenance;Maintenance mode
+977;Mode manuel;Manual mode
+976;MODE MANUEL EN COURS;MANUAL MODE IN PROGRESS
+920;MODE NETTOYAGE EN COURS;CLEANING IN PROGRES
+1032;Mode N°%.0f;Mode N°%.0f
+718;Mode N°%d;Mode N°%d
+432;MODE RECETTE EN COURS;PROTOCOL IN PROGRES
+224;Moteur bas débit;Low-flow motor
+685;Moteur reprise;Exhaust motor
+789;Moteur soufflage;Supply motor
+878;Nbre chasse :;Nber Flush :
+911;Next;Next
+923;None;None
+41;NORMAL;NORMAL
+585;Off;Off
+88;On;On
+565;Operator;Operator
+157;OUT;OUT
+860;OUV;OPN
+395;Ouvert;Open
+1034;Ouverture : %.0f %%;Opening : %.0f %%
+113;Pause;Pause
+649;Phone : +33 (0)4 93 77 79 74;Phone : +33 (0)4 93 77 79 74
+1155;Position : %.0f %%;Position : %.0f %%
+1383;Press : %.0f Pa;Press : %.0f Pa
+1439;Press Ext : %.0f Pa;Ext Press : %.0f Pa
+690;Press Souf : %.0f Pa;Spl Press : %.0f Pa
+934;Prise électrique;Electrical outlet
+687;Re-Start;Re-Start
+964;Recettes;Protocols
+877;Retour;Return
+891;Réarmement;Rearm
+712;Réarmer;Rearm
+573;Seconde(s) :;Second(s) :
+688;Seconde(s) restante(s) :;Remaining second(s) :
+369;Service;Service
+924;SOUFFLAGE;SUPPLY
+69;Soufflage;Supply
+249;Soufflage bas débit;Low-Flow supply
+626;Start;Start
+246;Stop;Stop
+1079;STOR1_Cmd_EV_Alim_Lavabo;
+1180;STOR1_Cmd_Va_Vid_Lavabo;
+747;STOR2_Cmd_EV_Alim_Lavabo;
+284;STOR2_Cmd_Va_Vid_Lavabo;
+4;STOR3_Cmd_Ma_Prise;
+1277;STOR3_Cmd_Reg_BasDebit_Souf;
+837;STOR4_Cmd_BatElec_CTA;
+1340;STOR4_Cmd_Reg_BasDebit_Ext;
+867;STOR5_Cmd_Ma_Prise;
+488;Suivant;Next
+196;Temp : %.1f °C;Temp : %.1f °C
+525;Temp. eau :;Temp. Wat. :
+319;Validation;Validation
+544;Vanne Bat. froide;Cold Bat. valve
+435;Vanne douche;Shower valve
+548;Vanne eau mitigée;Mixed water valve
+763;Vanne lavabo;Sink valve
+506;Vanne NEP;CIP valve
+543;Ventilation :;Ventilation :
+307;Veuillez sélectionner une recette;Please select a protocol
+1396;Vit Max : %.0f %%;Max spd : %.0f %%
+1419;Vit Min : %.0f %%;Min spd : %.0f %%
+108;Vitesse : %.0f %%;Speed : %.0f %%
+363;Vol. d$'eau :;Wat. vol. :
+735;Volume d$'eau : %.1f L;Water Flow : %.1f L

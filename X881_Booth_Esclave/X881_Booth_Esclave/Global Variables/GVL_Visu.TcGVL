@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <GVL Name="GVL_Visu" Id="{3572212d-db37-49bd-8253-5c30d788ce78}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	//Les différents état et/ou information de l'écran
+	Page_En_Cours 	:STRING;
+	Connexion	 	:WSTRING;
+	Etat_Connexion	:BOOL;
+	Language	 	:STRING;
+	
+	//Gestion du mouvement des flèches dans la page dépollution
+	Arrow_Up		:INT;
+	Arrow_Down		:INT;
+	
+	//Etat pour l'objet moteur
+	Etat_On			:BOOL;
+	Etat_Off		:BOOL;
+	Etat_Fault		:BOOL;
+	
+	On_Off_Anim		:BOOL;				//Variable qui me permet d'animé mes images
+	On_Off_Anim_Rap	:BOOL;				//Variable qui me permet d'animé mes images en plus rapide
+	On_Off_Anim_Lent:BOOL;				//Variable qui me permet d'animé mes images en plus lent
+	Nom_Cabine_FR	:STRING;			//Variable qui stock le nom de la cabine en français
+	Nom_Cabine_EN	:STRING;			//Variable qui stock le nom de la cabine en anglais
+	
+	//Variable de couleur de la cabine en fonction de son état
+	Couleur_Cabine 	:DWORD;
+	Couleur_Cabine2	: DWORD;
+	
+	//Gestion de la page Nettoyage
+	Cmd_Img_Clean1	:BOOL;
+	Cmd_Img_Clean2	:BOOL;
+	Cmd_Img_Clean3	:BOOL;
+	Cmd_Img_Clean4	:BOOL;
+	Cmd_Img_Clean5	:BOOL;
+	Cmd_Img_Clean6	:BOOL;
+	Cmd_Img_Clean7	:BOOL;
+	
+	//Gestion de la page Sel_Recettes
+	Visu_Btn_Start	:BOOL;
+	
+	//Gestion de la page Recet_EnCours	
+	Visu_VolEau_Douche	:BOOL;
+	Visu_VolEau_Lavabo	:BOOL;
+	Visu_ChasseEau		:BOOL;
+	Visu_Mes_Debit_Eau	:REAL;
+	Visu_Debit_Eau		:BOOL;
+	Visu_Tempo			:BOOL;
+	
+	//Gestion de la page Mode_Manu
+	Visu_VolEau_Douche_Manu	:BOOL;
+	Visu_VolEau_Lavabo_Manu	:BOOL;
+	Visu_ChasseEau_Manu		:BOOL;
+	Visu_Mes_Debit_Eau_Manu	:REAL;
+	Visu_Debit_Eau_Manu		:BOOL;
+	Manu_Choix_Numero_Mode_INT	:INT;
+	Manu_i					:INT;
+	Manu_j					:INT;
+	Affich_Debit_Eau_Manu	:BOOL;
+	Affich_Debit_Eau_Manu_Douche	:BOOL;
+	Affich_Debit_Eau_Manu_Lavabo	:BOOL;
+	Affich_ChasseEau_Manu	:BOOL;
+	Visu_Temp_Manu			:BOOL;
+	
+	//gestion des alarmes
+	Affichage_PopUp_HightLevel	:BOOL;
+	Affichage_PopUp_Alarm		:BOOL;
+END_VAR
+
+VAR_GLOBAL PERSISTENT
+	Numero_Cabine	:INT;					//Ecrire le numéro de la cabine
+	Tab_Choix_Modes	:ARRAY[0..32] OF BOOL;	//Tableau de choix des modes
+	Min_Mode_Manu	:INT;					//Paramétrer le numéro du premier mode à TRUE
+	Max_Mode_Manu	:INT;					//Paramétrer le denrier mode à TRUE
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

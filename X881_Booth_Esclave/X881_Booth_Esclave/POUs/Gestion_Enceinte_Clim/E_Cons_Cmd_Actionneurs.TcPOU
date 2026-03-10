@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="E_Cons_Cmd_Actionneurs" Id="{029e4594-0a5a-47cc-8072-81db5ec877a0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM E_Cons_Cmd_Actionneurs
+VAR
+	Calcul1: REAL;
+	mini_humi: REAL;
+	SCL_Real_Decal_Deshu: SCL_Real;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de la vanne 3 voies de régulation*)
+Calcul1 := S_Cmd_Regul_PID_Temp_Froid + S_Cmd_Regul_PID_Deshu;
+Cons_Actionneur_V3V_Froid_CTA := LIMIT(Cons_Mini_V3V_Bat_Froid, Calcul1, Cons_Maxi_V3V_Bat_Froid);
+
+(**********************************************Décallage de la vitesse du moteur si demande de déshu importante*)
+SCL_Real_Decal_Deshu(
+	IN_REAL:= S_Cmd_Regul_PID_Deshu,
+	LIM_MIN_IN_REAL:= Mini_Decal_PID_Deshu,
+	LIM_MAX_IN_REAL:= Maxi_Decal_PID_Deshu,
+	LIM_MIN_OUT_REAL:= Mini_Decal_Deshu,
+	LIM_MAX_OUT_REAL:= Maxi_Decal_Deshu);
+Lect_Cons_VitMot_Cabine_MEnCond := Lect_Cons_VitMot_Cabine_MEnCond;
+
+(**********************************************Gestion du moteur 1 de soufflage de la CTA*)
+IF (Dmd_Post_Ventilation OR Mode_Depollution_cycle1)
+	THEN
+	Cons_Actionneur_Mot1_Souf_CTA := 100.0;
+	ELSE
+	Cons_Actionneur_Mot1_Souf_CTA := LIMIT(0.0, Lect_Cons_VitMot_Cabine_MEnCond, Cons_Maxi_Mot1_CTA);
+END_IF;
+
+(**********************************************Gestion du moteur 2 de soufflage de la CTA*)
+IF (Dmd_Post_Ventilation OR Mode_Depollution_cycle1)
+	THEN
+	Cons_Actionneur_Mot2_Souf_CTA := 100.0;
+	ELSE
+Cons_Actionneur_Mot2_Souf_CTA := LIMIT(0.0, Lect_Cons_VitMot_Cabine_MEnCond, Cons_Maxi_Mot2_CTA);
+END_IF;
+
+(**********************************************Gestion de la batterie electrique*)
+(*Consigne ANA*)
+Cons_Actionneur_BatElec_CTA := LIMIT(0.0, S_Cmd_Regul_PID_Temp_Chaud, Cons_Maxi_Bat_Electrique);
+(*Commande TOR*)
+IF (NOT Defaut_Sonde_Temp_Cabine AND NOT Defaut_Alim_BatElec_CTA AND RS_MEnCond.Q1)
+THEN Cmd_Actionneur_BatElec_CTA := TRUE;	ELSE Cmd_Actionneur_BatElec_CTA := FALSE;	END_IF;
+
+(**********************************************Gestion de l'humidificateur*)
+(*Consigne ANA*)
+Cons_Actionneur_Humi_CTA := LIMIT(mini_humi, S_Cmd_Regul_PID_Humi,Cons_Maxi_Humidificateur);
+
+(*Commande TOR*)
+IF (RS_MEnCond.Q1 AND NOT Defaut_General_Humi AND E_Pressostat_Secu)
+THEN Cmd_Actionneur_Humi_CTA := TRUE;	ELSE Cmd_Actionneur_Humi_CTA := FALSE;	END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="E_Cons_Cmd_Actionneurs">
+      <LineId Id="6" Count="42" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <GlobalTextList Name="GlobalTextList" Id="{2755b34d-9822-4ac0-97ab-20c783c3e2bd}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="GlobalTextListObject">
+          <l n="TextList" t="ArrayList" cet="TextListRow">
+            <o>
+              <v n="TextID">"238"</v>
+              <v n="TextDefault">"   Maintenance"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>   Maintenance</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"661"</v>
+              <v n="TextDefault">"%.0f"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"215"</v>
+              <v n="TextDefault">"%.0f "</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"648"</v>
+              <v n="TextDefault">"%.0f /"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f /</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1018"</v>
+              <v n="TextDefault">"%.0f heure(s)"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f hour(s)</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1709"</v>
+              <v n="TextDefault">"%.0f hrs"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f hrs</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1058"</v>
+              <v n="TextDefault">"%.0f min"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f min</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"528"</v>
+              <v n="TextDefault">"%.0f minute(s)"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f minute(s)</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"48"</v>
+              <v n="TextDefault">"%.0f sec"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f sec</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"13"</v>
+              <v n="TextDefault">"%.0f seconde(s)"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f second(s)</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"513"</v>
+              <v n="TextDefault">"%.0f Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"748"</v>
+              <v n="TextDefault">"%.0f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.0f °C</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"97"</v>
+              <v n="TextDefault">"%.1f L"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%.1f L</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"943"</v>
+              <v n="TextDefault">"%d"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%d</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"52"</v>
+              <v n="TextDefault">"%s"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>%s</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"160"</v>
+              <v n="TextDefault">"- Douchette alimentée"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>- Handspray supply</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"584"</v>
+              <v n="TextDefault">"- Vidange(s) ouverte(s)"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>- Drain(s) opened</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"174"</v>
+              <v n="TextDefault">"Admin"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Admin</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"997"</v>
+              <v n="TextDefault">"Air : %.0f Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Air : %0f Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"56"</v>
+              <v n="TextDefault">"Air : %.1f Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Air : %.1f Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"636"</v>
+              <v n="TextDefault">"ALERTE NIVEAU HAUT BAC A DOUCHE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>HIGH WATER LEVEL IN SHOWER TRAY ALERT</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1381"</v>
+              <v n="TextDefault">"Appli : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Apply : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1516"</v>
+              <v n="TextDefault">"Appli : %.0f m3/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Apply : %.0f m3/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"10"</v>
+              <v n="TextDefault">"APPUYER SUR LA DOUCHETTE POUR L'UTILISER !"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>- PUSH ON HANDSPRAY TO USE IT !</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"305"</v>
+              <v n="TextDefault">"APPUYER SUR LE BOUTON REARMEMENT"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PUSH THE REARM BUTTON TO CONTINUE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1147"</v>
+              <v n="TextDefault">"Blow Temp : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"882"</v>
+              <v n="TextDefault">"Bow Temp : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"292"</v>
+              <v n="TextDefault">"Cabine"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Booth</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"491"</v>
+              <v n="TextDefault">"CABINE EN PAUSE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>BOOTH ON PAUSE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"99"</v>
+              <v n="TextDefault">"Chasse WC gros volume"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Large-volume flush toilet</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"158"</v>
+              <v n="TextDefault">"Chasse WC petit volume"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Low-volume flush toilet</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"772"</v>
+              <v n="TextDefault">"Chasse(s) restante(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Remaining flush(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"31"</v>
+              <v n="TextDefault">"CHWS Temp : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1236"</v>
+              <v n="TextDefault">"COM Registre soufflage"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Supply air damper com.</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"230"</v>
+              <v n="TextDefault">"Connecté"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Connected</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"619"</v>
+              <v n="TextDefault">"Connexion"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Connection</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"912"</v>
+              <v n="TextDefault">"Cons. Hygro. : %.1f %%Hr"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Set. Hygro. : %.1f %%Hr</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"225"</v>
+              <v n="TextDefault">"Cons. Temp. : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Set. Temp. : %.1f °C</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1388"</v>
+              <v n="TextDefault">"Cons. Temp. eau : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Set. Temp. Wat. : %.1f °C</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"117"</v>
+              <v n="TextDefault">"Consigne : %.0f Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Setpoint : %.0f Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"340"</v>
+              <v n="TextDefault">"Consigne : %.1f L"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Setpoint : %.1f L</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"894"</v>
+              <v n="TextDefault">"Consigne(s) : %.1f L"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Setpoint : %.1f L</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"886"</v>
+              <v n="TextDefault">"Contact"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Contact</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"458"</v>
+              <v n="TextDefault">"Debit Max : %d Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Flow max : %d Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"195"</v>
+              <v n="TextDefault">"Debit Min : %d Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Flow min : %d Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"734"</v>
+              <v n="TextDefault">"Deconnecté"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Disconnected</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"821"</v>
+              <v n="TextDefault">"Deconnexion"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Deconnection</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"255"</v>
+              <v n="TextDefault">"Depollution"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Decontamination</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"975"</v>
+              <v n="TextDefault">"Douchette"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Hand Spray</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"617"</v>
+              <v n="TextDefault">"Drain douche"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Shower drain</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"469"</v>
+              <v n="TextDefault">"Drain lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Sink drain</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"784"</v>
+              <v n="TextDefault">"Débit : %.1f l/min"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Flow : %.1f l/min</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1121"</v>
+              <v n="TextDefault">"Débit : %d m3/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Flow : %d m3/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1233"</v>
+              <v n="TextDefault">"Défaut différentiel prise électrique"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Differential fault in electrical outlet</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"478"</v>
+              <v n="TextDefault">"Défaut discordance débit d’eau de la douche"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mismatch in shower water flow rate</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"799"</v>
+              <v n="TextDefault">"Défaut discordance débit d’eau du lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mismatch in sink water flow rate</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"633"</v>
+              <v n="TextDefault">"Défaut discordance prise de courant"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Power plug supply mismatch</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"514"</v>
+              <v n="TextDefault">"Défaut prise forcée manuellement"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Manually forced power plug</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1537"</v>
+              <v n="TextDefault">"Défaut prise lors de l’ouverture porte"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Door open during a power plug cycle</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"801"</v>
+              <v n="TextDefault">"Défaut temperature de soufflage CTA climatique trop haute"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Faulty supply air temperature AHU climatic too high</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"586"</v>
+              <v n="TextDefault">"Détail de la recette sélectionnée"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Details of the selected protocol</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1156"</v>
+              <v n="TextDefault">"Eau : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Wat : %.1f °C</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1560"</v>
+              <v n="TextDefault">"Ecr paramètres"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Wrt Settings</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"844"</v>
+              <v n="TextDefault">"Electrovanne douche"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Shower solenoid valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"684"</v>
+              <v n="TextDefault">"Electrovanne lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Sink solenoid valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"415"</v>
+              <v n="TextDefault">"Etape : %d /"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Step : %d /</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"318"</v>
+              <v n="TextDefault">"Etats des E/S TOR"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>States of I/O</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1440"</v>
+              <v n="TextDefault">"ETOR10_Hygrostat_Souf_CT"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1495"</v>
+              <v n="TextDefault">"ETOR11_Pressostat_Secu"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1076"</v>
+              <v n="TextDefault">"ETOR12_Thermostat_Secu"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"493"</v>
+              <v n="TextDefault">"ETOR13_Marche_BatElec_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"273"</v>
+              <v n="TextDefault">"ETOR1_Fdc_Va_Vid_Lavabo_Ouv"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"949"</v>
+              <v n="TextDefault">"ETOR2_Fdc_Va_Vid_Lavabo_Ferm"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1342"</v>
+              <v n="TextDefault">"ETOR3_Info_Ma_Prise"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"829"</v>
+              <v n="TextDefault">"ETOR3_Reg_BasDebit_Souf_Ouv"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1108"</v>
+              <v n="TextDefault">"ETOR4_RegBasDebit_Souf_Ferm"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1346"</v>
+              <v n="TextDefault">"ETOR4_Service_Humi_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"275"</v>
+              <v n="TextDefault">"ETOR5_Def_Humi_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"82"</v>
+              <v n="TextDefault">"ETOR5_Reg_BasDebit_Ext_Ouv"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"892"</v>
+              <v n="TextDefault">"ETOR6_Info_Contact_Porte"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1455"</v>
+              <v n="TextDefault">"ETOR6_Reg_BasDebit_Ext_Ferm"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"926"</v>
+              <v n="TextDefault">"ETOR7_Def_MotRep_Souf_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1403"</v>
+              <v n="TextDefault">"ETOR7_Info_Ma_Prise"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"258"</v>
+              <v n="TextDefault">"ETOR8_Def_MotSouf_Souf_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"401"</v>
+              <v n="TextDefault">"ETOR8_Info_Contact_Porte"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1031"</v>
+              <v n="TextDefault">"ETOR9_Def_Alim_BatElec_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"665"</v>
+              <v n="TextDefault">"EXTRACTION"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>EXHAUST</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"566"</v>
+              <v n="TextDefault">"Extraction"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Exhaust</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"164"</v>
+              <v n="TextDefault">"Extraction bas débit"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Low- flow exhaust</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"519"</v>
+              <v n="TextDefault">"FDC :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>LS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"168"</v>
+              <v n="TextDefault">"FERM"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CLS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"279"</v>
+              <v n="TextDefault">"Fermer"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Closed</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"779"</v>
+              <v n="TextDefault">"Fermé"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Close</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"773"</v>
+              <v n="TextDefault">"FORCE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>FORCE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"223"</v>
+              <v n="TextDefault">"Heure(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Hour(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"670"</v>
+              <v n="TextDefault">"Heure(s) restante(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Remaining hour(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"936"</v>
+              <v n="TextDefault">"Hygro : %.1f %Hr"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Hygro : %.1f %Hr</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"126"</v>
+              <v n="TextDefault">"LED"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>LED</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1475"</v>
+              <v n="TextDefault">"Mail : Smartbooth@osmose06.com"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mail : Smartbooth@osmose06.com</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"581"</v>
+              <v n="TextDefault">"Mesure : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Measure : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"434"</v>
+              <v n="TextDefault">"Mesure : %.0f m3/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Measure : %.0f m3/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1096"</v>
+              <v n="TextDefault">"Mesure : %.0f Vol/h"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Measure : %.0f Vol/h</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"887"</v>
+              <v n="TextDefault">"Minute(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Minute(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"797"</v>
+              <v n="TextDefault">"Minute(s) restante(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Remaining minute(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"354"</v>
+              <v n="TextDefault">"MODE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>MODE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"885"</v>
+              <v n="TextDefault">"MODE DEPOLLUTION EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>DECONTAMINATION IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"346"</v>
+              <v n="TextDefault">"Mode maintenance"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Maintenance mode</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"977"</v>
+              <v n="TextDefault">"Mode manuel"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Manual mode</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"976"</v>
+              <v n="TextDefault">"MODE MANUEL EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>MANUAL MODE IN PROGRESS</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"920"</v>
+              <v n="TextDefault">"MODE NETTOYAGE EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CLEANING IN PROGRES</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1032"</v>
+              <v n="TextDefault">"Mode N°%.0f"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mode N°%.0f</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"718"</v>
+              <v n="TextDefault">"Mode N°%d"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mode N°%d</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"432"</v>
+              <v n="TextDefault">"MODE RECETTE EN COURS"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PROTOCOL IN PROGRES</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"224"</v>
+              <v n="TextDefault">"Moteur bas débit"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Low-flow motor</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"685"</v>
+              <v n="TextDefault">"Moteur reprise"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Exhaust motor</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"789"</v>
+              <v n="TextDefault">"Moteur soufflage"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Supply motor</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"878"</v>
+              <v n="TextDefault">"Nbre chasse :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Nber Flush :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"911"</v>
+              <v n="TextDefault">"Next"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Next</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"923"</v>
+              <v n="TextDefault">"None"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>None</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"41"</v>
+              <v n="TextDefault">"NORMAL"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>NORMAL</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"585"</v>
+              <v n="TextDefault">"Off"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Off</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"88"</v>
+              <v n="TextDefault">"On"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>On</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"565"</v>
+              <v n="TextDefault">"Operator"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Operator</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"157"</v>
+              <v n="TextDefault">"OUT"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>OUT</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"860"</v>
+              <v n="TextDefault">"OUV"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>OPN</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"395"</v>
+              <v n="TextDefault">"Ouvert"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Open</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1034"</v>
+              <v n="TextDefault">"Ouverture : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Opening : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"113"</v>
+              <v n="TextDefault">"Pause"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Pause</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"649"</v>
+              <v n="TextDefault">"Phone : +33 (0)4 93 77 79 74"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Phone : +33 (0)4 93 77 79 74</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1155"</v>
+              <v n="TextDefault">"Position : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Position : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1383"</v>
+              <v n="TextDefault">"Press : %.0f Pa"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Press : %.0f Pa</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1439"</v>
+              <v n="TextDefault">"Press Ext : %.0f Pa"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Ext Press : %.0f Pa</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"690"</v>
+              <v n="TextDefault">"Press Souf : %.0f Pa"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Spl Press : %.0f Pa</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"934"</v>
+              <v n="TextDefault">"Prise électrique"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Electrical outlet</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"687"</v>
+              <v n="TextDefault">"Re-Start"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Re-Start</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"964"</v>
+              <v n="TextDefault">"Recettes"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Protocols</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"877"</v>
+              <v n="TextDefault">"Retour"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Return</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"891"</v>
+              <v n="TextDefault">"Réarmement"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Rearm</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"712"</v>
+              <v n="TextDefault">"Réarmer"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Rearm</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"573"</v>
+              <v n="TextDefault">"Seconde(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Second(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"688"</v>
+              <v n="TextDefault">"Seconde(s) restante(s) :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Remaining second(s) :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"369"</v>
+              <v n="TextDefault">"Service"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Service</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"924"</v>
+              <v n="TextDefault">"SOUFFLAGE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SUPPLY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"69"</v>
+              <v n="TextDefault">"Soufflage"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Supply</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"249"</v>
+              <v n="TextDefault">"Soufflage bas débit"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Low-Flow supply</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"626"</v>
+              <v n="TextDefault">"Start"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Start</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"246"</v>
+              <v n="TextDefault">"Stop"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Stop</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1079"</v>
+              <v n="TextDefault">"STOR1_Cmd_EV_Alim_Lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1180"</v>
+              <v n="TextDefault">"STOR1_Cmd_Va_Vid_Lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"747"</v>
+              <v n="TextDefault">"STOR2_Cmd_EV_Alim_Lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"284"</v>
+              <v n="TextDefault">"STOR2_Cmd_Va_Vid_Lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"4"</v>
+              <v n="TextDefault">"STOR3_Cmd_Ma_Prise"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1277"</v>
+              <v n="TextDefault">"STOR3_Cmd_Reg_BasDebit_Souf"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"837"</v>
+              <v n="TextDefault">"STOR4_Cmd_BatElec_CTA"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1340"</v>
+              <v n="TextDefault">"STOR4_Cmd_Reg_BasDebit_Ext"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"867"</v>
+              <v n="TextDefault">"STOR5_Cmd_Ma_Prise"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"488"</v>
+              <v n="TextDefault">"Suivant"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Next</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"196"</v>
+              <v n="TextDefault">"Temp : %.1f °C"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Temp : %.1f °C</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"525"</v>
+              <v n="TextDefault">"Temp. eau :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Temp. Wat. :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"319"</v>
+              <v n="TextDefault">"Validation"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Validation</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"544"</v>
+              <v n="TextDefault">"Vanne Bat. froide"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Cold Bat. valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"435"</v>
+              <v n="TextDefault">"Vanne douche"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Shower valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"548"</v>
+              <v n="TextDefault">"Vanne eau mitigée"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Mixed water valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"763"</v>
+              <v n="TextDefault">"Vanne lavabo"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Sink valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"506"</v>
+              <v n="TextDefault">"Vanne NEP"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CIP valve</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"543"</v>
+              <v n="TextDefault">"Ventilation :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Ventilation :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"307"</v>
+              <v n="TextDefault">"Veuillez sélectionner une recette"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Please select a protocol</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1396"</v>
+              <v n="TextDefault">"Vit Max : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Max spd : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"1419"</v>
+              <v n="TextDefault">"Vit Min : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Min spd : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"108"</v>
+              <v n="TextDefault">"Vitesse : %.0f %%"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Speed : %.0f %%</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"363"</v>
+              <v n="TextDefault">"Vol. d'eau :"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Wat. vol. :</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"735"</v>
+              <v n="TextDefault">"Volume d'eau : %.1f L"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>Water Flow : %.1f L</v>
+              </l>
+            </o>
+          </l>
+          <l n="Languages" t="ArrayList" cet="String">
+            <v>En</v>
+          </l>
+          <v n="GuidInit">{a46953b2-ddca-4bbe-82cf-932cdad59059}</v>
+          <v n="GuidReInit">{7875f494-5c93-4c18-9691-150c0c5be7c9}</v>
+          <v n="GuidExitX">{f0c040a5-868c-41c1-b0a9-52ff059d3bdf}</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="GlobalTextListObject">{63784cbb-9ba0-45e6-9d69-babf3f040511}</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="String">System.String</Type>
+        <Type n="TextListRow">{53da1be7-ad25-47c3-b0e8-e26286dad2e0}</Type>
+      </TypeList>
+    </XmlArchive>
+  </GlobalTextList>
+</TcPlcObject>

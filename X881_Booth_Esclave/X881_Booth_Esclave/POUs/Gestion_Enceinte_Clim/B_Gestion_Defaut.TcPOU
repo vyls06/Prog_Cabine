@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="B_Gestion_Defaut" Id="{f29a497f-93df-49fd-b934-391a3ae11056}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM B_Gestion_Defaut
+VAR
+(*Alarme défaut régulation de température*)
+	TON_Ecart_Temp: TON;
+(*Alarme défaut régulation d'hygrométrie*)
+	TON_Ecart_Hygro: TON;
+(*Alarme défaut de discordance de soufflage entre le pressostat de sécurité et les moteurs de la CTA*)
+	TON_Defaut_Discord_Souf: TON;
+(*Alarme défaut du thermostat de sécurité automatique proche de la batterie électrique*)
+	RS_Thermostat_Secu: RS;
+	TON_1: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Alarme défaut moteur 1 de soufflage CTA*)
+Defaut_MotRep_CTA := NOT E_Def_MotRep_CTA;
+
+(**********************************************Alarme défaut moteur 2 de soufflage CTA*)
+Defaut_MotSouf_CTA := NOT E_Def_MotSouf_CTA;
+
+(**********************************************Alarme défaut hygrostat de soufflage*)
+Defaut_Hygrostat_CTA := NOT E_Hygrostat_Souf_CTA;
+
+(**********************************************Alarme défaut sur l'alimentation électrique de la batterie électrique*)
+Defaut_Alim_BatElec_CTA := NOT E_Def_Alim_BatElec_CTA;
+
+(**********************************************Alarme défaut sur l'humidificateur*)
+Defaut_Humi_CTA := NOT E_Def_Humi_CTA;
+
+(**********************************************Alarme défaut régulation de température*)
+TON_Ecart_Temp(IN:= ((S_Ecart_Regul_PID_Temp > TOL_Regul_Temp_EnceintClim) AND Mode_Cabine_Automatique) , PT:= t#100m );
+IF(TON_Ecart_Temp.Q)
+	THEN
+	Defaut_Regul_Temp := TRUE;
+	ELSE
+	Defaut_Regul_Temp := FALSE;
+END_IF;
+
+(**********************************************Alarme défaut régulation d'hygrométrie*)
+TON_Ecart_Hygro(IN:= ((S_Ecart_Regul_PID_Hygro > TOL_Regul_Hygro_EnceintClim) AND Mode_Cabine_Automatique) , PT:= t#100m );
+IF(TON_Ecart_Hygro.Q)
+	THEN
+	Defaut_Regul_Hygro := TRUE;
+	ELSE
+	Defaut_Regul_Hygro := FALSE;
+END_IF;
+
+(*Defaut generale sur la partie humidification*)
+Defaut_General_Humi := Defaut_Sonde_Hygro_Cabine OR Defaut_Humi_CTA;
+
+(*Defaut des défauts qui arrêtent la recette du mode 25*)
+Defaut_Arret_Mode25 := 	Defaut_MotRep_CTA OR Defaut_MotSouf_CTA
+						 OR Defaut_Alim_BatElec_CTA OR Defaut_Humi_CTA
+						OR Defaut_Sonde_Hygro_Cabine OR Defaut_Sonde_Temp_Cabine
+						OR Defaut_Thermostat_Secu OR Defaut_Sonde_Temp_Souf;
+						
+(**********************************************Alarme défaut de discordance de soufflage entre le pressostat de sécurité et les moteurs de la CTA*)
+TON_Defaut_Discord_Souf(IN:= NOT E_Pressostat_Secu AND (Cons_Actionneur_Mot1_Souf_CTA > 60) AND (Cons_Actionneur_Mot2_Souf_CTA > 60), PT:= T#60S);
+IF (TON_Defaut_Discord_Souf.Q)
+	THEN
+	Defaut_Discord_Souf_CTA	:= TRUE;
+	ELSE
+	Defaut_Discord_Souf_CTA	:= FALSE;	
+END_IF
+
+(**********************************************Alarme défaut du thermostat de sécurité automatique proche de la batterie électrique*)
+TON_1(IN:= NOT E_Thermostat_Secu  , PT:= T#1S );
+RS_Thermostat_Secu(SET:= TON_1.Q, RESET1:= Cmd_Rearmement, Q1=> Defaut_Thermostat_Secu);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="B_Gestion_Defaut">
+      <LineId Id="7" Count="39" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="69" Count="2" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="59" Count="1" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="55" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

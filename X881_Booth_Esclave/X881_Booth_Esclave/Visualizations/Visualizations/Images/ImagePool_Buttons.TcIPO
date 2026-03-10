@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <ImagePool Name="ImagePool_Buttons" Id="{03d73cc3-47cd-4181-b0f7-c935adc98561}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="ImagePoolObject">
+          <v n="UniqueIdGenerator">"46"</v>
+          <l n="BitmapPool" t="ArrayList" cet="ImagePoolItem">
+            <o>
+              <v n="BitmapID">"Button_Off_Blue"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_Blue.png"</v>
+              <v n="ItemID">20</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Off_BlueC"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_BlueC.png"</v>
+              <v n="ItemID">21</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Off_Gray"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_Gray.png"</v>
+              <v n="ItemID">22</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Off_Green"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_Green.png"</v>
+              <v n="ItemID">23</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Off_Orange"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_Orange.png"</v>
+              <v n="ItemID">24</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Off_Red"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Off_Red.png"</v>
+              <v n="ItemID">25</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_Blue"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_Blue.png"</v>
+              <v n="ItemID">26</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_BlueC"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_BlueC.png"</v>
+              <v n="ItemID">27</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_Gray"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_Gray.png"</v>
+              <v n="ItemID">28</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_Green"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_Green.png"</v>
+              <v n="ItemID">29</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_Orange"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_Orange.png"</v>
+              <v n="ItemID">30</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_On_Red"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_On_Red.png"</v>
+              <v n="ItemID">31</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_Appuie_Sombre"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_Appuie_Sombre.png"</v>
+              <v n="ItemID">34</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Button_NonAppuie_Sombre"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Button_NonAppuie_Sombre.png"</v>
+              <v n="ItemID">37</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Selecteur_left"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Selecteur_left.png"</v>
+              <v n="ItemID">35</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Selecteur_middle"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Selecteur_middle.png"</v>
+              <v n="ItemID">40</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Selecteur_right - Copie"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Selecteur_right - Copie.png"</v>
+              <v n="ItemID">41</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Green_Bottom"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Green_Bottom.png"</v>
+              <v n="ItemID">38</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Green_Top"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Green_Top.png"</v>
+              <v n="ItemID">44</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Red_Bottom"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Red_Bottom.png"</v>
+              <v n="ItemID">45</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Red_Top"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Button\Red_Top.png"</v>
+              <v n="ItemID">46</v>
+            </o>
+            <o>
+              <v n="BitmapID">""</v>
+              <v n="FileID">""</v>
+              <v n="ItemID">42</v>
+            </o>
+          </l>
+          <v n="GuidInit">{caf85445-e559-484f-aec6-a74d8af28c1d}</v>
+          <v n="GuidReInit">{f7e9893b-5506-40c2-9560-1ff882c27c6f}</v>
+          <v n="GuidExitX">{01eaea93-75f1-468e-aafc-24f959219cfa}</v>
+          <v n="ValidIds">true</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="Boolean">System.Boolean</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="ImagePoolItem">{215b2719-0347-4e4d-ba85-8bcd66946f66}</Type>
+        <Type n="ImagePoolObject">{bb0b9044-714e-4614-ad3e-33cbdf34d16b}</Type>
+        <Type n="Int32">System.Int32</Type>
+        <Type n="String">System.String</Type>
+      </TypeList>
+    </XmlArchive>
+  </ImagePool>
+</TcPlcObject>

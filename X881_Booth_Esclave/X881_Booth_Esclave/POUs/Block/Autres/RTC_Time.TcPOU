@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="RTC_Time" Id="{68d49bbd-5d9b-44db-8f6f-82a830aa60da}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Version 1.0		Date 20.12.01*)
+FUNCTION_BLOCK RTC_Time
+VAR
+	Jours_Mois_courant		: INT;	(* Jour courant API 3112 *)
+	Heure_Minute_courant		: INT;	(* Heure courant API 2359 *)
+END_VAR
+VAR_INPUT
+	Auto_manu				: BOOL;	(*Selection mode Auto=1/manu=0  *)
+	F_On					: BOOL;	(* Forcage en mode manu ON *)
+	IN_MONTH				: WORD;
+	IN_DAY					: WORD;
+	IN_HOURS				: WORD;	(* System TIME (hours) *)
+	IN_MINUTES				: WORD;	(*System TIME (minutes)  *)
+	pos_sem				: WORD;	(* Jour de la semaine*)
+	Heure_debut_lun			: INT;	(* Heure de début 2359 *)
+	Heure_fin_lun				: INT;	(* Heure de fin 2359 *)
+	Heure_debut_mar			: INT;	(*Heure de début 2359  *)
+	Heure_fin_mar			: INT;	(*Heure de fin 2359  *)
+	Heure_debut_mer			: INT;	(* Heure de début 2359 *)
+	Heure_fin_mer			: INT;	(* Heure de fin 2359 *)
+	Heure_debut_jeu			: INT;	(* Heure de début 2359 *)
+	Heure_fin_jeu				: INT;	(* Heure de fin 2359 *)
+	Heure_debut_ven			: INT;	(* Heure de début 2359 *)
+	Heure_fin_ven			: INT;	(* Heure de fin 2359 *)
+	Heure_debut_sam			: INT;	(* Heure de début 2359 *)
+	Heure_fin_sam			: INT;	(* Heure de fin 2359 *)
+	Heure_debut_dim			: INT;	(* Heure de début 2359 *)
+	Heure_fin_dim			: INT;	(* Heure de fin 2359 *)
+	fct_periode				: BOOL;	(* Fonction Periode entre 2 dates *)
+	Jour_debut				: INT;	(* Jour de début 3112 *)
+	Jour_fin					: INT;	(* Jour de fin 3112 *)
+	fct_hebdo				: BOOL;	(*  *)
+	hebdo_lun				: BOOL;	(*  *)
+	hebdo_mar				: BOOL;	(*  *)
+	hebdo_mer				: BOOL;	(*  *)
+	hebdo_jeu				: BOOL;	(*  *)
+	hebdo_ven				: BOOL;	(*  *)
+	hebdo_sam				: BOOL;	(*  *)
+	hebdo_dim				: BOOL;	(*  *)
+END_VAR
+VAR_OUTPUT
+	Sortie					: BOOL;	(*Commande de la sortie  *)
+	Marche_periode			: BOOL;	(*Status état dans la periode  *)
+	Marche_horaire_lun		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_horaire_mar		: BOOL;	(*Status état dans la tranche horaire *)
+	Marche_horaire_mer		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_horaire_jeu		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_horaire_ven		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_horaire_sam		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_horaire_dim		: BOOL;	(*Status état dans la tranche horaire  *)
+	Marche_hebdo			: BOOL;	(*  *)
+	Marche_hebdo_lun		: BOOL;	(*  *)
+	Marche_hebdo_mar		: BOOL;	(*  *)
+	Marche_hebdo_mer		: BOOL;	(*  *)
+	Marche_hebdo_jeu		: BOOL;	(*  *)
+	Marche_hebdo_ven		: BOOL;	(*  *)
+	Marche_hebdo_sam		: BOOL;(*  *)
+	Marche_hebdo_dim		: BOOL;	(*  *)
+END_VAR
+VAR_EXTERNAL
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Reprise infORmation système*)
+Heure_Minute_courant 	:= UINT_TO_INT((IN_HOURS * 100) + IN_MINUTES);
+Jours_Mois_courant 		:= UINT_TO_INT((IN_DAY * 100) + IN_MONTH);
+
+(*LUNDI*)
+IF (Heure_debut_lun < Heure_fin_lun)
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_lun < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_lun AND pos_sem = 1)
+			THEN
+				Marche_horaire_lun := TRUE;
+			ELSE
+				Marche_horaire_lun := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_lun := FALSE;
+END_IF;
+
+(*MARDI*)
+IF (Heure_debut_mar < Heure_fin_mar) 
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_mar < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_mar AND pos_sem = 2) 
+			THEN
+				Marche_horaire_mar := TRUE;
+			ELSE
+				Marche_horaire_mar := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_mar := FALSE;
+END_IF;
+
+(*MERCREDI*)
+IF (Heure_debut_mer < Heure_fin_mer) 
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_mer < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_mer AND pos_sem = 3) 
+			THEN
+				Marche_horaire_mer := TRUE;
+			ELSE
+				Marche_horaire_mer := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_mer := FALSE;
+END_IF;
+
+(*JEUDI*)
+IF (Heure_debut_jeu < Heure_fin_jeu) 
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_jeu < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_jeu AND pos_sem = 4) 
+			THEN
+				Marche_horaire_jeu := TRUE;
+			ELSE
+				Marche_horaire_jeu := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_jeu := FALSE;
+END_IF;
+
+(*VENDREDI*)
+IF (Heure_debut_ven < Heure_fin_ven) 
+	THEN
+	(*fonctionnement horaire*)
+		IF ( (Heure_debut_ven < Heure_Minute_courant) AND( Heure_Minute_courant < Heure_fin_ven) AND (pos_sem = 5))
+			THEN
+				Marche_horaire_ven := TRUE;
+			ELSE
+				Marche_horaire_ven := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_ven := FALSE;
+END_IF;
+
+(*SAMEDI*)
+IF (Heure_debut_sam < Heure_fin_sam) 
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_sam < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_sam AND pos_sem = 6) 
+			THEN
+				Marche_horaire_sam := TRUE;
+			ELSE
+				Marche_horaire_sam := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_sam := FALSE;
+END_IF;
+
+(*DIMANCHE*)
+IF (Heure_debut_dim < Heure_fin_dim)
+	THEN
+	(*fonctionnement horaire*)
+		IF ( Heure_debut_dim < Heure_Minute_courant AND Heure_Minute_courant < Heure_fin_dim AND pos_sem = 0) 
+			THEN
+				Marche_horaire_dim := TRUE;
+			ELSE
+				Marche_horaire_dim := FALSE;
+		END_IF;
+	ELSE
+	Marche_horaire_dim := FALSE;
+END_IF;
+
+(*Fonctionnement periodique*)
+Marche_periode := FALSE;
+IF ( fct_periode = TRUE ) 
+	THEN
+		IF ( Jour_debut <= Jour_fin) 
+			THEN
+				IF ( Jour_debut <= Jours_Mois_courant AND Jours_Mois_courant <= Jour_fin ) 
+					THEN
+						Marche_periode := TRUE;
+					ELSE
+						Marche_periode := FALSE;
+				END_IF;
+			ELSE
+			(*Fonctionnement a cheval sur 2 année*)
+				IF ( Jour_debut <= Jours_Mois_courant AND Jours_Mois_courant <= Jour_fin ) 
+					THEN
+						Marche_periode := FALSE;
+					ELSE
+						Marche_periode := TRUE;
+				END_IF;
+		END_IF;
+	ELSE
+		Marche_periode:=TRUE;
+END_IF;
+
+(*Fonctionnement hebdomatdaire*)
+Marche_hebdo := FALSE;
+Marche_hebdo_lun := FALSE;
+Marche_hebdo_mar := FALSE;
+Marche_hebdo_mer := FALSE;
+Marche_hebdo_jeu := FALSE;
+Marche_hebdo_ven := FALSE;
+Marche_hebdo_sam := FALSE;
+Marche_hebdo_dim := FALSE;
+
+IF ( fct_hebdo = TRUE )
+	THEN
+		IF ( hebdo_lun = TRUE AND pos_sem = 1)
+			THEN
+				Marche_hebdo_lun := TRUE;	
+		END_IF;
+		IF ( hebdo_mar = TRUE AND pos_sem = 2) 
+			THEN
+				Marche_hebdo_mar := TRUE;
+		END_IF;
+		IF ( hebdo_mer = TRUE AND pos_sem = 3) 
+			THEN
+				Marche_hebdo_mer := TRUE;
+			END_IF;
+		IF ( hebdo_jeu = TRUE AND pos_sem = 4) 
+			THEN
+				Marche_hebdo_jeu := TRUE;
+		END_IF;
+		IF ( hebdo_ven = TRUE AND pos_sem = 5) 
+			THEN
+				Marche_hebdo_ven := TRUE;
+			END_IF;
+		IF ( hebdo_sam = TRUE AND pos_sem = 6) 
+			THEN
+				Marche_hebdo_sam := TRUE;
+			END_IF;
+		IF ( hebdo_dim = TRUE AND pos_sem = 7)
+			THEN
+				Marche_hebdo_dim := TRUE;
+			END_IF;
+	ELSE
+		Marche_hebdo := TRUE;
+END_IF;
+
+(*Gestion Auto/manu et On/Off*)
+Sortie := FALSE;
+IF (Auto_manu = TRUE) 
+	THEN
+	(*Selection horaire*)
+		IF (Marche_periode = TRUE 
+			AND (
+				(Marche_hebdo_lun = TRUE AND Marche_horaire_lun = TRUE) 
+				OR (Marche_hebdo_mar = TRUE AND Marche_horaire_mar = TRUE) 
+				OR (Marche_hebdo_mer = TRUE AND Marche_horaire_mer = TRUE) 
+				OR (Marche_hebdo_jeu = TRUE AND Marche_horaire_jeu = TRUE) 
+				OR (Marche_hebdo_ven = TRUE AND Marche_horaire_ven = TRUE) 
+				OR (Marche_hebdo_sam = TRUE AND Marche_horaire_sam = TRUE) 
+				OR (Marche_hebdo_dim = TRUE AND Marche_horaire_dim = TRUE)
+				)
+			) 
+			THEN
+				Sortie := TRUE;
+		END_IF;
+	ELSE
+		IF ( F_On = TRUE ) 
+			THEN
+				Sortie := TRUE;
+		ELSE
+			Sortie := FALSE;
+		END_IF;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="RTC_Time">
+      <LineId Id="62" Count="0" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="64" Count="195" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="f_Gestion_Etats" Id="{ec138549-c169-43bf-84f9-ecf79b9a8ab9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM f_Gestion_Etats
+VAR
+(*Gestion etat cabine dépollution*)
+	RS_Depollution: RS;
+	R_TRIG_Depol: R_TRIG;
+	TON_Depollution: TON_V1;
+	R_TRIG_cylcle1: R_TRIG;
+	TP_Cycle1: TP;
+	RS_CTA: RS;
+(*Gestion etat cabine Manuel*)
+	Mode_END_Manu: BOOL;
+	Securite_Tempo_Manu: REAL;
+	RS_Manu: RS;
+(*Gestion etat cabine Automatique*)
+	Mode_END_Auto: BOOL;
+	RS_Automatique: RS;
+(*Gestion de la condition d'affichage du bouton étape suivante*)
+	Mode_texte_Auto: BOOL;
+	Mode_Evaluation_Auto: BOOL;
+	Mode_Netoyage_Auto: BOOL;
+	Mode_Lav_Douch_Bouton_Auto: BOOL;
+	Mode_MiseEnCondi: BOOL;
+	R_TRIG_FIN: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de la condition d'affichage du bouton étape suivante*)
+(*Affichage du bouton étape suivante si mode 30 à 59 OU mode 24 OU mode 23 OU mode 3 OU mode 16 OU mode 17 *)
+Mode_texte_Auto				:= (Mode_Auto.Numero_Mode >= 30) AND (Mode_Auto.Numero_Mode <= 59);
+Mode_Evaluation_Auto		:= Mode_Auto.Mode_23 OR Mode_Auto.Mode_24;
+Mode_Netoyage_Auto			:= Mode_Auto.Mode_3;
+Mode_Lav_Douch_Bouton_Auto	:= Mode_Auto.Mode_16 OR Mode_Auto.Mode_17;
+Mode_MiseEnCondi			:= Mode_Auto.Mode_25 OR Mode_Auto.Mode_28;
+IF (Mode_texte_Auto OR Mode_Evaluation_Auto OR Mode_Netoyage_Auto OR Mode_Lav_Douch_Bouton_Auto OR Mode_MiseEnCondi)
+	THEN
+	Condi_Affich_Etape_Suiv := TRUE;
+	ELSE
+	Condi_Affich_Etape_Suiv := FALSE;
+END_IF;
+
+
+(********************************************** Gestion de l'affichage du bouton de réarmement*)
+IF (Defaut_Debordement_Douche OR Defaut_Debordement_Lavabo OR Defaut_Discord_Deb_Eau_Douche OR Defaut_Discord_Deb_Eau_Lavabo
+	OR Defaut_Discord_PC_Cab OR Def_Discord_Alim_Prise OR Def_Prise_Porte_Ouverte OR Defaut_Differentiel_Prise_Elec OR Defaut_Thermostat_Secu)
+	THEN
+	Condi_Affich_Rearm := TRUE;
+	ELSE
+	Condi_Affich_Rearm := FALSE;
+END_IF;
+
+(************************************************Gestion du mode Neutre et Evaluation*)
+Mode_Evaluation := Mode_Auto.Mode_23 OR Mode_Auto.Mode_24;
+Mode_Neutre := Mode_Auto.Mode_8 OR Mode_Manu.Mode_8;
+
+(*************************************************Gestion de la commande de la régulation de l'extraction*)
+IF((Mode_Neutre  OR (Cons_Actionneur_Registre_Ext_Volh = 0)))
+	THEN
+	Arret_Extraction := TRUE;
+	ELSE
+	Arret_Extraction := FALSE;
+END_IF;
+
+(*************************************************Gestion de la commande de la régulation du soufflage*)
+IF((Mode_Neutre OR (Cons_Actionneur_Registre_Souf_Volh = 0)))
+	THEN
+	Arret_Soufflage := TRUE;
+	ELSE
+	Arret_Soufflage := FALSE;
+END_IF;
+
+(**************************************************Gestion etat cabine éclairage*)
+IF(Activation_Ecl)
+	THEN
+	Mode_Cabine_Eclairage := TRUE;
+	ELSE
+	Mode_Cabine_Eclairage := FALSE;
+END_IF;
+
+(***************************************************Gestion etat cabine dépollution*)
+R_TRIG_Depol(CLK:= Start_Etat_Depollution);
+RS_Depollution(
+SET:= (R_TRIG_Depol.Q AND NOT RS_Depollution.Q1),
+RESET1:= 	(Mode_Cabine_Automatique OR Mode_Cabine_Manuel OR Mode_Maintenance)
+			OR (R_TRIG_Depol.Q AND RS_Depollution.Q1) OR TON_Depollution.Q);
+
+TON_Depollution(
+	Enable:= RS_Depollution.Q1,
+	Pause:= ,
+	In_Cons_Seconde:= 1,
+	In_Cons_Minute:= Cons_Temp_Minute_Depol,
+	In_Cons_Heure:= Cons_Temp_heure_Depol,
+	In_Cons_Jour:= 0 ,
+	Seconde_Restant=> Lect_Temp_Seconde_Depol,
+	Minute_Restant=> Lect_Temp_Minute_Depol,
+	Heure_Restant=> Lect_Temp_heure_Depol);
+
+IF(RS_Depollution.Q1) // Version démarrage en manuel
+	THEN
+	Mode_Cabine_Depollution := TRUE;
+	Sel_Etats_Cabine := 4;
+	ELSE
+	Mode_Cabine_Depollution := FALSE;
+END_IF;
+
+// Démarrage du premier cycle de dépollution qui nettoie la CTA pendant 5 minutes. Uniquement si utilisation de la CTA dans la recette
+RS_CTA(SET:= (Mode_Cabine_Automatique AND RS_MEnCond.Q1), RESET1:= Mode_Cabine_Libre); // Détection du démarrage de la CTA
+R_TRIG_cylcle1(CLK:= (Mode_Auto.Mode_10 AND RS_CTA.Q1)); // Démarrage via la recette, 1er cycle
+TP_Cycle1(IN:= R_TRIG_cylcle1.Q, PT:= T#300S);
+Mode_Depollution_cycle1 := TP_Cycle1.Q;
+
+IF(Mode_Auto.Mode_10) // Démarrage via la recette 2ème cycle
+	THEN
+	Mode_Cabine_Depollution := TRUE;
+END_IF;
+
+(**************************************************************Gestion etat cabine nettoyage*)
+IF(Start_Etat_Nettoyage AND NOT Mode_Cabine_Automatique AND NOT Mode_Cabine_Manuel AND NOT Mode_Cabine_Depollution  AND NOT Mode_Maintenance)
+	THEN
+	Mode_Cabine_Nettoyage := TRUE;
+	Sel_Etats_Cabine := 5;
+	ELSE
+	Mode_Cabine_Nettoyage := FALSE;
+END_IF;
+
+(***************************************************************Gestion etat cabine Manuel*)
+(*Mode arrêt du mode manuel*)
+Mode_END_Manu := Mode_Arret_Manu;
+(*Sécurité pour éviter de démarrer le mode manuel sans avoir réglé une consigne de temps supérieure à zéro*)
+Securite_Tempo_Manu := Manu_Tempo_Transition_Seconde + Manu_Tempo_Transition_Minute + Manu_Tempo_Transition_Heure;
+
+RS_Manu(SET:=
+(Start_Mode_Manu AND NOT Mode_Cabine_Automatique AND (Securite_Tempo_Manu <> 0)),
+RESET1:= Mode_END_Manu OR Mode_Cabine_Automatique OR Mode_Maintenance,
+Q1=> Mode_Cabine_Manuel);
+
+IF(Mode_Cabine_Manuel)
+	THEN
+	Sel_Etats_Cabine := 2;
+END_IF;
+
+(****************************************************************Gestion etat cabine Automatique*)
+(*Mode arrêt du mode automatique*)
+R_TRIG_FIN(CLK:= (Numero_Mode_Auto=0));
+Mode_END_Auto := R_TRIG_FIN.Q;
+
+RS_Automatique(
+SET:= ((Start_Recette_Mode_Auto AND (Nbre_Etape_Totale <> 0))),
+RESET1:= Mode_END_Auto OR Mode_Maintenance,
+Q1=> Mode_Cabine_Automatique);
+
+IF(Mode_Cabine_Automatique)
+	THEN
+	Sel_Etats_Cabine := 3;
+END_IF;
+
+(*****************************************************************Gestion etat cabine libre*)
+IF((NOT Mode_Cabine_Manuel AND NOT Mode_Cabine_Automatique AND NOT Mode_Cabine_Depollution AND NOT Mode_Cabine_Nettoyage
+			AND NOT Mode_Maintenance))
+	THEN
+	Sel_Etats_Cabine := 1;
+	Mode_Cabine_Libre := TRUE;
+	ELSE
+	Mode_Cabine_Libre := FALSE;
+END_IF;
+
+(*****************************************************************Gestion etat cabine Maintenance*)
+IF(Cmd_Mode_Maintenance)
+	THEN
+	Sel_Etats_Cabine := 7;
+	Mode_Maintenance := TRUE;
+	ELSE
+	Mode_Maintenance := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="f_Gestion_Etats">
+      <LineId Id="20" Count="76" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="97" Count="31" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="129" Count="29" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

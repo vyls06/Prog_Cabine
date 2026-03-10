@@ -1,0 +1,251 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <TextList Name="Noms_Modes" Id="{e8e0f21e-9ec3-4820-bf71-bc64e873a4a1}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="TextListObject">
+          <v n="UniqueIdGenerator">"0"</v>
+          <l n="TextList" t="ArrayList" cet="TextListRow">
+            <o>
+              <v n="TextID">"1"</v>
+              <v n="TextDefault">"DOUCHE BONDE OUVERTE ET TEMPO"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SHOWER WITH DRAIN AND DELAY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"2"</v>
+              <v n="TextDefault">"DOUCHE BONDE FERMEE ET TEMPO"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SHOWER WITHOUT DRAIN AND DELAY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"3"</v>
+              <v n="TextDefault">"DOUCHETTE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CLEANING</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"4"</v>
+              <v n="TextDefault">"LAVABO BONDE OUVERTE ET TEMPO"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SINK WITH DRAIN AND DELAY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"5"</v>
+              <v n="TextDefault">"LAVABO BONDE FERMEE ET TEMPO"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SINK WITHOUT DRAIN AND DELAY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"6"</v>
+              <v n="TextDefault">"PRISE ELECTRIQUE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PLUG ACTIVATE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"7"</v>
+              <v n="TextDefault">"VIDANGE(S)"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>OPENED DRAIN</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"8"</v>
+              <v n="TextDefault">"NEUTRE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>NEUTRAL</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"9"</v>
+              <v n="TextDefault">"CHASSE D EAU GRAND VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>LARGE VOLUME TOILET FLUSH</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"10"</v>
+              <v n="TextDefault">"DEPOLLUTION"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>DECONTAMINATION</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"11"</v>
+              <v n="TextDefault">"NEUTRE AVEC BAS DEBIT"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>NEUTRAL WITH LOW FLOW</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"12"</v>
+              <v n="TextDefault">"DOUCHE BONDE OUVERTE ET VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SHOWER WITH DRAIN AND VOLUME</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"13"</v>
+              <v n="TextDefault">"DOUCHE BONDE FERMEE ET VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SHOWER WITHOUT DRAIN AND VOLUME</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"14"</v>
+              <v n="TextDefault">"LAVABO BONDE OUVERTE ET VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SINK WITH DRAIN AND VOLUME</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"15"</v>
+              <v n="TextDefault">"LAVABO BONDE FERMEE ET VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SINK WITHOUT DRAIN AND VOLUME</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"16"</v>
+              <v n="TextDefault">"DOUCHE BONDE OUVERTE ET BOUTON"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SHOWER WITH DRAIN AND BUTTON</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"17"</v>
+              <v n="TextDefault">"LAVABO BONDE OUVERTE ET BOUTON"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SINK WITH DRAIN AND BUTTON</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"18"</v>
+              <v n="TextDefault">"LAVAGE CHAUD"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>HOT CLEANING</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"19"</v>
+              <v n="TextDefault">"LAVAGE FROID"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>COLD CLEANING</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"20"</v>
+              <v n="TextDefault">"MODE PARAMETRABLE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PARAMETER MODE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"21"</v>
+              <v n="TextDefault">"ALERTE PREPARATEUR"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>PREPARATOR ALERT</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"22"</v>
+              <v n="TextDefault">"ALERTE EVALUATEUR"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>EVALUATOR ALERT</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"23"</v>
+              <v n="TextDefault">"EVALUATION"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>EVALUATION</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"24"</v>
+              <v n="TextDefault">"EVALUATION AVEC AIR"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>EVALUATION WITH AIR FLOW</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"25"</v>
+              <v n="TextDefault">"MISE EN CONDITION"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CONDITIONING BOOTH</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"26"</v>
+              <v n="TextDefault">"CHASSE D EAU PETIT VOLUME"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>SMALL VOLUME TOILET FLUSH</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"27"</v>
+              <v n="TextDefault">"LAVAGE NEP"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>CLEANING</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"28"</v>
+              <v n="TextDefault">"CABINE EN CONDITION"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>BOOTH IN CONDITION</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"29"</v>
+              <v n="TextDefault">"LIBRE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>EMPTY</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"30"</v>
+              <v n="TextDefault">"MODE TEXTE"</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v>TEXT MODE</v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">"0"</v>
+              <v n="TextDefault">""</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+            <o>
+              <v n="TextID">""</v>
+              <v n="TextDefault">""</v>
+              <l n="LanguageTexts" t="ArrayList" cet="String">
+                <v></v>
+              </l>
+            </o>
+          </l>
+          <l n="Languages" t="ArrayList" cet="String">
+            <v>En</v>
+          </l>
+          <v n="GuidInit">{40918684-657a-4c4d-838f-4aebaf2f5764}</v>
+          <v n="GuidReInit">{4a50dd81-9281-4dc6-8a5b-9ef880a63afd}</v>
+          <v n="GuidExitX">{604d4eb7-8907-407a-b16d-59a8c159e6a6}</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="String">System.String</Type>
+        <Type n="TextListObject">{2bef0454-1bd3-412a-ac2c-af0f31dbc40f}</Type>
+        <Type n="TextListRow">{53da1be7-ad25-47c3-b0e8-e26286dad2e0}</Type>
+      </TypeList>
+    </XmlArchive>
+  </TextList>
+</TcPlcObject>

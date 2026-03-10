@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Prise" Id="{cbd38128-5f95-4090-9ef5-a42ecec25c04}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Prise
+VAR_INPUT
+	Enable:						BOOL;
+	Cmd_Prise:					BOOL;	(*Commande de la prise de courant*)
+	Cabine_Seche: 				BOOL;
+	Statut_Ferm_Reg_Douche:		BOOL;	(*Statut fermeture du registre de la vanne de la douche / 1 = Fermé / si registre non présence forcer la variable à TRUE*)
+	Statut_Ferm_Lavabo:			BOOL;	(*Statut fermeture du registre de la vanne du lavabo / 1 = Fermé / si registre non présence forcer la variable à TRUE*)
+	Statut_Electrovanne_Douche:		BOOL;
+	Statut_Electrovanne_Lavabo:		BOOL;
+	Statut_Def_Prise_Porte_Ouverte:		BOOL;
+	Statut_Def_Discord_Alim_Prise:		BOOL;
+	Statut_Defaut_Discord_PC_Cab:		BOOL;
+END_VAR
+VAR_OUTPUT
+	STOR_Prise:			BOOL;			(*Commande de la sortie TOR de la prise*)
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF(Enable AND Cmd_Prise
+	AND (Statut_Ferm_Reg_Douche OR Cabine_Seche OR Option_Debitmetre_Lavabo) AND (Statut_Ferm_Lavabo OR Cabine_Seche OR Option_Debitmetre_Lavabo)
+	AND ( NOT Statut_Electrovanne_Douche OR Cabine_Seche) AND (NOT Statut_Electrovanne_Lavabo OR Cabine_Seche)
+	AND NOT Statut_Def_Prise_Porte_Ouverte AND NOT Statut_Def_Discord_Alim_Prise AND NOT Statut_Defaut_Discord_PC_Cab)
+	THEN
+		STOR_Prise := TRUE;
+	ELSE
+		STOR_Prise := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Prise">
+      <LineId Id="18" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Registre_V1" Id="{0af8a070-6274-4088-9fe1-173e55175a61}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Registre_V1
+VAR_INPUT
+	Enable:					BOOL;	(*Mise en route du bloc de fonction*)
+	Type_Consigne:			BOOL;	 (*Choix du type de pilotage du registre / 1 = ANA / 0 = TOR*)
+	Mode_Vidange:			BOOL; 	(*Mode de vidange / 1=Mode vidange / 0= Mode alimentation douche, Douchette, Lavabo, etc...*)
+	Cons_Pos_Dem:			REAL; 	(*Consigne position registre demandé (Venant de la régulation) / en %*)
+	Cmd_Ouv_Dem:			BOOL; 	(*Commande ouverture registre demandé (Venant de la régulation) / 1 = Ouverture*)
+	Info_Mes_Pos:			REAL; 	(*Info mesure position registre (recopie EAN) / en %*)
+	Presence_Fdc:			INT; 	(*Mot de présence des fin de course / 0 = Pas de fin de course / 1 = Fin de course Ouvert / 2 = Fin de course Fermé / 3 = Les 2 fin de course*)
+	Info_Fdc_Ouvert:			BOOL; 	(*Info fin de course ouvert (recopie ETOR) / 1 = Ouvert*)
+	Info_Fdc_Ferme:			BOOL; 	(*Info fin de course fermé (recopi ETOR) / 1 = Fermé*)
+	Secu_Niveau_Haut:		BOOL; 	(*Sécurité du niveau haut / 0 = Niveau haut actif*)
+	Defaut_Alim_Eau:			BOOL;	(*Sécurité qui coupe l'alimentation en eau*)
+	Control_Discrodance:		BOOL;	 (*Autorisation de marche des alarmes / 1 = Alarme autorisé*)
+	Hyst_Al_Discord:			REAL;	 (*Hystéresis pour le défaut discordance en type ANA*)
+	Tempo_Discord_TOR:		TIME; 	(*Temporisation du défaut discordance en type TOR*)
+	EF_Forcage:				BOOL;	 (*Enable forçage du registre / 1= Autorisé*)
+	F_STOR_Registre: 		BOOL;	 (*Forçage du registre pour le mode TOR / 1= Forcé*)
+	F_SAN_Registre:			REAL; 	(*Forçage du registre pour le mode ANA / en %*)
+	In_SCL_MIN_REAL: REAL;
+	In_SCL_OUT_REAL: REAL;
+	SAN_MIN: REAL;
+	SAN_MAX: REAL;
+END_VAR
+VAR_OUTPUT
+	SAN_Cons_Registre:		INT; (*Consigne a appliqué au registre ANA (pour SAN) / en %*)
+	STOR_Cmd_Ouv_Registre: BOOL; (*Commande a appliqué au registre TOR (pour STOR) / 1 = Ouverture*)
+	Def_Discordance_ANA:BOOL;
+	Def_Discordance_Ouverture:BOOL;
+	Def_Discordance_Fermeture: BOOL;
+END_VAR
+VAR
+	Cons_Registre:			REAL;
+	iCons_Registre:			INT;
+	Cmd_Registre:			BOOL;
+	SCL_ANA: 				SCL;
+	TON_1:					TON;
+	TON_2:					TON;
+	TON_3:					TON;
+	TON_4:					TON;
+	TON_5:					TON;
+	TON_6:					TON;
+	RS_1:					RS;
+	RS_2:					RS;
+	Calcul_1: REAL;
+	Calcul_2: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF(Enable)
+	THEN
+	(*======================Gestion de la Consigne===================================*)
+	IF(Type_Consigne)
+		THEN			(* Gestion consigne pour un registre ANA *)
+		Cmd_Registre := FALSE;
+		IF(EF_Forcage)
+			THEN
+				Cons_Registre := F_SAN_Registre;
+			ELSE
+				Cons_Registre := Cons_Pos_Dem;
+		END_IF;
+	ELSE				 (* Gestion consigne pour un registre TOR *)
+		Cons_Registre := 0.0;
+		IF(EF_Forcage)
+			THEN
+				Cmd_Registre := F_STOR_Registre;
+			ELSE
+				Cmd_Registre := Cmd_Ouv_Dem;
+		END_IF
+	END_IF;
+	
+	(*======================Gestion de la sortie Analogique==============================*)
+	iCons_Registre := REAL_TO_INT(Cons_Registre); (*Convertion de la consigne analogique*)
+	SCL_ANA(
+		IN_INT:= iCons_Registre,
+		LIM_MIN_IN_REAL:= In_SCL_MIN_REAL,
+		LIM_MAX_IN_REAL:= In_SCL_OUT_REAL,
+		LIM_MIN_OUT_REAL:= SAN_MIN,(*0V*)
+		LIM_MAX_OUT_REAL:= SAN_MAX,(*10V*)
+		OUT_INT=> SAN_Cons_Registre);
+	
+	(*======================Gestion de la sortie TOR====================================*)
+	IF( Mode_Vidange)
+		THEN (*Gestion de la STOR en fonction du mode de vidange*)
+		IF(Secu_Niveau_Haut)
+			THEN
+				STOR_Cmd_Ouv_Registre := TRUE;
+			ELSE
+				STOR_Cmd_Ouv_Registre := Cmd_Registre;
+		END_IF;
+	ELSE (*Gestion de la STOR en fonction du mode alimentation*)
+		IF(Secu_Niveau_Haut)
+			THEN
+				STOR_Cmd_Ouv_Registre := FALSE;
+			ELSE
+				STOR_Cmd_Ouv_Registre := Cmd_Registre AND NOT Defaut_Alim_Eau;
+		END_IF;
+	END_IF;
+	
+	(*======================Gestion du défaut de discordance============================*)
+	IF(Control_Discrodance)
+		THEN		(*Lors du contrôle de discordance*)
+			IF(Type_Consigne)
+				THEN		(* Alarme discordance pour registre SAN *)
+					Calcul_1 := (Cons_Registre - Hyst_Al_Discord) ;
+					Calcul_2 := (Cons_Registre + Hyst_Al_Discord) ;
+					TON_1(IN := ((Calcul_1 > Info_Mes_Pos) OR (Calcul_2 < Info_Mes_Pos)),PT := T#150s);
+					Def_Discordance_ANA:= TON_1.Q;
+			ELSE			(* Alarme discordance pour registre STOR *)
+				CASE Presence_Fdc OF
+					0	:	(*Mode pas de fin de course*)
+							Def_Discordance_Ouverture := FALSE;
+							Def_Discordance_Fermeture := FALSE;
+					1	:	(*Mode Fdc ouverture uniquement*)
+							TON_2(IN := ( STOR_Cmd_Ouv_Registre AND NOT Info_Fdc_Ouvert ), PT := Tempo_Discord_TOR);
+							Def_Discordance_Ouverture:= TON_2.Q;
+							Def_Discordance_Fermeture := FALSE;
+					2	:	(*Mode Fdc fermeture uniquement*)
+							TON_3(IN := ( NOT STOR_Cmd_Ouv_Registre AND NOT Info_Fdc_Ferme ), PT := Tempo_Discord_TOR);
+							Def_Discordance_Fermeture:= TON_3.Q;
+							Def_Discordance_Ouverture := FALSE;
+					3	:	(*Mode Fdc ouverture et fermeture*)
+							TON_4(IN := ((STOR_Cmd_Ouv_Registre AND NOT Info_Fdc_Ouvert)),PT := Tempo_Discord_TOR);
+							TON_5(IN := ((NOT STOR_Cmd_Ouv_Registre AND NOT Info_Fdc_Ferme )),PT := Tempo_Discord_TOR);
+							TON_6(IN := (Info_Fdc_Ouvert AND Info_Fdc_Ferme) ,PT := Tempo_Discord_TOR);
+							RS_1(SET:= TON_4.Q, RESET1:= Info_Fdc_Ouvert);
+							RS_2(SET:= TON_5.Q, RESET1:= Info_Fdc_Ferme);
+							Def_Discordance_Ouverture:= RS_1.Q1 OR TON_6.Q;
+							Def_Discordance_Fermeture:= RS_2.Q1 OR TON_6.Q;
+	
+					ELSE  (*Si Presence_Fdc > à 3*)
+					Def_Discordance_Ouverture := FALSE;
+					Def_Discordance_Fermeture := FALSE;
+				END_CASE;
+			END_IF;
+		ELSE		(* Si contrôle d'alarme discordance désactivé *)
+			Def_Discordance_ANA := FALSE;
+			Def_Discordance_Ouverture := FALSE;
+			Def_Discordance_Fermeture := FALSE;
+	END_IF;
+	ELSE
+			SAN_Cons_Registre := 0;
+			STOR_Cmd_Ouv_Registre := FALSE;
+			Def_Discordance_ANA := FALSE;
+			Def_Discordance_Ouverture := FALSE;
+			Def_Discordance_Fermeture := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Registre_V1">
+      <LineId Id="47" Count="97" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Integr_Vol_Eau" Id="{2b3fa571-1175-41fa-ae84-cd687d103256}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Integr_Vol_Eau
+VAR_INPUT
+	Enable :BOOL;
+	Mes_Debit_Eau :REAL; (*Mesure débit en l/min*)
+END_VAR
+VAR_OUTPUT
+	Volume_Eau :REAL; (*Volume d'eau en Litre*)
+END_VAR
+VAR
+	TON_Inc: TON;
+	R_TRIG_1	:R_TRIG;
+	R_TRIG_Inc: R_TRIG;
+	TOP_INTEGRATION	:BOOL;
+	Reset	:BOOL;
+
+	FlowRate_MPS :REAL; (*Debit d'eau en l/s*)
+	TimeElapsed :TIME; (*Temps écoulé depuis la dernière mesur*)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Comptage des secondes*)
+TON_Inc(IN:= (NOT TOP_INTEGRATION AND NOT Reset), PT:= T#1s, Q=> TOP_INTEGRATION );
+R_TRIG_Inc(CLK:= TOP_INTEGRATION);
+
+R_TRIG_1(CLK:=TOP_INTEGRATION);
+Reset := NOT Enable;
+
+(*Convertion du débit d'eau l/min en l/s*)
+FlowRate_MPS := Mes_Debit_Eau / 60.0;
+
+(*Condition d'activation : mettre la variable Enbale à TRUE pour exécuter le calcul*)
+IF (TOP_INTEGRATION)
+	THEN
+	Volume_Eau			:= Volume_Eau + FlowRate_MPS;
+END_IF;
+
+Volume_Eau:=SEL(Reset,(Volume_Eau),0.0);
+Mes_Debit_Eau:=SEL(Reset,Mes_Debit_Eau,0.0);]]></ST>
+    </Implementation>
+    <LineIds Name="Integr_Vol_Eau">
+      <LineId Id="89" Count="16" />
+      <LineId Id="50" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

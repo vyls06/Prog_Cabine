@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Objet_PI_V1" Id="{d4c56d46-6a27-412d-9756-5156af185d55}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Objet_PI_V1
+VAR_INPUT
+	Cons_Variable			:REAL;	(*Consigne variable Régulante / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Mes_Regul				:REAL;	(*Mesure Régulante / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Autorisation_Marche		:BOOL;	(*Autorisation marche Régulation / 1 = Marche*)
+	Type_Consigne			:BOOL;	(*TYPE consigne Régulation /  0 = Variable / 1 = Fixe (Fonctionne avec Consigne Occupé/Inoccupé)*)
+	SelConsigneInoccupe		:BOOL;	(*1 = Fonctionnement uniquement sur consigne Inoccupé / 0 = Consigne occupé / inoccupé*)
+	Mode_Occupe			:BOOL;	(*Mode occupé/inoccupé / 1 = Occupé / 0 = Inoccupé*)
+	Sens_PID				:BOOL;	(*Sens du PID / 1 = FROID / 0 = CHAUD*)
+	MIN_Sortie_CMD_PID		:REAL;	(*Limite MIN Sortie commande Régulation / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	MAX_Sortie_CMD_PID		:REAL;	(*Limite MAX Sortie commande Régulation / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Gain_Variable			:BOOL;	(*Activation du gain variable / 1 = Gain variable activé*)
+	Hyst_Gain_Variable		:REAL;	(*HystéRésis d'enclenchement du Gain variable / L'unité dépend de la Régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Coef_Gain_Variable		:REAL;	(*Coéficient multiplicateur du Gain variable / En %*)
+	EN_Filtre_S_CMD_PID		:BOOL;	(*Activation du filtre de la sortie commande PID / 1 = Filtre actif*)
+	Tempo_Puls_Filtre		:TIME;	(*Temporisation entre chaque pulse pour LE filtrage de la sortie commande / En sec*)
+	IN_UP_RATE				:REAL;	(*Echellon d'incrementation de la sortie commande PID / 0...100,0 %*)
+	IN_DOWN_RATE			:REAL;	(*Echellon décrémentation de la sortie commande PID / 0...100,0 %*)
+	EN_Mes_pertub			:BOOL;	(*Activation de la compensation de mesure de perturbation / 1 = Activé*)
+	Coef_Mes_pertub			:REAL;	(*Coéficient multiplicateur de la mesure de perturbation / En %*)
+	Mesure_pertub			:REAL;	(*Mesure de perturbation*)
+	Temps_Perturbation		:TIME;	(*Temporisation d'échantillonage pour la mesure perturbation / En sec*)
+END_VAR
+
+VAR_OUTPUT
+	Sortie_CMD_PID			:REAL;	(*Sortie commande Régulation / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Sortie_CMD_PID_Brute		:REAL;	(*Sortie commande Régulation apréS bloc PID / L'unité dépend de la régulation (°C / % / Pa / bar / m3/h / mg/l ect ....)*)
+	Gain					:REAL;	(*Info du gain Séléctionné pour LE PID*)
+	Ecart_Mesure_Cons		:REAL;	(*Info de l'écart de consigne entre la mesure et la consigne*)
+END_VAR
+
+VAR
+	TON_Filtre			:TON;
+	TP_Filtre				:TP;
+	TON_Pertub			:TON;
+	TP_Pertub			:TP;
+	R_TRIG_Pertub		:R_TRIG;
+	R_TRIG_1			:R_TRIG;
+	Cons_PID_INT		:REAL;
+	Cons_PID_INT2		:REAL;
+	Status_Marche		:BOOL;
+	CONS_Filtrer			:REAL; (*Sortie lissé / 0...100,0 %*)
+	CONS_OLD			:REAL; (*0...100,0 % / 0...100,0*)
+	PULS_Filtre			:BOOL;
+	Gain_Mes_pertub		:REAL; (*Gain calculé pour la mesure de perturbation*)
+	Gain_Int				:REAL; (*Info du gain séléctionné pour le PID*)
+	Mesure_pertub_old	:REAL;
+	Diff_Mesure_pertub	:REAL;
+	puls_detecte			:BOOL;
+	FPID_1				: PID;
+	Calcul1				:REAL;
+END_VAR
+
+VAR_IN_OUT
+	Tab_RegulPI	:Objet_RegulPI; (*Tableau des valeurs*)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion autorisation marche *********************************************************)
+Status_Marche := Autorisation_Marche;
+
+(* Gestion consigne régulante *********************************************************)
+(* Selection consigne *)
+IF Tab_RegulPI.Mot_Lecture.3
+	THEN
+		Cons_PID_INT := Tab_RegulPI.W_ConsInoccupe;
+	ELSE
+		IF NOT(Tab_RegulPI.Mot_Lecture.1)
+			THEN
+				Cons_PID_INT := Cons_Variable;
+			ELSE
+				IF Tab_RegulPI.Mot_Lecture.2
+					THEN
+						Cons_PID_INT := Tab_RegulPI.W_ConsOccupe;
+					ELSE
+						Cons_PID_INT := Tab_RegulPI.W_ConsInoccupe;
+				END_IF;
+		END_IF;
+END_IF;
+
+(* Intégration de la bande morte *)
+IF Sens_PID
+	THEN
+		Cons_PID_INT2 := Cons_PID_INT + Tab_RegulPI.W_BandeMorte;
+	ELSE
+		Cons_PID_INT2 := Cons_PID_INT - Tab_RegulPI.W_BandeMorte;
+END_IF;
+
+(* Forçage consigne *)
+IF Tab_RegulPI.Mot_Ecriture.0
+	THEN
+		Tab_RegulPI.R_InfoConsPI := Tab_RegulPI.W_ConsPIForcage;
+	ELSE
+		Tab_RegulPI.R_InfoConsPI := LIMIT(Tab_RegulPI.W_LimiteMinCons,Cons_PID_INT2,Tab_RegulPI.W_LimiteMaxCons);
+END_IF;
+
+(*  Gestion mesure perturbation *)
+R_TRIG_Pertub(CLK := TP_Pertub.Q);
+IF R_TRIG_Pertub.Q
+	THEN
+		Diff_Mesure_pertub := ABS(Mesure_pertub - Mesure_pertub_old);
+		Mesure_pertub_old := Mesure_pertub;
+END_IF;
+IF ((Coef_Mes_pertub * Diff_Mesure_pertub) = 0.0)
+	THEN 
+		Gain_Mes_pertub := 1.0;
+	ELSE
+		Gain_Mes_pertub := Coef_Mes_pertub * Diff_Mesure_pertub;	
+END_IF;
+
+(* Séléction du gain PID *)
+IF Gain_Variable
+	THEN
+		IF ((Tab_RegulPI.R_MesRegulPI >= (Tab_RegulPI.R_InfoConsPI - Hyst_Gain_Variable)) AND (Tab_RegulPI.R_MesRegulPI <= (Tab_RegulPI.R_InfoConsPI + Hyst_Gain_Variable)))
+			THEN
+				Gain_Int := Tab_RegulPI.W_GainPI * Coef_Gain_Variable;
+			ELSE
+				Gain_Int := Tab_RegulPI.W_GainPI;
+		END_IF;
+	ELSE
+		Gain_Int := Tab_RegulPI.W_GainPI;	
+END_IF;
+
+IF EN_Mes_pertub
+	THEN
+		Gain := Gain_Int / Gain_Mes_pertub;
+	ELSE
+		Gain := Gain_Int;
+END_IF;
+
+(* Sens du PID(Inversion du signe du gain) *********************************************************)
+IF (Sens_PID)
+	THEN
+	Gain := 0.0 - Gain;
+	ELSE
+	Gain := Gain;
+END_IF
+
+(* Régulation PID *********************************************************)
+FPID_1(
+	ACTUAL:= 		Tab_RegulPI.R_MesRegulPI,
+	SET_POINT:= 	Tab_RegulPI.R_InfoConsPI,
+	KP:= 			Gain,
+	TN:= 			Tab_RegulPI.W_IntegralPI,
+	TV:= 			Tab_RegulPI.W_DerivPI,
+	Y_MANUAL:= 	0.0,
+	Y_OFFSET:= 		0.0,
+	Y_MIN:= 			MIN_Sortie_CMD_PID,
+	Y_MAX:= 		MAX_Sortie_CMD_PID,
+	RESET:= 		NOT Status_Marche);
+Ecart_Mesure_Cons := FPID_1.ERROR;
+
+(* Gestion sortie commande PID *********************************************************)
+IF Tab_RegulPI.Mot_Ecriture.1
+	THEN
+		Tab_RegulPI.R_SortieCmdPI := Tab_RegulPI.W_SortieCMDForcage;
+	ELSE
+		IF Tab_RegulPI.Mot_Lecture.0
+			THEN
+				IF NOT(EN_Filtre_S_CMD_PID)
+					THEN
+						Tab_RegulPI.R_SortieCmdPI := FPID_1.Y;
+					ELSE (* Filtrage sortie commande PID *)
+					(* Detection de front montant *)
+					R_TRIG_1(CLK := PULS_Filtre);
+					puls_detecte := R_TRIG_1.Q;
+ 
+					IF (puls_detecte)
+						THEN
+							IF (FPID_1.Y > CONS_OLD)
+								THEN
+									CONS_Filtrer := CONS_Filtrer + IN_UP_RATE;
+									CONS_OLD := CONS_Filtrer;
+							END_IF;
+							IF (FPID_1.Y < CONS_OLD)
+								THEN
+									CONS_Filtrer := CONS_Filtrer - IN_DOWN_RATE;
+									CONS_OLD := CONS_Filtrer;
+							END_IF;
+							IF (FPID_1.Y = 100.0)
+								THEN
+									CONS_Filtrer := CONS_Filtrer + IN_UP_RATE;
+									CONS_OLD := CONS_Filtrer;
+							END_IF;
+							IF (FPID_1.Y = 0.0)
+								THEN
+									CONS_Filtrer := CONS_Filtrer - IN_DOWN_RATE;
+									CONS_OLD := CONS_Filtrer;
+							END_IF;
+					END_IF;
+					Tab_RegulPI.R_SortieCmdPI := LIMIT(MIN_Sortie_CMD_PID,CONS_Filtrer,MAX_Sortie_CMD_PID);
+				END_IF;
+			ELSE
+				Tab_RegulPI.R_SortieCmdPI := 0.0;
+		END_IF;
+END_IF;
+Sortie_CMD_PID := Tab_RegulPI.R_SortieCmdPI;
+Sortie_CMD_PID_Brute := FPID_1.Y;
+
+(* Recopie pour lecture GTC *********************************************************)
+Tab_RegulPI.R_MesRegulPI	:= Mes_Regul;
+Tab_RegulPI.Mot_Lecture.0	:= Status_Marche;
+Tab_RegulPI.Mot_Lecture.1 	:= Type_Consigne;
+Tab_RegulPI.Mot_Lecture.2	:= Mode_Occupe;
+Tab_RegulPI.Mot_Lecture.3 	:= SelConsigneInoccupe;]]></ST>
+    </Implementation>
+    <LineIds Name="Objet_PI_V1">
+      <LineId Id="64" Count="145" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

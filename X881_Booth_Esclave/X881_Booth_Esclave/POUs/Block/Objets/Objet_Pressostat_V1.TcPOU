@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Objet_Pressostat_V1" Id="{b7f03509-4d3c-41b0-8e07-2000882081d3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Objet_Pressostat_V1
+VAR_INPUT
+	Info_Pressostat	:BOOL;	(*nfo détection préssostat / 1 = Détection*)
+	Seuil_Press		:REAL;	(*Seuil préssion Réglé sur LE préssostat / en Pa*)
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	R_StatDefaut: BOOL;
+	R_SeuilPress: REAL;
+END_VAR
+VAR_IN_OUT
+	Tab_Pressostat: Objet_Pressostat;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion mesure **************************************************************)
+R_StatDefaut	:= Info_Pressostat;
+Tab_Pressostat.R_SeuilPress	:= Seuil_Press;
+
+(* Gestion lecture GTC *********************************************************)
+Tab_Pressostat.Mot_Lecture.0:= R_StatDefaut;]]></ST>
+    </Implementation>
+    <LineIds Name="Objet_Pressostat_V1">
+      <LineId Id="22" Count="4" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

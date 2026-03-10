@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <Task Name="Tache_test" Id="{97c06318-43ff-4b00-84e4-fb0b92cd62ea}">
+    <!--CycleTime in micro seconds.-->
+    <CycleTime>10000</CycleTime>
+    <Priority>6</Priority>
+    <PouCall>
+      <Name>p_Com_Modbus_RS485</Name>
+    </PouCall>
+    <TaskFBGuid>{79b9b39b-091a-43e8-8dda-8395b03f86d1}</TaskFBGuid>
+    <Fb_init>{cd7a5711-7314-4dec-b9dc-34db21010e72}</Fb_init>
+    <Fb_exit>{52cb929f-b1f9-4e8d-b1ea-66fcc0d85418}</Fb_exit>
+    <CycleUpdate>{ab4e725a-70ec-4913-be4c-36316ac5bf31}</CycleUpdate>
+    <PostCycleUpdate>{fa2ecc18-c3a5-4c0d-96ad-f04e85acf4cc}</PostCycleUpdate>
+  </Task>
+</TcPlcObject>

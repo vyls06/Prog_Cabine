@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_RemoteClient" Id="{5b9e999e-ea1e-4f2f-8495-bd7bd7ad978d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RemoteClient
+VAR_INPUT
+	hListener				: T_HSOCKET;
+	bEnable 				: BOOL;
+END_VAR
+VAR_OUTPUT
+	bAccepted			: BOOL;
+	hSocket				: T_HSOCKET;
+	bBusy				: BOOL;
+	bError 				: BOOL;
+	nErrID				: UDINT;
+	sFromClient			: T_MaxString;
+END_VAR
+VAR
+	fbAccept 			: FB_SocketAccept := ( sSrvNetID := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	fbClose				: FB_SocketClose := ( sSrvNetID := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	fbServerDataExcha	: FB_ServerDataExcha;
+	fbAcceptTON			: TON := ( PT := T#1s);
+	eStep				: E_ClientSteps;
+	R_TRIG_1: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE eStep OF
+
+	CLIENT_STATE_IDLE:
+		IF bEnable XOR bAccepted THEN
+			bBusy := TRUE;
+			bError := FALSE;
+			nErrId := 0;
+			sFromClient := '';
+			IF bEnable THEN
+				fbAcceptTON( IN := FALSE );
+				eStep := CLIENT_STATE_CONNECT_START;
+			ELSE
+				eStep := CLIENT_STATE_CLOSE_START;
+			END_IF
+		ELSIF bAccepted THEN
+			eStep := CLIENT_STATE_DATAEXCHA_START;
+		ELSE
+			bBusy := FALSE;
+		END_IF
+
+	CLIENT_STATE_CONNECT_START:
+		fbAcceptTON( IN := TRUE, PT := PLCPRJ_ACCEPT_POLLING_TIME );
+		IF fbAcceptTON.Q THEN
+			fbAcceptTON( IN := FALSE );
+			fbAccept(  bExecute := FALSE  );
+			fbAccept(	hListener := hListener,
+						bExecute:= TRUE );
+			eStep := CLIENT_STATE_CONNECT_WAIT;
+		END_IF
+
+	CLIENT_STATE_CONNECT_WAIT:
+		fbAccept( bExecute := FALSE );
+		IF NOT fbAccept.bBusy THEN
+			IF NOT fbAccept.bError THEN
+				IF fbAccept.bAccepted THEN
+					bAccepted := TRUE;
+					hSocket := fbAccept.hSocket;
+					LogMessage( 'REMOTE client ACCEPTED!', hSocket );
+				END_IF
+				eStep := CLIENT_STATE_IDLE;
+			ELSE
+				LogError( 'FB_SocketAccept',  fbAccept.nErrId );
+				nErrId := fbAccept.nErrId;
+				eStep := CLIENT_STATE_ERROR;
+			END_IF
+		END_IF
+
+	CLIENT_STATE_DATAEXCHA_START:
+		fbServerDataExcha( bExecute := FALSE );
+		fbServerDataExcha( 	hSocket := hSocket,
+								bExecute := TRUE );
+		eStep := CLIENT_STATE_DATAEXCHA_WAIT;
+
+	CLIENT_STATE_DATAEXCHA_WAIT:
+		fbServerDataExcha( bExecute := FALSE, sFromClient=>sFromClient );
+		IF NOT fbServerDataExcha.bBusy THEN
+			IF NOT fbServerDataExcha.bError THEN
+				eStep := CLIENT_STATE_IDLE;
+			ELSE
+				(* possible errors are logged inside of fbServerDataExcha function block *)
+				nErrId := fbServerDataExcha.nErrID;
+				eStep := CLIENT_STATE_ERROR;
+			END_IF
+		END_IF
+
+	CLIENT_STATE_CLOSE_START:
+		fbClose( bExecute := FALSE );
+		fbClose(	hSocket:= hSocket,
+				bExecute:= TRUE );
+		eStep := CLIENT_STATE_CLOSE_WAIT;
+
+	CLIENT_STATE_CLOSE_WAIT:
+		fbClose( bExecute := FALSE );
+		IF NOT fbClose.bBusy THEN
+			LogMessage( 'REMOTE client CLOSED!', hSocket );
+			bAccepted := FALSE;
+			MEMSET( ADR( hSocket ), 0, SIZEOF( hSocket ) );
+			IF fbClose.bError THEN
+				LogError( 'FB_SocketClose (remote client)', fbClose.nErrId );
+				nErrId := fbClose.nErrId;
+				eStep := CLIENT_STATE_ERROR;
+			ELSE
+				bBusy := FALSE;
+				bError := FALSE;
+				nErrId := 0;
+				eStep := CLIENT_STATE_IDLE;
+			END_IF
+		END_IF
+
+	CLIENT_STATE_ERROR:
+		bError := TRUE;
+		IF bAccepted THEN
+			eStep := CLIENT_STATE_CLOSE_START;
+		ELSE
+			eStep := CLIENT_STATE_IDLE;
+			bBusy := FALSE;
+		END_IF
+END_CASE
+
+R_TRIG_1(CLK:= fbServerDataExcha.bError);
+IF(R_TRIG_1.Q)
+	THEN
+	eStep := CLIENT_STATE_ERROR;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RemoteClient">
+      <LineId Id="21" Count="103" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

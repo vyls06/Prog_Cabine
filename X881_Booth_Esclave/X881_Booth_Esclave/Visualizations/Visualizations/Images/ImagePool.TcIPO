@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <ImagePool Name="ImagePool" Id="{598227ac-7cb6-4d0d-8b48-c797976e71c2}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="ImagePoolObject">
+          <v n="UniqueIdGenerator">"123"</v>
+          <l n="BitmapPool" t="ArrayList" cet="ImagePoolItem">
+            <o>
+              <v n="BitmapID">"accueil"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Fond\accueil.png"</v>
+              <v n="ItemID">12</v>
+            </o>
+            <o>
+              <v n="BitmapID">"english0"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Logos\english.png"</v>
+              <v n="ItemID">29</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Enoleo_Logo-complet-vert0"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Logos\Enoleo_Logo-complet-vert.png"</v>
+              <v n="ItemID">30</v>
+            </o>
+            <o>
+              <v n="BitmapID">"France0"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Logos\France.png"</v>
+              <v n="ItemID">31</v>
+            </o>
+            <o>
+              <v n="BitmapID">"checked"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Autres\checked.png"</v>
+              <v n="ItemID">21</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Fond_Degr"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Fond\Fond_Degr.png"</v>
+              <v n="ItemID">46</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Cabine_1"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Cabine_1.png"</v>
+              <v n="ItemID">73</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Cabine-2"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Cabine-2.png"</v>
+              <v n="ItemID">78</v>
+            </o>
+            <o>
+              <v n="BitmapID">"arrow-down"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\arrow-down.png"</v>
+              <v n="ItemID">79</v>
+            </o>
+            <o>
+              <v n="BitmapID">"arrow-down2"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\arrow-down2.png"</v>
+              <v n="ItemID">89</v>
+            </o>
+            <o>
+              <v n="BitmapID">"arrow-up"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\arrow-up.png"</v>
+              <v n="ItemID">90</v>
+            </o>
+            <o>
+              <v n="BitmapID">"arrow-up2"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\arrow-up2.png"</v>
+              <v n="ItemID">91</v>
+            </o>
+            <o>
+              <v n="BitmapID">"growth"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\growth.png"</v>
+              <v n="ItemID">92</v>
+            </o>
+            <o>
+              <v n="BitmapID">"growth_down"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\growth_down.png"</v>
+              <v n="ItemID">93</v>
+            </o>
+            <o>
+              <v n="BitmapID">"growth2"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\growth2.png"</v>
+              <v n="ItemID">94</v>
+            </o>
+            <o>
+              <v n="BitmapID">"growth2_Down"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\growth2_Down.png"</v>
+              <v n="ItemID">95</v>
+            </o>
+            <o>
+              <v n="BitmapID">"fan_Gray"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\fan_Gray.png"</v>
+              <v n="ItemID">96</v>
+            </o>
+            <o>
+              <v n="BitmapID">"fan (1)"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\fan (1).png"</v>
+              <v n="ItemID">99</v>
+            </o>
+            <o>
+              <v n="BitmapID">"fan_45"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\fan_45.png"</v>
+              <v n="ItemID">103</v>
+            </o>
+            <o>
+              <v n="BitmapID">"clean"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Anim\clean.png"</v>
+              <v n="ItemID">101</v>
+            </o>
+            <o>
+              <v n="BitmapID">"caution"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Autres\caution.png"</v>
+              <v n="ItemID">106</v>
+            </o>
+            <o>
+              <v n="BitmapID">"warning"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Autres\warning.png"</v>
+              <v n="ItemID">110</v>
+            </o>
+            <o>
+              <v n="BitmapID">"cross"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Autres\cross.png"</v>
+              <v n="ItemID">108</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Logo_OS"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Logos\Logo_OS.png"</v>
+              <v n="ItemID">113</v>
+            </o>
+            <o>
+              <v n="BitmapID">"QR_OS"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Logos\QR_OS.jpg"</v>
+              <v n="ItemID">120</v>
+            </o>
+            <o>
+              <v n="BitmapID">""</v>
+              <v n="FileID">""</v>
+              <v n="ItemID">122</v>
+            </o>
+          </l>
+          <v n="GuidInit">{efd9888c-d446-40d9-af01-73520c303372}</v>
+          <v n="GuidReInit">{86132e67-df94-409d-aa11-ba8aec0e1356}</v>
+          <v n="GuidExitX">{eb136979-4057-411d-a55e-befb4f687eb4}</v>
+          <v n="ValidIds">true</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="Boolean">System.Boolean</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="ImagePoolItem">{215b2719-0347-4e4d-ba85-8bcd66946f66}</Type>
+        <Type n="ImagePoolObject">{bb0b9044-714e-4614-ad3e-33cbdf34d16b}</Type>
+        <Type n="Int32">System.Int32</Type>
+        <Type n="String">System.String</Type>
+      </TypeList>
+    </XmlArchive>
+  </ImagePool>
+</TcPlcObject>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="LogMessage" Id="{ee3bdd69-1a87-4b05-ac8e-db0bceeacd9c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION LogMessage : DINT
+VAR_INPUT
+	msg		: STRING;
+	hSocket	: T_HSOCKET;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bLogDebugMessages THEN
+	LogMessage := ADSLOGDINT( ADSLOG_MSGTYPE_HINT OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, '::Internal handle: %d' ), UDINT_TO_DINT(hSocket.handle)  );
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="LogMessage">
+      <LineId Id="7" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

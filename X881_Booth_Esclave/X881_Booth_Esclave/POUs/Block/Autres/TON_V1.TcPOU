@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="TON_V1" Id="{c4dd15bb-a7b4-462e-a9d1-7c628344e753}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK TON_V1
+VAR_INPUT
+	Enable: BOOL;
+	Pause: BOOL;
+	In_Cons_Seconde: REAL;
+	In_Cons_Minute: REAL;
+	In_Cons_Heure: REAL;
+	In_Cons_Jour: REAL;
+END_VAR
+VAR_OUTPUT
+	Q: BOOL;
+	Seconde_Restant: REAL;
+	Minute_Restant: REAL;
+	Heure_Restant: REAL;
+	Jour_Restant: REAL;
+END_VAR
+VAR
+	TON_Inc: TON;
+	R_TRIG_Inc: R_TRIG;
+	Incrementation_Sec: BOOL;
+	Valeur_Seconde: REAL;
+	Valeur_Minutes: REAL;
+	Valeur_Heures: REAL;
+	Valeur_Jour: REAL;
+	Var1: REAL;
+	Var2: REAL;
+	Var3: REAL;
+	Var4: REAL;
+	Seconde: REAL;
+	Seconde_tot_Restant: REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Comptage des secondes*)
+TON_Inc(IN:= (NOT Incrementation_Sec AND NOT Pause AND NOT Q), PT:= T#1s, Q=> Incrementation_Sec );
+R_TRIG_Inc(CLK:= Incrementation_Sec);
+
+IF(Enable)
+	THEN
+(***************************************Comptage des secondes***************************************)
+	IF(R_TRIG_Inc.Q AND NOT Q)
+		THEN
+		Valeur_Seconde := Valeur_Seconde + 1.0;
+		Seconde := Seconde + 1.0;
+	END_IF;
+(****************************************Comptage des minutes****************************************)
+	IF((Valeur_Seconde >= 60.0)  AND NOT Q)
+		THEN
+		Valeur_Seconde := 0.0;
+		Valeur_Minutes := Valeur_Minutes + 1.0;
+	END_IF;
+(****************************************Comptage des heures****************************************)
+	IF((Valeur_Minutes >= 60.0)   AND NOT Q)
+		THEN
+		Valeur_Minutes := 0.0;
+		Valeur_Heures := Valeur_Heures + 1.0;
+	END_IF;
+(****************************************Comptage des jours****************************************)
+	IF((Valeur_Heures >= 24.0) AND NOT Q)
+		THEN
+		Valeur_Heures := 0.0;
+		Valeur_Jour := Valeur_Jour + 1.0;
+	END_IF;
+(****************************************Lors de l'arrêt****************************************)
+	ELSE
+	Var1 := 0.0;
+	Var2 := 0.0;
+	Var3 := 0.0;
+	Var4 := 0.0;
+
+	Valeur_Seconde := 0.0;
+	Valeur_Minutes := 0.0;
+	Valeur_Heures := 0.0;
+	Valeur_Jour := 0.0;
+	Seconde := 0.0;
+	Seconde_tot_Restant := 0.0;
+	Minute_Restant := 0;
+	Heure_Restant := 0;
+	Jour_Restant := 0;
+	Q := FALSE;
+END_IF;
+
+(****************************************Calcul du temp restant****************************************)
+Var1 := In_Cons_Minute * 60.0;
+Var2 := In_Cons_Heure * 3600.0;
+Var3 := In_Cons_Jour * 86400.0;
+Var4 := Var1 + Var2 + Var3 + In_Cons_Seconde;
+
+Seconde_tot_Restant := LIMIT(0, (Var4 - Seconde), 3000000);
+
+Seconde_Restant := (REAL_TO_INT(Seconde_tot_Restant)) MOD 60;
+Minute_Restant := (REAL_TO_INT(Seconde_tot_Restant) / 60) MOD 60;
+Heure_Restant := (REAL_TO_INT(Seconde_tot_Restant) / 3600) MOD 24;
+Jour_Restant := (REAL_TO_INT(Seconde_tot_Restant) / 86400) MOD 24;
+
+(****************************************Sortie****************************************)
+IF(Seconde >= (Var4 + 1) AND Enable)
+	THEN
+	Q := TRUE;
+	ELSE
+	Q := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="TON_V1">
+      <LineId Id="31" Count="68" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,579 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="o_Cons_Cmd_Actionneurs" Id="{6c54e938-1130-4058-9ae4-db92486b75e2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM o_Cons_Cmd_Actionneurs
+VAR
+	Calcul_Temp1: REAL;
+	Mode_NEP_Chaud: BOOL;
+	Mode_NEP_Froid: BOOL;
+	Calcul_Debit_Bypass: REAL;
+	ACH_Deb_Souf_Etat_Depol: REAL;
+	ACH_Deb_Souf_Etat_Libre: REAL;
+	ACH_Mode_Auto_Out_Debit_Souf: REAL;
+	Consigne_Mode_EnFctnmnt_PD: REAL := 67.0;
+	Consigne_Mode_EnFctnmnt_GD: REAL := 600.0;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Commande des actionneurs*)
+Cmd_Appli_PC_Cab					:= (Mode_Auto.Cmd_Prise  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Prise AND Mode_Manu.Enable);
+Cmd_Appli_Vanne_Alim_Douche			:= (Mode_Auto.Cmd_Douche  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Douche AND Mode_Manu.Enable) OR Forc_Ouv_Alim_Lav_Dou;
+Cmd_Appli_Vanne_Alim_Douchette		:= ((Mode_Auto.Cmd_Douchette  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Douchette AND Mode_Manu.Enable) OR Mode_Cabine_Nettoyage);
+Cmd_Appli_Vanne_Alim_Lavabo			:= (Mode_Auto.Cmd_Lavabo  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Lavabo AND Mode_Manu.Enable);
+Cmd_Appli_Vanne_Vid_Douche			:= ((Mode_Auto.Cmd_Vidange_Douche  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Vidange_Douche AND Mode_Manu.Enable) OR Mode_Cabine_Nettoyage);
+Cmd_Appli_Vanne_Vid_Lavabo			:= ((Mode_Auto.Cmd_Vidange_Lavabo  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Vidange_Lavabo AND Mode_Manu.Enable) OR Mode_Cabine_Nettoyage);
+Cmd_Appli_ElectroValve_Alim_Douche	:= (Mode_Auto.Cmd_Electrovanne_Douche  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Electrovanne_Douche AND Mode_Manu.Enable);
+Cmd_Appli_ElectroValve_Alim_Lavabo	:= (Mode_Auto.Cmd_Electrovanne_Lavabo  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Electrovanne_Lavabo AND Mode_Manu.Enable) OR Forc_Ouv_Alim_Lav_Dou;
+Cmd_Appli_Reg_Etanche_Souf			:= (Cons_Actionneur_Registre_Souf_m3h > ((Cons_Max_Bas_Deb_Ext + 0.5) * Volume_Cabine)) AND Option_Reg_Etanche_Souf;
+Cmd_Appli_Vanne_Alim_NEP			:=  (Mode_Auto.Cmd_NEP  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_NEP AND Mode_Manu.Enable);
+Cmd_Appli_Verin_WC_GV				:=(Mode_Auto.Cmd_Verin_WC_GV  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Verin_WC_GV AND Mode_Manu.Enable);
+Cmd_Appli_Verin_WC_PV				:=(Mode_Auto.Cmd_Verin_WC_PV  AND Mode_Auto.Enable) OR (Mode_Manu.Cmd_Verin_WC_PV AND Mode_Manu.Enable);
+
+(*Convertion des valeurs m3/h en Vol/h (ACH)*)
+ACH_Deb_Souf_Etat_Depol 	:= Cons_Deb_Souf_Etat_Depol * Volume_Cabine;
+ACH_Deb_Souf_Etat_Libre 	:= Cons_Deb_Souf_Etat_Libre * Volume_Cabine;
+ACH_Mode_Auto_Out_Debit_Souf:= Mode_Auto.Out_Debit_Souf * Volume_Cabine;
+
+(**********************************************Gestion de la consigne de débit en état cabine libre*)
+IF(Mode_Cabine_Libre)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Deb_Souf_Etat_Libre;
+	Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Deb_Souf_Etat_Libre;
+	
+	IF (ACH_Deb_Souf_Etat_Libre < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+		THEN
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= ACH_Deb_Souf_Etat_Libre;
+		ELSE
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= ACH_Deb_Souf_Etat_Libre;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= 0.0;	
+	END_IF
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 1020.0; //Mettre le débit maximum pour qu'il reste ouvert à 100%
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+END_IF;
+
+(**********************************************Gestion de la consigne de débit en etat cabine dépollution*)
+IF(Mode_Cabine_Depollution OR Mode_Depollution_cycle1)
+	THEN
+	IF (Mode_Depollution_cycle1) // 1er cycle, décontamination de la CTA
+		THEN
+		Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Deb_Souf_Etat_Depol;
+		Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Deb_Souf_Etat_Depol;
+		
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 375.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= 100.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 575.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 100.0;
+		GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 200.0;
+	END_IF;
+	IF (Mode_Cabine_Depollution AND NOT Mode_Depollution_cycle1) // 2ème cycle, décontamination de la cabine
+		THEN
+		Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Deb_Souf_Etat_Depol;
+		Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Deb_Souf_Etat_Depol;
+		
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= ACH_Deb_Souf_Etat_Depol;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 1020.0; //Mettre le débit maximum pour qu'il reste ouvert à 100%
+		GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+	END_IF;
+END_IF;
+
+(**********************************************Gestion de la consigne de débit en etat cabine Mode mise en condition*)
+IF(Mode_MEnCond AND NOT Mode_Cabine_Libre)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+	Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+	
+	GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+	IF (ACH_Mode_Auto_Out_Debit_Souf < 354.0)  //Mettre la valeur maximum du débit du registre en diam 100mm
+		THEN
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= ACH_Mode_Auto_Out_Debit_Souf;
+		ELSE
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= ACH_Mode_Auto_Out_Debit_Souf;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= 0.0;	
+	END_IF
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 1020.0; //Mettre le débit maximum pour qu'il reste ouvert à 100%
+END_IF;
+
+(**********************************************Gestion de la consigne de débit en etat cabine Mode fonctionnement*)
+IF(Mode_Fctnmt AND NOT Mode_Cabine_Libre)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+	Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+	(*IF (ACH_Mode_Auto_Out_Debit_Souf < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+		THEN
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= ACH_Mode_Auto_Out_Debit_Souf;
+		ELSE
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= ACH_Mode_Auto_Out_Debit_Souf;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= 0.0;	
+	END_IF*)
+	GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= ACH_Mode_Auto_Out_Debit_Souf;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+	Calcul_Debit_Bypass 								:= LIMIT(0.0, 600.0 - (Consigne_Mode_EnFctnmnt_GD + ACH_Mode_Auto_Out_Debit_Souf), 579.0);
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= Calcul_Debit_Bypass;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= Consigne_Mode_EnFctnmnt_GD;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+	(*IF (ACH_Mode_Auto_Out_Debit_Souf < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+		THEN
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= ACH_Mode_Auto_Out_Debit_Souf;
+		ELSE
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= ACH_Mode_Auto_Out_Debit_Souf;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= 0.0;	
+	END_IF*)
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= LIMIT(0, Consigne_Mode_EnFctnmnt_GD - ACH_Mode_Auto_Out_Debit_Souf, 1020.0);
+END_IF;
+
+(**********************************************Consigne des actionneurs en mode manuel*)
+IF(Mode_Cabine_Manuel)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh 					:= Cons_Deb_Soufflage_Appli;
+	Cons_Actionneur_Registre_Souf_Volh 					:= Cons_Deb_Soufflage_Appli;
+	IF (Cons_Deb_Soufflage_Appli < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+		THEN
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= Cons_Deb_Soufflage_Appli;
+		ELSE
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= Cons_Deb_Soufflage_Appli;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= 0.0;	
+	END_IF
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+END_IF;
+
+(**********************************************Gestion des consignes en cas de défaut sur le capteur de pression*)
+IF (Defaut_Sonde_Press_Cabine AND NOT Dmd_Post_Ventilation)
+	THEN
+	GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= 0.0;	
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+END_IF
+
+(**********************************************Consigne des actionneurs en mode automatique*)
+IF(Mode_Cabine_Automatique AND NOT Mode_Cabine_Depollution AND NOT Mode_MEnCond AND NOT Mode_Fctnmt)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh	:= Cons_Deb_Soufflage_Appli;
+	Cons_Actionneur_Registre_Souf_Volh	:= Cons_Deb_Soufflage_Appli;
+	Cons_Actionneur_Moteur_ByPass		:= Mode_Auto.Out_Cons_Moteur_ByPass;
+	// Deux types de fonctionnement, la première si une reccette est déclaré avec une gestion de CTA et le deuxième type sans gestion de CTA
+	IF (RS_MEnCond.Q1)// gestion avec CTA (Activation des redistres de soufflage générale et du soufflage de la cabine)
+		THEN
+		Cons_Actionneur_Registre_Ext_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+		Cons_Actionneur_Registre_Souf_Volh 					:= ACH_Mode_Auto_Out_Debit_Souf;
+		(*IF (ACH_Mode_Auto_Out_Debit_Souf < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+			THEN
+			GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= 0.0;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= ACH_Mode_Auto_Out_Debit_Souf;
+			ELSE
+			GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= ACH_Mode_Auto_Out_Debit_Souf;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= 0.0;	
+		END_IF*)
+		GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= Consigne_Mode_EnFctnmnt_PD;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+		Calcul_Debit_Bypass 								:= LIMIT(0.0, 600.0 - (Consigne_Mode_EnFctnmnt_GD + Consigne_Mode_EnFctnmnt_PD), 579.0);
+		GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= Calcul_Debit_Bypass;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= Consigne_Mode_EnFctnmnt_GD;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+		(*IF (ACH_Mode_Auto_Out_Debit_Souf < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+			THEN
+			GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= 0.0;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= ACH_Mode_Auto_Out_Debit_Souf;
+			ELSE
+			GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05	:= ACH_Mode_Auto_Out_Debit_Souf;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06	:= 0.0;	
+		END_IF*)
+		GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= LIMIT(0, Consigne_Mode_EnFctnmnt_GD - Consigne_Mode_EnFctnmnt_PD, 1020.0);
+	ELSE // gestion sans CTA (Activation des redistres de soufflage générale uniquement et ouverture du registre FCVT03)
+		IF (Cons_Deb_Soufflage_Appli < 354.0) //Mettre la valeur maximum du débit du registre en diam 100mm
+			THEN
+			GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= 0.0;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= Cons_Deb_Soufflage_Appli;
+			ELSE
+			GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01		:= Cons_Deb_Soufflage_Appli;
+			GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02		:= 0.0;	
+		END_IF
+		GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 1020.0; //Mettre le débit maximum pour qu'il reste ouvert à 100%
+		GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+		GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+	END_IF
+END_IF;
+
+(**********************************************Gestion de la consigne de température, de débit soufflage et de débit extraction en etat cabine nettoyage vol/h*)
+IF(Mode_Cabine_Nettoyage)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh := Cons_Deb_Souf_Etat_Nettoyage;
+	Cons_Actionneur_Registre_Souf_Volh := Cons_Deb_Souf_Etat_Nettoyage;
+END_IF;
+
+(**********************************************Gestion de la consigne de température, de débit soufflage et de débit extraction en etat cabine evaluation vol/h*)
+IF(Mode_Evaluation)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh := Cons_Deb_Souf_Etat_Evaluation;
+	Cons_Actionneur_Registre_Souf_Volh := Cons_Deb_Souf_Etat_Evaluation;
+END_IF;
+
+(**********************************************Consigne de la vanne 3 voies eau mitigée*)
+(*Deux types de gestion, une via la regul PID si une vanne d'alimentation est ouverte et la deuxième si il y'a la NEP (Position de régulation au repos)*)
+Mode_NEP_Chaud := Mode_Auto.Mode_18 OR Mode_Manu.Mode_18;
+Mode_NEP_Froid := Mode_Auto.Mode_19 OR Mode_Manu.Mode_19;
+
+IF(Mode_NEP_Chaud OR Mode_NEP_Froid)
+	THEN
+	Cons_Actionneur_V3V_Eau_Mitig := MAX(Mode_Auto.Out_Cons_V3V_Eau_Mitig , Mode_Manu.Out_Cons_V3V_Eau_Mitig);
+	ELSE
+	Cons_Actionneur_V3V_Eau_Mitig := S_Cmd_PID_Temp_Eau_Mitig;
+END_IF;
+
+(**********************************************Forçage ouverture electrovanne lavabo et douche pour eviter l'achéssement*******************************************************************************)
+IF((Mode_Cabine_Libre AND Option_Cabine_Humide AND ((VDayOfWeek = Cons_J_Forc_Vid_Lavabo) AND (Vheure = Cons_H_Forc_Vid_Lavabo) AND (Vminute = Cons_M_Forc_Vid_Lavabo))))
+	THEN
+	Forc_Ouv_Alim_Lav_Dou := FALSE;
+	ELSE
+	Forc_Ouv_Alim_Lav_Dou := FALSE;
+END_IF;
+
+(**********************************************Convertion en m3/h pour la consigne de soufflage et d'extraction******************************************)
+Cons_Actionneur_Registre_Ext_m3h := (Cons_Actionneur_Registre_Ext_Volh * Volume_Cabine);
+Cons_Actionneur_Registre_Souf_m3h := (Cons_Actionneur_Registre_Souf_Volh * Volume_Cabine);
+
+(**********************************************Convertion en °F pour la consigne de la vanne thermo******************************************)
+Calcul_Temp1 := ((1.8 * Cons_Temperature_Eau) + 32.0);
+Cons_Temperature_Eau_F := REAL_TO_INT(Calcul_Temp1 * 10);
+
+(**********************************************Consigne appliquée sur le registre étanche d'extraction******************************************)
+IF (Option_Reg_Etanche_Ext)
+	THEN
+	IF(Option_Regul_Deb_Ou_Press)
+		THEN
+		Cons_Actionneur_Reg_Etanche_Ext := S_Cmd_PID_Press_Cab;
+		ELSE
+		IF((Cons_Actionneur_Registre_Ext_m3h > ((Cons_Max_Bas_Deb_Ext + 0.5) * Volume_Cabine)))
+			THEN
+			Cons_Actionneur_Reg_Etanche_Ext := 100.0;
+			ELSE
+			Cons_Actionneur_Reg_Etanche_Ext := 0.0;
+		END_IF;
+	END_IF;
+ELSE
+	Cons_Actionneur_Reg_Etanche_Ext := 0.0;
+END_IF;
+
+(**********************************************Gestion de la consigne de débit en mode post ventilation*)
+IF(Dmd_Post_Ventilation)
+	THEN
+	Cons_Actionneur_Registre_Ext_Volh 					:= 0.0;
+	Cons_Actionneur_Registre_Souf_Volh 					:= 0.0;
+	
+	GVL_RegTROX.ConsAppliDeb_RegSouf_GD_FCVT01			:= 675.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_PD_FCVT02			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_Cabine_FCVT03		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_Reg_Bypass_FCVT04			:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabGD_FCVT05		:= 675.0;
+	GVL_RegTROX.ConsAppliDeb_RegSouf_CabPD_FCVT06		:= 0.0;
+	GVL_RegTROX.ConsAppliDeb_RegRep_FCVT07				:= 0.0;
+END_IF;
+
+(**********************************************Déclaration des VAV en communication******************************************)
+(**********************************************VAV FCVT01*)
+(*Sonde*)
+GVL_RegTROX.MES_RegSouf_GD_FCVT01(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegSouf_GD_FCVT01_DefCom OR GVL_RegTROX.RegSouf_GD_FCVT01_Def_DiscordDeb, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 1020.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 1020.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegSouf_GD_FCVT01);
+(*Registre*)	
+GVL_RegTROX.RegSouf_GD_FCVT01(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegSouf_GD_FCVT01.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 1020.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegSouf_GD_FCVT01);
+	
+(**********************************************VAV FCVT02*)
+(*Sonde*)
+GVL_RegTROX.MES_RegSouf_PD_FCVT02(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegSouf_PD_FCVT02_DefCom OR GVL_RegTROX.RegSouf_PD_FCVT02_Def_DiscordDeb, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 364.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 364.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegSouf_PD_FCVT02);
+(*Registre*)	
+GVL_RegTROX.RegSouf_PD_FCVT02(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegSouf_PD_FCVT02.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 364.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegSouf_PD_FCVT02);
+
+(**********************************************VAV FCVT03*)
+(*Sonde*)
+GVL_RegTROX.MES_RegSouf_Cabine_FCVT03(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegSouf_Cabine_FCVT03_DefCom, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 1020.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 1020.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegSouf_Cabine_FCVT03);
+(*Registre*)	
+GVL_RegTROX.RegSouf_Cabine_FCVT03(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegSouf_Cabine_FCVT03.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 1020.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegSouf_Cabine_FCVT03);
+
+(**********************************************VAV FCVT04*)
+(*Sonde*)
+GVL_RegTROX.MES_RegBypass_FCVT04(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.Reg_Bypass_FCVT04_DefCom OR GVL_RegTROX.Reg_Bypass_FCVT04_Def_DiscordDeb, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 579.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 579.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegBypass_FCVT04);
+(*Registre*)	
+GVL_RegTROX.RegBypass_FCVT04(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_Reg_Bypass_FCVT04.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 579.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegBypass_FCVT04);
+	
+(**********************************************VAV FCVT05*)
+(*Sonde*)
+GVL_RegTROX.MES_RegSouf_CabGD_FCVT05(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegSouf_CabGD_FCVT05_DefCom OR GVL_RegTROX.RegSouf_CabGD_FCVT05_Def_DiscordDeb, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 1020.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 1020.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegSouf_CabGD_FCVT05);
+(*Registre*)	
+GVL_RegTROX.RegSouf_CabGD_FCVT05(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegSouf_CabGD_FCVT05.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 1020.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegSouf_CabGD_FCVT05);
+	
+(**********************************************VAV FCVT06*)
+(*Sonde*)
+GVL_RegTROX.MES_RegSouf_CabPD_FCVT06(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegSouf_CabPD_FCVT06_DefCom OR GVL_RegTROX.RegSouf_CabPD_FCVT06_Def_DiscordDeb, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 364.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 364.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegSouf_CabPD_FCVT06);
+(*Registre*)	
+GVL_RegTROX.RegSouf_CabPD_FCVT06(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegSouf_CabPD_FCVT06.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 364.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegSouf_CabPD_FCVT06);
+	
+(**********************************************VAV FCVT07*)
+(*Sonde*)
+GVL_RegTROX.MES_RegRep_FCVT07(
+	Enable_Alarme:= TRUE, 
+	Status_DEF_EAN:= GVL_RegTROX.RegRep_FCVT07_DefCom, 
+	Tempo_AL:= T#10S, 
+	EAN_MIN:= 0.0, 
+	EAN_MAX:= 1020.0, 
+	MES_MIN:= 0.0, 
+	MES_MAX:= 1020.0, 
+	Filtre_Actif:= FALSE, 
+	Temps_Echantillonage:= T#500MS, 
+	Tab_Sonde:= GVL_RegTROX.TAB_Sonde_RegRep_FCVT07);
+(*Registre*)	
+GVL_RegTROX.RegRep_FCVT07(
+	Cons_Pos_Dem:= GVL_RegTROX.Com_RegRep_FCVT07.MES_Pos, 
+	Type_Consigne:= TRUE, 
+	Control_Discordance:= FALSE, 
+	Presence_Fdc:= 0, 
+	Inverse_SAN:= FALSE, 
+	SAN_MIN:= 0.0, 
+	SAN_MAX:= 1020.0,
+	Tab_RegMoto:= GVL_RegTROX.TAB_Reg_RegRep_FCVT07);]]></ST>
+    </Implementation>
+    <LineIds Name="o_Cons_Cmd_Actionneurs">
+      <LineId Id="106" Count="12" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="694" Count="1" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="119" Count="5" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="208" Count="3" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="248" Count="3" />
+      <LineId Id="459" Count="1" />
+      <LineId Id="252" Count="1" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="254" Count="6" />
+      <LineId Id="462" Count="0" />
+      <LineId Id="464" Count="11" />
+      <LineId Id="463" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="140" Count="2" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="213" Count="3" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="269" Count="1" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="275" Count="5" />
+      <LineId Id="312" Count="6" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="803" Count="1" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="284" Count="0" />
+      <LineId Id="805" Count="1" />
+      <LineId Id="285" Count="9" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="433" Count="13" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="451" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="483" Count="1" />
+      <LineId Id="482" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="488" Count="1" />
+      <LineId Id="491" Count="3" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="147" Count="2" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="151" Count="2" />
+      <LineId Id="378" Count="2" />
+      <LineId Id="807" Count="24" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="397" Count="11" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="418" Count="12" />
+      <LineId Id="417" Count="0" />
+      <LineId Id="155" Count="44" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="778" Count="13" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="504" Count="0" />
+      <LineId Id="506" Count="2" />
+      <LineId Id="510" Count="5" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="519" Count="1" />
+      <LineId Id="525" Count="1" />
+      <LineId Id="529" Count="3" />
+      <LineId Id="518" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="540" Count="21" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="563" Count="22" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="587" Count="22" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="612" Count="21" />
+      <LineId Id="611" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="636" Count="21" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="658" Count="0" />
+      <LineId Id="660" Count="21" />
+      <LineId Id="659" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

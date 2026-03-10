@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="a2_Gestion_ES" Id="{bb52da6a-38f1-4c7b-820d-a34b2c2a09f7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a2_Gestion_ES
+VAR
+	Var_BOOL_Bidon :BOOL;
+	Var_INT_Bidon :INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Configuration des Entrées*)
+	E_Info_Niveau_Haut_Douche := 		Var_BOOL_Bidon;
+	E_Info_Niveau_Haut_Lavabo := 		Var_BOOL_Bidon;
+	E_Info_Contact_Porte := 			ETOR6_Info_Contact_Porte;
+	E_Info_PC_Cab := 					ETOR3_Info_Ma_Prise;
+	E_Etat_Evac_SaniDouche := 			Var_BOOL_Bidon;
+	E_Info_Klixon_BattElec := 			Var_BOOL_Bidon;
+	E_Defaut_Prise_Elec :=				Var_BOOL_Bidon;
+
+	E_Vanne_Alim_Douche_Ouv := 			Var_BOOL_Bidon;
+	E_Vanne_Alim_Douche_Ferm := 		Var_BOOL_Bidon;
+	E_Vanne_Alim_Douchette_Ouv := 		Var_BOOL_Bidon;
+	E_Vanne_Alim_Douchette_Ferm := 		Var_BOOL_Bidon;
+	E_Vanne_Alim_Lavabo_Ouv := 			Var_BOOL_Bidon;
+	E_Vanne_Alim_Lavabo_Ferm := 		Var_BOOL_Bidon;
+	E_Vanne_Vidange_Douche_Ouv := 		Var_BOOL_Bidon;
+	E_Vanne_Vidange_Douche_Ferm := 		Var_BOOL_Bidon;
+	E_Vanne_Vidange_Lavabo_Ouv := 		ETOR1_Fdc_Va_Vid_Lavabo_Ouv;
+	E_Vanne_Vidange_Lavabo_Ferm := 		ETOR2_Fdc_Va_Vid_Lavabo_Ferm;
+	E_Vanne_Alim_NEP_Ouv := 			Var_BOOL_Bidon;
+	E_Vanne_Alim_NEP_Ferm := 			Var_BOOL_Bidon;
+
+	E_Vanne_Souf_Bas_Deb_Ouv :=			Var_BOOL_Bidon;
+	E_Vanne_Souf_Bas_Deb_Ferm :=		Var_BOOL_Bidon;
+	E_Vanne_Ext_Bas_Deb_Ouv :=			Var_BOOL_Bidon;
+	E_Vanne_Ext_Bas_Deb_Ferm :=			Var_BOOL_Bidon;
+
+	E_Sonde_Temp_Amb := 				EAN2_Sonde_Temp_Cabine;
+	E_Sonde_Hygro_Amb := 				EAN3_Sonde_Hygro_Cabine;
+	E_Sonde_Pression_Cabine :=			EAN5_Sonde_Pression_Cabine;
+	E_Sonde_Temp_Eau_Mitig :=			Var_INT_Bidon;
+	E_Sonde_press_Souf :=				EAN6_Sonde_press_Souf;
+	E_Sonde_press_Ext :=				EAN8_Sonde_press_Ext;
+	E_Sonde_Temp_Batt_EG :=				EAN4_Sonde_Temp_Batt_EG;
+
+	E_Sonde_Gros_Debit_Soufflage := 	Var_INT_Bidon;
+	E_Sonde_Gros_Debit_Extraction := 	Var_INT_Bidon;
+	E_Sonde_Petit_Debit_Extraction := 	Var_INT_Bidon;
+	E_Sonde_Pression_ByPass :=			Var_INT_Bidon;
+	E_Retour_Pos_Reg_Etanche_Ext :=		EAN7_Retour_Pos_Reg_Etanche_Ext;
+
+	E_Sonde_Debit_Alim_Douche :=		Var_INT_Bidon;
+	E_Sonde_Debit_Alim_Lavabo := 		EAN1_Sonde_Debit_Eau_Lavabo;
+	E_Sonde_Temp_Souf :=				EAN9_Sonde_Temp_Souf;
+
+(**********************************************Configuration des Sorties*)
+	STOR3_Cmd_Ma_Prise := 				S_Cmd_PC_Cab;
+	Var_BOOL_Bidon := 					S_Cmd_Vanne_Alim_Douche;
+	Var_BOOL_Bidon := 					S_Cmd_Vanne_Alim_Douchette;
+	Var_BOOL_Bidon := 					S_Cmd_Vanne_Alim_Lavabo;
+	Var_BOOL_Bidon := 					S_Cmd_Vanne_Vid_Douche;
+	STOR2_Cmd_Va_Vid_Lavabo  := 		S_Cmd_Vanne_Vid_Lavabo;
+	Var_BOOL_Bidon := 					S_Cmd_Vanne_NEP;
+	Var_BOOL_Bidon :=					S_Cmd_Appli_Verin_WC_GV;
+	Var_BOOL_Bidon :=					S_Cmd_Appli_Verin_WC_PV;
+
+	Var_BOOL_Bidon := 					S_Cmd_ElectroValve_Alim_Douche;
+	STOR1_Cmd_EV_Alim_Lavabo := 		S_Cmd_ElectroValve_Alim_Lavabo;
+
+	Var_BOOL_Bidon := 					S_Cmd_BattElec;
+	Var_BOOL_Bidon :=					S_Cmd_Vanne_Souf_Bas_Deb;
+	Var_BOOL_Bidon :=					S_Cmd_Vanne_Ext_Bas_Deb;
+	Var_BOOL_Bidon :=					S_Cmd_Reg_Etanche_Souf;
+
+	Var_INT_Bidon :=				 	S_Cons_Registre_Extraction;
+	Var_INT_Bidon := 					S_Cons_Registre_Soufflage;
+	Var_INT_Bidon := 					S_Cons_Moteur_BasDebit;
+	Var_INT_Bidon := 					S_Cons_Moteur_ByPass;
+	Var_INT_Bidon := 					S_Cons_BattElec;
+	SAN7_Cons_Ouv_Reg_Etanche_Ext :=	S_Cons_Reg_Etanche_Ext;
+	Var_INT_Bidon :=					S_Cons_Ouv_V3V_Eau_Mitig;
+	Var_INT_Bidon := 					S_Cons_Module_Sontay;
+
+(*Configuration des Entrées et Sorties - Gestion des enceintes climatiques*)
+	E_Def_MotRep_CTA := 				ETOR7_Def_MotRep_Souf_CTA;
+	E_Def_MotSouf_CTA := 				ETOR8_Def_MotSouf_Souf_CTA;
+	E_Hygrostat_Souf_CTA := 			ETOR10_Hygrostat_Souf_CT;
+	E_Def_Alim_BatElec_CTA := 			ETOR9_Def_Alim_BatElec_CTA;
+	E_Marche_BatElec_CTA := 			ETOR13_Marche_BatElec_CTA;
+	E_Def_Humi_CTA := 					ETOR5_Def_Humi_CTA;
+	E_Service_Humi_CTA := 				ETOR4_Service_Humi_CTA;
+	E_Pressostat_Secu := 				ETOR11_Pressostat_Secu;
+	E_Thermostat_Secu :=				ETOR12_Thermostat_Secu;
+
+	STOR4_Cmd_BatElec_CTA := 			S_Cmd_BatElec_CTA;
+	Var_BOOL_Bidon := 					S_Cmd_Humi_CTA;
+
+	SAN5_Cons_V3V_Froid_CTA := 			S_Cons_V3V_Froid_CTA;
+	SAN2_Cons_MotRep_CTA := 			S_Cons_MotRep_CTA;
+	SAN3_Cons_MotSouf_CTA := 			S_Cons_MotSouf_CTA;
+	SAN4_Cons_BatElec_CTA := 			S_Cons_BatElec_CTA;
+	SAN1_Cons_Humi_CTA := 				S_Cons_Humi_CTA;]]></ST>
+    </Implementation>
+    <LineIds Name="a2_Gestion_ES">
+      <LineId Id="373" Count="42" />
+      <LineId Id="471" Count="0" />
+      <LineId Id="416" Count="37" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="454" Count="7" />
+      <LineId Id="93" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

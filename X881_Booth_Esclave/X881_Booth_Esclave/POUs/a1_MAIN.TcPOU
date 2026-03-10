@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="a1_MAIN" Id="{df61af48-a442-4644-8cca-6a9b9f405efc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a1_MAIN
+VAR
+	FB_S_UPS_CX81xx :FB_S_UPS_CX81xx;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(******************Gestion UPS********************************)
+FB_S_UPS_CX81xx(
+	sNetID:='',
+	iPLCPort:= 851,
+	tTimeout:= DEFAULT_ADS_TIMEOUT,
+	eUpsMode:= eSUPS_WrPersistData_Shutdown,
+	ePersistentMode:= SPDM_2PASS);
+
+(***********************Execution des taches***********************)
+a2_Gestion_ES();
+a3_Ecriture_Bit();
+a4_Lecture_Bit();
+a5_Ecriture_InterCom();
+a6_Lecture_InterCom();
+b_SCL_Mesures();
+c_Gestion_Defaut();
+d_Gestion_Pause_Modes();
+e_Gestion_Horraire();
+f_Gestion_Etats();
+g_Gestion_Texte_Modes();
+h_Enr_Recette();
+i_Protocol_Auto();
+j_Protocol_Manu();
+l_Cons_LED();
+n0_Regulation_Bas_Deb();
+n1_Regulation_Press();
+n2_Regulation_Temp();
+n3_Regul_Temp_EauMitig();
+o_Cons_Cmd_Actionneurs();
+//p_Com_Modbus_RS485();
+q_Gestion_Actionneurs_ANA();
+r_Gestion_Actionneurs_TOR();
+s_InterCom_Esclave();
+t_Enr_Variables();
+Visu();
+Alarmes();
+(***********************Execution des taches de la partie enceinte climatique***********************)
+IF (Option_Cabine_Climatique)
+	THEN
+	B_Gestion_Defaut();
+	C0_Gestion_Consignes();
+	C_Regul_Temp();
+	D_Regul_Humi();
+	E_Cons_Cmd_Actionneurs();
+	F_Gestion_Actionneurs();
+	ELSE
+	S_Cmd_BatElec_CTA			:= FALSE;
+	S_Cmd_Humi_CTA				:= FALSE;
+	S_Cons_V3V_Froid_CTA		:= 0;
+	S_Cons_MotRep_CTA			:= 0;
+	S_Cons_MotSouf_CTA			:= 0;
+	S_Cons_BatElec_CTA			:= 0;
+	S_Cons_Humi_CTA				:= 0;
+
+	Defaut_MotRep_CTA			:= FALSE;
+	Defaut_MotSouf_CTA			:= FALSE;
+	Defaut_Hygrostat_CTA 		:= FALSE;
+	Defaut_Alim_BatElec_CTA		:= FALSE;
+	Defaut_Humi_CTA				:= FALSE;
+	Defaut_Regul_Temp			:= FALSE;
+	Defaut_Regul_Hygro			:= FALSE;
+	Defaut_Arret_Mode25			:= FALSE;
+
+	Cons_Actionneur_V3V_Froid_CTA	:= 0.0;
+	Cons_Actionneur_Mot1_Souf_CTA	:= 0.0;
+	Cons_Actionneur_Mot2_Souf_CTA	:= 0.0;
+	Cons_Actionneur_BatElec_CTA		:= 0.0;
+	Cons_Actionneur_Humi_CTA		:= 0.0;
+
+	Cmd_Actionneur_BatElec_CTA		:= FALSE;
+	Cmd_Actionneur_Humi_CTA		:= FALSE;
+	Dmd_Post_Ventilation				:= FALSE;
+END_IF;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="a1_MAIN">
+      <LineId Id="4" Count="33" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="38" Count="38" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

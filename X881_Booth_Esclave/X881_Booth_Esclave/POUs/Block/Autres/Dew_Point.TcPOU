@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="Dew_Point" Id="{d3a26c1e-5ebe-4a60-9ebc-1a28d631bd50}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Dew_Point
+VAR_INPUT
+    rTemp : REAL; (* Température ambiante [°C] *)
+    rRh   : REAL; (* Humidité Relative [%] *)
+END_VAR
+VAR_OUTPUT
+    rDewPoint : REAL; (* Point de rosée calculé [°C] *)
+    bError    : BOOL; (* TRUE si les entrées sont incohérentes (ex: sonde HS) *)
+END_VAR
+VAR
+    rGamma   : REAL;
+    rRh_Safe : REAL; (* Valeur interne sécurisée pour le calcul *)
+    
+    (* Constantes Magnus-Tetens *)
+    c_b : REAL := 17.62;
+    c_c : REAL := 243.12;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* 1. Gestion des erreurs et sécurisation *)
+bError := (rRh < 0.0) OR (rRh > 100.0) OR (rTemp < -19.0);
+
+(* On borne l'humidité pour protéger le Logarithme (LN) *)
+(* Même si le capteur envoie -10% (rupture de fil), on calcule avec 0.1% pour éviter le crash PLC *)
+IF rRh < 0.1 THEN
+    rRh_Safe := 0.1; 
+ELSIF rRh > 100.0 THEN
+    rRh_Safe := 100.0;
+ELSE
+    rRh_Safe := rRh;
+END_IF
+
+(* 2. Calcul du coefficient Gamma *)
+(* Formule : ln(RH/100) + (b * T) / (c + T) *)
+rGamma := LN(rRh_Safe / 100.0) + ( (c_b * rTemp) / (c_c + rTemp) );
+
+(* 3. Résultat final *)
+rDewPoint := (c_c * rGamma) / (c_b - rGamma);]]></ST>
+    </Implementation>
+    <LineIds Name="Dew_Point">
+      <LineId Id="91" Count="17" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

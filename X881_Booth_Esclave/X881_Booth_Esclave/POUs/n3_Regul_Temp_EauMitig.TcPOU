@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="n3_Regul_Temp_EauMitig" Id="{1abc09ba-693e-4dac-932e-39a644385174}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM n3_Regul_Temp_EauMitig
+VAR
+	PID_Temp_Eau_Mitig: PID;
+	SetPoint_PID_Temp_EM: REAL;
+	Actual_PID_Temp_EM: REAL;
+	TON_1: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de l'enable de la régulation PID*)
+(*Gestion de la régulation de la température uniquement si une d'alimentation est ouverte (sauf NEP et douchette)*)
+(*Petite temporisation le temps que la température bouge après une ouverture de vanne*)
+TON_1(IN:= ((E_Vanne_Alim_Douche_Ouv OR E_Vanne_Alim_Lavabo_Ouv OR S_Cmd_ElectroValve_Alim_Douche OR S_Cmd_ElectroValve_Alim_Lavabo) AND Option_Regul_Temp_Eau), PT:= T#5S);
+IF (TON_1.Q)
+	THEN
+	Enable_PID_Temp_Eau_Mitig := TRUE;
+	ELSE
+	Enable_PID_Temp_Eau_Mitig := FALSE;
+END_IF;
+
+(*Gestion de la consigne celon le mode*)
+IF (Mode_Cabine_Automatique) THEN (*SetPoint_PID_Temp_EM := Mode_Auto.Out_Temp_Eau*) SetPoint_PID_Temp_EM := Cons_Temp_EauMitige ; END_IF;
+IF (Mode_Cabine_Manuel) THEN SetPoint_PID_Temp_EM := Mode_Manu.Out_Temp_Eau ; END_IF;
+
+(*Gestion du blocage du PID*)
+Actual_PID_Temp_EM := SEL(Enable_PID_Temp_Eau_Mitig, SetPoint_PID_Temp_EM ,Tab_MES_Sonde_Temp_Eau_Mitig.R_MesCor);
+
+(**********************************************Régulation PID*)
+PID_Temp_Eau_Mitig(
+	ACTUAL:= Actual_PID_Temp_EM,
+	SET_POINT:= SetPoint_PID_Temp_EM,
+	KP:= Gain_PID_Temp_Eau_Mitig,
+	TN:= Integral_PID_Temp_Eau_Mitig,
+	TV:= Derivee_PID_Temp_Eau_Mitig,
+	Y_MANUAL:= 0.0,
+	Y_OFFSET:= 0.0,
+	Y_MIN:= 0.0,
+	Y_MAX:= 100.0,
+	RESET:= FALSE,
+	Y=> S_Cmd_PID_Temp_Eau_Mitig);
+
+S_Ecart_Regul_PID_Temp_Eau_Mitig := SEL(Enable_PID_Temp_Eau_Mitig, 0.0, ABS(PID_Temp_Eau_Mitig.ERROR));
+]]></ST>
+    </Implementation>
+    <LineIds Name="n3_Regul_Temp_EauMitig">
+      <LineId Id="7" Count="33" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

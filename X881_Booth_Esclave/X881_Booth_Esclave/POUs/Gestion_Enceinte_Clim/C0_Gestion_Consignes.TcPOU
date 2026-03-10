@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="C0_Gestion_Consignes" Id="{1284d435-d5d5-4666-b8a7-cf38378e6ac6}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM C0_Gestion_Consignes
+VAR
+(*Gestion du post ventilation*)
+	TON_Post_Ventilation: TON;
+	Temp_Post_ventil: TIME;
+	RS_Post_ventilation: RS;
+	Reset_Post_Ventil: BOOL;
+	R_Trig_Post_Ventil: R_TRIG;
+	TP_Post_Ventil: TP;
+	Arret_Post_Ventil: BOOL;
+	Set_Post_Ventilation: BOOL;
+	Set_TON: BOOL;
+	RS_YMin: RS;
+	TP_YMin: TP;
+	Var_1: BOOL;
+	TON_YMin: TON;
+	R_TRIG_TempHygro: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion des consignes lors du Mode Stand-By (Libre)
+IF(Mode_Cabine_Libre)
+	THEN
+	Lect_Cons_Temperature_Cabine		:= 0.0 ;
+	Lect_Cons_Hygrometrie_Cabine			:= 0.0 ;
+	Lect_Cons_VitMot_Cabine_MEnCond		:= 0.0 ;
+END_IF;*)
+
+(**********************************************Gestion des consignes lors du Mode Mise en fonctionnement*)
+Mode_MEnCond := Mode_Auto.Mode_25;
+Mode_Fctnmt := Mode_Auto.Mode_28;
+(*Maintient de la consigne de température et de l'hygrométrie durant toute la recette si il y'a eu un mode mise en condition*)
+RS_MEnCond(SET:= (Mode_Cabine_Automatique AND Mode_MEnCond), RESET1:= Mode_Cabine_Libre  OR (Numero_Mode_Actuel = 10));
+IF(RS_MEnCond.Q1)
+	THEN
+	(*Gestion du changement de vitesse des moteurs de la CTA une fois la mise en condition terminée*)
+	IF(Mode_MEnCond)
+		THEN
+		Lect_Cons_VitMot_Cabine_MEnCond		:= Cons_VitMot_Cabine_MEnCond;
+		ELSE
+		Lect_Cons_VitMot_Cabine_MEnCond		:= Cons_VitMot_Cabine_EnCond;
+	END_IF;
+	ELSE
+	Lect_Cons_VitMot_Cabine_MEnCond := 0.0;
+END_IF;
+(*Enregistrement des consignes sur le front montant du mode qui gére les consigne (Mode 25)*)
+R_TRIG_TempHygro(CLK:= Mode_MEnCond);
+IF (R_TRIG_TempHygro.Q)
+	THEN
+	Lect_Cons_Temperature_Cabine			:= Mode_Auto.Out_Para_11;
+	Lect_Cons_Hygrometrie_Cabine			:= Mode_Auto.Out_Para_12;
+	ELSE
+	Lect_Cons_Temperature_Cabine			:= Lect_Cons_Temperature_Cabine;
+	Lect_Cons_Hygrometrie_Cabine			:= Lect_Cons_Hygrometrie_Cabine;
+END_IF
+
+(**********************************************Gestion de l'enable PID de la température*)
+IF(RS_MEnCond.Q1 AND NOT Defaut_Sonde_Temp_Cabine AND NOT Defaut_Alim_BatElec_CTA AND E_Pressostat_Secu)
+	THEN
+	Enable_Regul_PID_Temp := TRUE AND NOT Dmd_Post_Ventilation;
+	ELSE
+	Enable_Regul_PID_Temp := FALSE;
+END_IF;
+
+(**********************************************Gestion de l'enable PID de l'hygrometrie*)
+IF(RS_MEnCond.Q1  AND NOT Defaut_General_Humi AND E_Pressostat_Secu)
+	THEN
+	Enable_Regul_PID_Hr := TRUE AND NOT Dmd_Post_Ventilation;
+	ELSE
+	Enable_Regul_PID_Hr := FALSE;
+END_IF;
+(*Passage à la consigne minimum à 18% de l'humidification, si demande*)
+Var_1 := (S_Cmd_Regul_PID_Humi >= 7.0);
+TON_YMin(IN:= Var_1, PT:= T#30s);
+RS_YMin(SET:= (Enable_Regul_PID_Humi AND TON_YMin.Q), RESET1:= (Mode_Arret_Auto OR (Numero_Mode_Actuel = 10)));
+TP_YMin(IN:= RS_YMin.Q1, PT:= T#1s);
+IF (TP_YMin.Q) THEN Regul_Humi_YMin := 25.0; ELSE Regul_Humi_YMin := 0.0; END_IF;
+
+(**********************************************Gestion du post ventilation*)
+(*Conversion du temp - temps en seconde*)
+Temp_Post_ventil 		:= TO_TIME((TO_DINT(Cons_Sec_Post_Ventil + 5)) * 1000);
+(*Détection de la chauffe*)
+Set_Post_Ventilation 	:= (S_Cmd_Regul_PID_Temp_Chaud > 10.0);
+Set_TON 				:= (S_Cmd_Regul_PID_Temp_Chaud < 10.0);
+TON_Post_Ventilation	(IN:= (Set_TON), PT:= Temp_Post_ventil);
+RS_Post_ventilation		(SET:= Set_Post_Ventilation,
+						RESET1:= Reset_Post_Ventil OR Numero_Mode_Auto=0);
+Reset_Post_Ventil 		:= TON_Post_Ventilation.Q AND NOT TP_Post_Ventil.Q;
+(*Détection d'un arrêt lors du front montant de l'arrêt de la recette*)
+Arret_Post_Ventil 		:= (Mode_Arret_Auto (*OR (Numero_Mode_Actuel = 10)*));
+R_Trig_Post_Ventil		(CLK:= Arret_Post_Ventil);
+TP_Post_Ventil			(IN:= R_Trig_Post_Ventil.Q, PT:= Temp_Post_ventil);
+(*Mode post ventilation*)
+Dmd_Post_Ventilation 	:= TP_Post_Ventil.Q AND RS_Post_ventilation.Q1;]]></ST>
+    </Implementation>
+    <LineIds Name="C0_Gestion_Consignes">
+      <LineId Id="17" Count="9" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="27" Count="3" />
+      <LineId Id="33" Count="9" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="3" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="43" Count="24" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="69" Count="12" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

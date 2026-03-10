@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="j_Protocol_Manu" Id="{4c76d305-7a1a-47a0-9041-070c34b365fb}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM j_Protocol_Manu
+VAR
+(*Enregistrement de la recette manuel*)
+	R_TRIG_Enr_Manuel: R_TRIG;
+(*initialisation des valeurs*)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(************************************************************************************************************************Gestion Arrêt du grafcet*)
+Mode_Arret_Manu := 	(Reset_Mode_Manu(*Bouton arrêt*)
+					OR ((Numero_Mode_Manu = 1) AND Mode_Manu.Fin_Action) (*Fin du mode*)
+					OR (Mode_Manu.Mode_12 AND Defaut_Discord_Deb_Eau_Douche)
+					OR (Mode_Manu.Mode_13 AND Defaut_Discord_Deb_Eau_Douche)
+					OR (Mode_Manu.Mode_14 AND Defaut_Discord_Deb_Eau_Lavabo)
+					OR (Mode_Manu.Mode_15 AND Defaut_Discord_Deb_Eau_Lavabo)
+					OR Defaut_Debordement_Douche OR Defaut_Debordement_Lavabo)
+					OR (Mode_Manu.Mode_4 AND Defaut_Discord_Deb_Eau_Lavabo AND Option_Debitmetre_Lavabo)
+					OR (Mode_Manu.Mode_5 AND Defaut_Discord_Deb_Eau_Lavabo AND Option_Debitmetre_Lavabo)
+					OR (Mode_Manu.Mode_1 AND Defaut_Discord_Deb_Eau_Douche AND Option_Debitmetre_Douche)
+					OR (Mode_Manu.Mode_2 AND Defaut_Discord_Deb_Eau_Douche AND Option_Debitmetre_Douche)
+					OR (Mode_Auto.Mode_25 AND Defaut_Arret_Mode25 AND Option_Cabine_Climatique)
+					OR Defaut_Discord_Reg_Etanche_Ext OR Defaut_Sonde_Temp_Eau_Mitig;
+
+(************************************************************************************************************************Enregistrement de la recette manuel*)
+R_TRIG_Enr_Manuel(CLK:=Mode_Cabine_Manuel);
+IF(R_TRIG_Enr_Manuel.Q)
+	THEN
+	Tab_Enr_Mode_Manu[1] 			:= Manu_Choix_Numero_Mode;
+	Tab_Enr_Mode_Manu[2] 			:= Manu_Tempo_Transition_Seconde;
+	Tab_Enr_Mode_Manu[3] 			:= Manu_Tempo_Transition_Minute;
+	Tab_Enr_Mode_Manu[4] 			:= Manu_Tempo_Transition_Heure;
+	Tab_Enr_Mode_Manu[5] 			:= Manu_Lct_Cons_Vol_Douche;
+	Tab_Enr_Mode_Manu[6] 			:= Manu_Lct_Cons_Vol_Lavabo;
+	Tab_Enr_Mode_Manu[7] 			:= Manu_Cons_Deb_Soufflage;
+	Tab_Enr_Mode_Manu[8] 			:= Manu_Cons_Deb_Extraction;
+	Tab_Enr_Mode_Manu[9] 			:= Manu_Cons_Temp_Eau;
+	Tab_Enr_Mode_Manu[10] 			:= Manu_Cons_Nbre_Chasse;
+	Tab_Enr_Mode_Manu[11] 			:= Manu_Cons_Para11;
+	Tab_Enr_Mode_Manu[12] 			:= Manu_Cons_Para12;
+	Tab_Enr_Mode_Manu[13] 			:= Manu_Cons_Para13;
+	Tab_Enr_Mode_Manu[14] 			:= Manu_Cons_Para14;
+	Tab_Enr_Mode_Manu[15] 			:= Manu_Cons_Para15;
+END_IF;
+
+(************************************************************************************************************************Démarrage du mode manu*)
+(*Démarrage du mode manuel à la fin de l'enregistrement*)
+IF(Mode_Cabine_Manuel AND (Tab_Enr_Mode_Manu[1] <> 0))
+	THEN
+	Numero_Mode_Manu := 1;
+END_IF;
+
+(*Gestion du case du mode auto*)
+CASE Numero_Mode_Manu OF
+(*******************************************************************************************Etape 0 : Attente*)
+0:
+Mode_Manu(
+	Enable:= 						(FALSE),
+	Numero_Etape:= 					Numero_Mode_Manu);
+
+(*******************************************************************************************Etape 1 : Execution de la recette en mode auto*)
+1:
+Mode_Manu(
+	Enable:= 						(Numero_Mode_Manu = 1),
+	Numero_Etape:= 					Numero_Mode_Manu,
+	Numero_Mode:= 					Tab_Enr_Mode_Manu[1],
+	Tempo_Transition_seconde:= 		Tab_Enr_Mode_Manu[2],
+	Tempo_Transition_Minute:=		Tab_Enr_Mode_Manu[3],
+	Tempo_Transition_Heure:= 		Tab_Enr_Mode_Manu[4],
+	Cons_Volume_Eau_Douche:= 		Tab_Enr_Mode_Manu[5],
+	Cons_Volume_Eau_Lavabo:=		Tab_Enr_Mode_Manu[6],
+	Cons_Deb_Soufflage:=			Tab_Enr_Mode_Manu[7],
+	Cons_Deb_Extraction:=			Tab_Enr_Mode_Manu[8],
+	Cons_Temperature_Eau:=			Tab_Enr_Mode_Manu[9],
+	Cons_Nbre_Chasse:=				Tab_Enr_Mode_Manu[10],
+	Cons_Para_11:=					Tab_Enr_Mode_Manu[11],
+	Cons_Para_12:= 					Tab_Enr_Mode_Manu[12],
+	Cons_Para_13:=					Tab_Enr_Mode_Manu[13],
+	Cons_Para_14:=					Tab_Enr_Mode_Manu[14],
+	Cons_Para_15:= 					Tab_Enr_Mode_Manu[15]);
+
+(*Lecture des consignes appliquée en cours de fonctionnement pour chaque étape (Valeurs en sorties du bloc Mode)*)
+(*Affichage du texte du mode en cours*)
+MEMSET(ADR(Lecture_Texte_Choisi_FR),0,SIZEOF(Lecture_Texte_Choisi_FR));
+MEMSET(ADR(Lecture_Texte_Choisi_ENG),0,SIZEOF(Lecture_Texte_Choisi_ENG));
+Lecture_Texte_Choisi_FR 			:= Mode_Manu.Out_Texte_FR;
+Lecture_Texte_Choisi_ENG			:= Mode_Manu.Out_Texte_ENG;
+(*Gestion du décompte du temps restant*)
+Temp_Restant_Seconde 				:= Mode_Manu.Out_Restant_Seconde;
+Temp_Restant_Minute 				:= Mode_Manu.Out_Restant_Minute;
+Temp_Restant_Heure 					:= Mode_Manu.Out_Restant_Heure;
+(*Gestion du décompte du nombre de chasse*)
+Nbre_Chasse_Total 					:= Mode_Manu.Cons_Nbre_Chasse;
+Nbre_Chasse_EnCours 				:= MAX(Mode_Manu.Cpt_Chasse_PV, Mode_Manu.Cpt_Chasse_GV);
+(*Débit d'eau, consigne de ventilation et consigne de température d'eau*)
+IF (S_Cmd_Vanne_Alim_Douche OR S_Cmd_ElectroValve_Alim_Douche) THEN
+Lect_Volume_Eau_Douche 				:= LIMIT(0,(Mode_Manu.Out_Volume_Eau_Douche - Trop_Plein_Douche + Garde_Deau_Douche),150);
+ELSE Lect_Volume_Eau_Douche 		:= 0.0; END_IF;
+IF (S_Cmd_Vanne_Alim_Lavabo OR S_Cmd_ElectroValve_Alim_Lavabo) THEN
+Lect_Volume_Eau_Lavabo				:= LIMIT(0,(Mode_Manu.Out_Volume_Eau_Lavabo - Trop_Plein_Lavabo + Garde_Deau_Lavabo),150);
+ELSE Lect_Volume_Eau_Lavabo 		:= 0.0; END_IF;
+Cons_Deb_Soufflage_Appli 			:= Mode_Manu.Out_Debit_Souf;
+Cons_Deb_Extraction_Appli 			:= Mode_Manu.Out_Debit_Ext;
+Cons_Temperature_Eau_Appli 			:= Mode_Manu.Out_Temp_Eau;
+Cons_Para_Nbre_Chasse_Eau 			:= Mode_Manu.Cons_Nbre_Chasse;
+Cons_Para_11_Appli 					:= Mode_Manu.Out_Para_11;
+Cons_Para_12_Appli 					:= Mode_Manu.Out_Para_12;
+Cons_Para_13_Appli 					:= Mode_Manu.Out_Para_13;
+Cons_Para_14_Appli 					:= Mode_Manu.Out_Para_14;
+Cons_Para_15_Appli 					:= Mode_Manu.Out_Para_15;
+
+(*Fin du mode*)
+IF(Mode_Arret_Manu)
+	THEN
+	Numero_Mode_Manu := 2;
+END_IF;
+
+(*******************************************************************************************Etape 2 : Initialisation des valeurs*)
+2:
+Tab_Enr_Mode_Manu[1] 				:= 0;
+Tab_Enr_Mode_Manu[2] 				:= 0;
+Tab_Enr_Mode_Manu[3] 				:= 0;
+Tab_Enr_Mode_Manu[4] 				:= 0;
+Tab_Enr_Mode_Manu[5] 				:= 0;
+Tab_Enr_Mode_Manu[6] 				:= 0;
+Tab_Enr_Mode_Manu[7] 				:= 0;
+Tab_Enr_Mode_Manu[8] 				:= 0;
+Tab_Enr_Mode_Manu[9] 				:= 0;
+Tab_Enr_Mode_Manu[10]				:= 0;
+Tab_Enr_Mode_Manu[11]				:= 0;
+Tab_Enr_Mode_Manu[12]				:= 0;
+Tab_Enr_Mode_Manu[13]				:= 0;
+Tab_Enr_Mode_Manu[14]				:= 0;
+Tab_Enr_Mode_Manu[15]				:= 0;
+
+Mode_Manu(
+	Enable:= 						FALSE,
+	Numero_Etape:= 					0,
+	Numero_Mode:= 					0,
+	Tempo_Transition_seconde:=		0,
+	Tempo_Transition_Minute:=		0,
+	Tempo_Transition_Heure:= 		0,
+	Cons_Volume_Eau_Douche:= 		0,
+	Cons_Volume_Eau_Lavabo:=		0,
+	Cons_Deb_Soufflage:= 			0,
+	Cons_Deb_Extraction:=			0,
+	Cons_Temperature_Eau:= 			0,
+	Cons_Nbre_Chasse:= 				0,
+	Cons_Para_11:= 					0,
+	Cons_Para_12:= 					0,
+	Cons_Para_13:= 					0,
+	Cons_Para_14:= 					0,
+	Cons_Para_15:= 					0);
+
+MEMSET(ADR(Lecture_Texte_Choisi_FR),0,SIZEOF(Lecture_Texte_Choisi_FR));
+MEMSET(ADR(Lecture_Texte_Choisi_ENG),0,SIZEOF(Lecture_Texte_Choisi_ENG));
+Lecture_Texte_Choisi_FR				:= '';
+Lecture_Texte_Choisi_ENG			:= '';
+Temp_Restant_Seconde 				:= 0.0;
+Temp_Restant_Minute 				:= 0.0;
+Temp_Restant_Heure 					:= 0.0;
+Lect_Volume_Eau_Douche 				:= 0.0;
+Lect_Volume_Eau_Lavabo				:= 0.0;
+Cons_Deb_Soufflage_Appli 			:= 0.0;
+Cons_Deb_Extraction_Appli 			:= 0.0;
+Cons_Temperature_Eau_Appli 			:= 0.0;
+Cons_Para_Nbre_Chasse_Eau 			:= 0.0;
+Cons_Para_11_Appli 					:= 0.0;
+Cons_Para_12_Appli 					:= 0.0;
+Cons_Para_13_Appli 					:= 0.0;
+Cons_Para_14_Appli 					:= 0.0;
+Cons_Para_15_Appli 					:= 0.0;
+
+(*Retour à l'étape 0 à la fin de l'initialisation*)
+Numero_Mode_Manu 					:= 0;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="j_Protocol_Manu">
+      <LineId Id="169" Count="165" />
+      <LineId Id="163" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

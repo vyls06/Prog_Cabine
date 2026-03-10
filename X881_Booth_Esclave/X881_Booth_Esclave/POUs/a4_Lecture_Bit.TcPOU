@@ -1,0 +1,186 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="a4_Lecture_Bit" Id="{df554e47-ba79-4ddd-999f-d99649224269}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a4_Lecture_Bit
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Variable Lect_Bit_IHM1*) (*Adresse Modbus GTC : 21009*)
+(*Gestion des défauts*)
+%MX17442.0 := Defaut_Debordement_Douche;
+%MX17442.1 := Defaut_Debordement_Lavabo;
+%MX17442.2 := Defaut_Discord_Deb_Eau_Douche;
+%MX17442.3 := Defaut_Discord_Deb_Eau_Lavabo;
+%MX17442.4 := Defaut_Discord_PC_Cab;
+%MX17442.5 := Def_Discord_Alim_Prise;
+%MX17442.6 := Def_Prise_Porte_Ouverte;
+%MX17442.7 := Defaut_Pompe_Relevage;
+%MX17442.8 := Defaut_Porte_Ouverte;
+%MX17442.9 := Defaut_Com_Dalcnet;
+%MX17442.10 := Defaut_Com_Vanne_Thermo;
+%MX17442.11 := Defaut_Com_Vanne_General;
+%MX17442.12 := Defaut_Com_Client;
+%MX17442.13 := Defaut_Discord_Vanne_Vid_Douche_Ouv;
+%MX17442.14 := Defaut_Discord_Vanne_Vid_Douche_Ferm;
+%MX17442.15 := Defaut_Discord_Vanne_Vid_Lavabo_Ouv;
+
+(**********************************************Variable Lect_Bit_IHM2*) (*Adresse Modbus GTC : 21010*)
+(*Gestion des défauts*)
+%MX17444.0 := Defaut_Discord_Vanne_Vid_Lavabo_Ferm;
+%MX17444.1 := Defaut_Discord_Vanne_Alim_Douche_Ouv;
+%MX17444.2 := Defaut_Discord_Vanne_Alim_Douche_Ferm;
+%MX17444.3 := Defaut_Discord_Vanne_Alim_Lavabo_Ouv;
+%MX17444.4 := Defaut_Discord_Vanne_Alim_Lavabo_Ferm;
+%MX17444.5 := Defaut_Discord_Vanne_Alim_Douchette_Ouv;
+%MX17444.6 := Defaut_Discord_Vanne_Alim_Douchette_Ferm;
+%MX17444.7 := Defaut_Discord_Deb_Ext;
+%MX17444.8 := Defaut_Discord_Deb_Souf;
+%MX17444.9 := Defaut_Discord_Reg_Souf_Ferm;
+%MX17444.10 := Defaut_Discord_Reg_Ext_Ferm;
+%MX17444.11 := Defaut_Klixon_BattElec;
+%MX17444.12 := Defaut_Differentiel_Prise_Elec;
+%MX17444.13 := Defaut_Discord_Vanne_Souf_Bas_Deb_Ouv;
+%MX17444.14 := Defaut_Discord_Vanne_Souf_Bas_Deb_Ferm;
+%MX17444.15 := Defaut_Discord_Vanne_Ext_Bas_Deb_Ouv;
+
+(**********************************************Variable Lect_Bit_IHM7*) (*Adresse Modbus GTC : 21015*)
+(*Gestion des défauts*)
+%MX17454.0 := Defaut_Discord_Vanne_Ext_Bas_Deb_Ferm;
+%MX17454.1 := Defaut_Discord_Reg_Etanche_Ext;
+%MX17454.2 := Defaut_Discord_Regul_Press_Cab;
+%MX17454.3 :=Defaut_Com_Reg_Souf ;
+%MX17454.4 := Defaut_Com_Reg_Ext;
+%MX17454.5 := Defaut_Ensemble_Bas_Debit;
+%MX17454.6 := Defaut_Ensemble_Bypass;
+%MX17454.7 := Defaut_Sonde_Press_Cabine;
+%MX17454.8 := Defaut_Sonde_Temp_Cabine;
+%MX17454.9 := Defaut_Sonde_Hygro_Cabine;
+%MX17454.10 := Defaut_Sonde_Temp_Eau_Mitig;
+%MX17454.11 := Defaut_Discord_Vanne_Alim_NEP_Ouv;
+%MX17454.12 := Defaut_Discord_Vanne_Alim_NEP_Ferm;
+
+(**********************************************Variable Lect_Bit_IHM3*) (*Adresse Modbus GTC : 21011*)
+(*configuration des Entrees et sorties tor*)
+%MX17446.0 := E_Info_Niveau_Haut_Douche;
+%MX17446.1 := E_Info_Niveau_Haut_Lavabo;
+%MX17446.2 := E_Info_Contact_Porte;
+%MX17446.3 := E_Info_PC_Cab;
+%MX17446.4 := E_Etat_Evac_SaniDouche;
+%MX17446.5 := E_Vanne_Alim_Douche_Ouv;
+%MX17446.6 := E_Vanne_Alim_Douche_Ferm;
+%MX17446.7 := E_Vanne_Alim_Douchette_Ouv;
+%MX17446.8 := E_Vanne_Alim_Douchette_Ferm;
+%MX17446.9 := E_Vanne_Alim_Lavabo_Ouv;
+%MX17446.10 := E_Vanne_Alim_Lavabo_Ferm;
+%MX17446.11 := E_Vanne_Vidange_Douche_Ouv;
+%MX17446.12 := E_Vanne_Vidange_Douche_Ferm;
+%MX17446.13 := E_Vanne_Vidange_Lavabo_Ouv;
+%MX17446.14 := E_Vanne_Vidange_Lavabo_Ferm;
+%MX17446.15 := S_Cmd_PC_Cab;
+
+(**********************************************Variable Lect_Bit_IHM4*) (*Adresse Modbus GTC : 21012*)
+(*configuration des Entrees et sorties tor*)
+%MX17448.0 := S_Cmd_Vanne_Alim_Douche;
+%MX17448.1 := S_Cmd_Vanne_Alim_Douchette;
+%MX17448.2 := S_Cmd_Vanne_Alim_Lavabo;
+%MX17448.3 := S_Cmd_Vanne_Vid_Douche;
+%MX17448.4 := S_Cmd_Vanne_Vid_Lavabo;
+%MX17448.5 := S_Cmd_ElectroValve_Alim_Douche;
+%MX17448.6 := S_Cmd_ElectroValve_Alim_Lavabo;
+%MX17448.7 := S_Cmd_Vanne_Souf_Bas_Deb;
+%MX17448.8 := S_Cmd_Vanne_Ext_Bas_Deb;
+%MX17448.9 := E_Vanne_Souf_Bas_Deb_Ouv;
+%MX17448.10 := E_Vanne_Souf_Bas_Deb_Ferm;
+%MX17448.11 := E_Vanne_Ext_Bas_Deb_Ouv;
+%MX17448.12 := E_Vanne_Ext_Bas_Deb_Ferm;
+%MX17448.13 := E_Defaut_Prise_Elec;
+%MX17448.14 := E_Info_Klixon_BattElec;
+%MX17448.15 := S_Cmd_Reg_Etanche_Souf;
+
+(**********************************************Variable Lect_Bit_IHM8*) (*Adresse Modbus GTC : 21016*)
+(*configuration des Entrees et sorties tor*)
+%MX17456.0 :=	E_Vanne_Alim_NEP_Ouv;
+%MX17456.1 := 	E_Vanne_Alim_NEP_Ferm;
+%MX17456.2 :=	S_Cmd_Vanne_NEP;
+%MX17456.3 :=	S_Cmd_Appli_Verin_WC_GV;
+%MX17456.4 :=	S_Cmd_Appli_Verin_WC_PV;
+
+(**********************************************Variable Lect_Bit_IHM5*) (*Adresse Modbus GTC : 21013*)
+(*Bit lecture gestion recette et état de la cabine*)
+%MX17450.0 := Mode_Cabine_Eclairage;
+%MX17450.1 := Mode_Cabine_Libre;
+%MX17450.2 := Mode_Cabine_Manuel;
+%MX17450.3 := Mode_Cabine_Automatique;
+%MX17450.4 := Mode_Cabine_Depollution;
+%MX17450.5 := Mode_Cabine_Nettoyage;
+%MX17450.6 := Mode_Evaluation;
+%MX17450.7 := Mode_Neutre;
+%MX17450.8 := Mode_Cabine_Defaut;
+%MX17450.9 := Mode_Maintenance;
+
+(**********************************************Variable Lect_Bit_IHM6*) (*Adresse Modbus GTC : 21014*)
+(*Bit lecture gestion recette et état de la cabine*)
+%MX17452.0 := Statut_Pause_Force;
+%MX17452.1 := Attente_Reset_Pause;
+%MX17452.2 := Comande_Pause;
+%MX17452.3 := Condi_Affich_Etape_Suiv;
+%MX17452.4 := Condi_Affich_Rearm;
+%MX17452.5 := Enable_PID_Bas_Deb_Ext;
+%MX17452.6 := Enable_PID_Press_Cab;
+%MX17452.7 := Enable_PID_Temp_Eau_Mitig;
+
+(*Mise à zéro des défaut si mode maintenance*)
+IF(Cmd_Mode_Maintenance)
+	THEN
+	%MW17442 := 0;
+	%MW17444 := 0;
+	%MW17454 := 0;
+	%MW17458 := 0;
+END_IF;
+
+(**********************************************Variable Lect_Bit_IHM9*) (*Adresse Modbus GTC : 21017*)
+(*Bit lecture gestion enceinte climatique*)
+%MX17458.0 := Defaut_MotRep_CTA;
+%MX17458.1 := Defaut_MotSouf_CTA;
+%MX17458.2 := Defaut_Hygrostat_CTA;
+%MX17458.3 := Defaut_Alim_BatElec_CTA;
+%MX17458.4 := Defaut_Humi_CTA;
+%MX17458.5 := Defaut_Regul_Temp;
+%MX17458.6 := Defaut_Regul_Hygro;
+%MX17458.7 := S_Cmd_BatElec_CTA;
+%MX17458.8 := S_Cmd_Humi_CTA;
+%MX17458.9 := E_Pressostat_Secu;
+%MX17458.10 := E_Marche_BatElec_CTA;
+%MX17458.11 := E_Service_Humi_CTA;
+
+(**********************************************Variable Lect_Bit_IHM10*) (*Adresse Modbus GTC : 21018*)
+%MX17460.0 := GVL_RegTROX.RegSouf_GD_FCVT01_DefCom;
+%MX17460.1 := GVL_RegTROX.RegSouf_GD_FCVT01_Def_DiscordDeb;
+%MX17460.2 := GVL_RegTROX.RegSouf_PD_FCVT02_DefCom;
+%MX17460.3 := GVL_RegTROX.RegSouf_PD_FCVT02_Def_DiscordDeb;
+%MX17460.4 := GVL_RegTROX.RegSouf_Cabine_FCVT03_DefCom;
+%MX17460.5 := GVL_RegTROX.Reg_Bypass_FCVT04_DefCom;
+%MX17460.6 := GVL_RegTROX.Reg_Bypass_FCVT04_Def_DiscordDeb;
+%MX17460.7 := GVL_RegTROX.RegSouf_CabGD_FCVT05_DefCom;
+%MX17460.8 := GVL_RegTROX.RegSouf_CabGD_FCVT05_Def_DiscordDeb;
+%MX17460.9 := GVL_RegTROX.RegSouf_CabPD_FCVT06_DefCom;
+%MX17460.10 := GVL_RegTROX.RegSouf_CabPD_FCVT06_Def_DiscordDeb;
+%MX17460.11 := GVL_RegTROX.RegRep_FCVT07_DefCom;
+%MX17460.12 := Defaut_Discord_Souf_CTA;
+%MX17460.13 := Defaut_Thermostat_Secu;
+%MX17460.14 := Defaut_Sonde_Temp_Souf;
+]]></ST>
+    </Implementation>
+    <LineIds Name="a4_Lecture_Bit">
+      <LineId Id="3" Count="17" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="22" Count="127" />
+      <LineId Id="163" Count="1" />
+      <LineId Id="167" Count="4" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="172" Count="3" />
+      <LineId Id="177" Count="4" />
+      <LineId Id="183" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

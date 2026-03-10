@@ -1,0 +1,775 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="GestionAlarme" Id="{761afe95-0182-4be1-930e-7cd5e197b856}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM GestionAlarme
+VAR CONSTANT
+	nbErreurMax 					: INT := 500; //définit le nombre d'erreur maximum que l'on peur gérer	
+	IndexDepartWarning  			: INT := 250;  //Définit l'index de départ des warning dans la liste d'erreur
+	IndexDepartWarningAcquittable  	: INT := 375;  //Définit l'index de départ des warning toujours aquittable dans la liste d'erreur
+	nbErreurMaxHistorique 			: INT := 1000; //définit le nombre d'erreur maximum que l'on peut inscrire dans l'historique	
+END_VAR
+VAR
+	TableauErreurRaw 	: ARRAY[0..nbErreurMax] OF Erreur_Struct; //Contiendra les erreurs dans l'ordre d'arrivé
+	TableauErreurVisu	: ARRAY[0..nbErreurMax] OF Erreur_StructVisu; //Contiendra les erreurs formatées
+	TextlistErreur 		: ARRAY[0..nbErreurMax] OF BOOL;
+	TextlistErreurOLD 	: ARRAY[0..nbErreurMax] OF BOOL;
+	index: INT;
+	NbrErreur: INT;
+	NT_GetTime1: NT_GetTime;
+	DateEnCour: DATE_AND_TIME;
+	// Bouton pour l'aquittement des défauts
+	bAcquitement: BOOL;
+	// représente la ligne en cour de sélection dans la visu
+	indexLigneActive: INT;
+	// bouton d'aquittement de tout les défauts
+	bAcquitementAll: BOOL;
+	index3: INT;
+	index4: INT;
+	index2: INT;
+	NbrErreurSave: INT;
+	DateEncourString: STRING;
+	tickDate: BOOL;
+	// Permet l'affichage croissant ou decroissant des défauts
+	bOrdreCroissant: BOOL;
+	LigneSelectionTabVisu: INT;
+	DernierDefautIDVisu: INT;
+	DernierDefautIDImageVisu: STRING(3);
+	CouleurBandeauVisu: DWORD;
+	bAckBandeau: BOOL;
+	// sera liée à la visu pour éviter les indexs négatifs
+	NbrErreurVisu: INT;
+	// sera liée à la visu pour éviter les indexs négatifs
+	nombredefautHistoriqueVisu: INT;
+	sDay:	STRING;
+	sMonth:	STRING;
+	sYear:	STRING;
+	sHour:	STRING;
+	sMinute:STRING;
+	sSecond:STRING;
+END_VAR
+
+VAR PERSISTENT
+	HistoriqueDefaut : ARRAY[0..nbErreurMaxHistorique] OF Erreur_StructVisu;
+	nombredefautHistorique : INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Programme d'exemple d'utilisation des alarmes
+Date : 25-09-2015
+Auteur : Jerome CHOVINO
+Version : V1.1
+
+Résumé : 	On peut gérer trois catégories (erreurs, warning et warning acquittables), il faut modifier la textlist "listeErreurWarning" pour créer les textes d'erreur
+			et mettre le bon booléen dans le tableau d'erreur définit dans l'action "DefinitionIDErreur" en face de l'index case tableau qui correspond à l'index de la textlist.
+			/!\ L'index 0 de la textlist "listeErreurWarning" doit rester vide !
+			
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*)
+
+DefinitionIDErreur(); //Actualisation des défauts
+//Recupération de la date en cour (utilise la librairie TC2_Utilities)
+tickDate := NOT tickDate;
+NT_GetTime1(
+	START:= tickDate, 
+	TMOUT:= T#200MS);
+//Contruction de la date en string
+sDay:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wDay);
+IF len(sDAy)< 2 THEN sday:= concat('0',sday) ; END_IF
+
+sMonth:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wMonth);
+IF len(sMonth)< 2 THEN sMonth:= concat('0',sMonth) ; END_IF
+
+sYear:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wYear);
+IF len(sYear)< 2 THEN sYear:= concat('0',sYear) ; END_IF
+
+sHour:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wHour);
+IF len(sHour)< 2 THEN sHour:= concat('0',sHour) ; END_IF
+
+sMinute:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wMinute);
+IF len(sMinute)< 2 THEN sMinute:= concat('0',sMinute) ; END_IF
+
+sSecond:=WORD_TO_STRING(NT_GetTime1.TIMESTR.wSecond);
+IF len(sSecond)< 2 THEN sSecond:= concat('0',sSecond) ; END_IF
+
+DateEncourString := sday;
+DateEncourString := CONCAT(DateEncourString,'/');
+DateEncourString := CONCAT(DateEncourString,sMonth);
+DateEncourString := CONCAT(DateEncourString,'/');
+DateEncourString := CONCAT(DateEncourString,sYear);
+DateEncourString := CONCAT(DateEncourString,'  ');
+DateEncourString := CONCAT(DateEncourString,sHour);
+DateEncourString := CONCAT(DateEncourString,':');
+DateEncourString := CONCAT(DateEncourString,sMinute);
+DateEncourString := CONCAT(DateEncourString,':');
+DateEncourString := CONCAT(DateEncourString,sSecond);
+
+//Structation des erreurs
+FOR index := 0 TO nbErreurMax DO 
+	//Nouveau défaut
+	IF TextlistErreur[index] AND NOT TextlistErreurOLD[index]  THEN		
+		TableauErreurRaw[NbrErreur].IdDefaut := index;		
+		TableauErreurRaw[NbrErreur].DateDefaut := 	DateEncourString;
+		IF index >= IndexDepartWarningAcquittable THEN //Warnings Acquittables
+			TableauErreurRaw[NbrErreur].TypeDefaut := 2; //1 = Warning acquittable, voir structure Erreur_Struct
+			TableauErreurRaw[NbrErreur].EtatDefaut := 'WA'; //nouveau warning acquittable 
+		ELSIF index >= IndexDepartWarning THEN //Warnings
+			TableauErreurRaw[NbrErreur].TypeDefaut := 1; //1 = Warning, voir structure Erreur_Struct
+			TableauErreurRaw[NbrErreur].EtatDefaut := 'WP'; //nouveau warning 
+		ELSE //Erreurs
+			TableauErreurRaw[NbrErreur].TypeDefaut := 0; //0 = Erreur, voir structure Erreur_Struct
+			TableauErreurRaw[NbrErreur].EtatDefaut := 'DP'; //nouveau Defaut 
+		END_IF
+	
+		//Ajout du nouveau défaut dans l'historique des défauts
+		HistoriqueDefaut[nombredefautHistorique].DateMessage := TableauErreurRaw[NbrErreur].DateDefaut;
+		HistoriqueDefaut[nombredefautHistorique].IDMessage := TableauErreurRaw[NbrErreur].IdDefaut;
+		HistoriqueDefaut[nombredefautHistorique].TypeDefaut := TableauErreurRaw[NbrErreur].EtatDefaut;
+		nombredefautHistorique := nombredefautHistorique + 1;
+		IF nombredefautHistorique > nbErreurMaxHistorique THEN nombredefautHistorique := 0; END_IF	
+		
+		NbrErreur := NbrErreur + 1;
+		IF NbrErreur > nbErreurMax THEN NbrErreur := 0; END_IF					
+	END_IF	
+	
+	TextlistErreurOLD[index] := TextlistErreur[index];	
+END_FOR
+
+FOR index := NbrErreur TO nbErreurMax DO //Effacer les cases vides du tableau brute
+	TableauErreurRaw[index].IdDefaut := 0;	
+	TableauErreurRaw[index].EtatDefaut := '';
+END_FOR
+
+//MAJ de l'état des défauts
+//Défaut disparu non acquité (ne s'applique pas aux warnings acquittables)
+FOR index := 0 TO NbrErreur DO
+	IF NOT TextlistErreur[TableauErreurRaw[index].IdDefaut] AND (TableauErreurRaw[index].IdDefaut <> 0)  AND (TableauErreurRaw[index].TypeDefaut <> 2) THEN	
+		IF TableauErreurRaw[index].IdDefaut < IndexDepartWarning THEN //Erreur
+			TableauErreurRaw[index].EtatDefaut := 'DD'; //nouveau Defaut 
+		ELSE//Warning
+			TableauErreurRaw[index].EtatDefaut := 'WD'; //nouveau warning 
+		END_IF		
+	END_IF
+END_FOR
+
+
+//Acquittement des défauts sélectionnés
+IF bAcquitement THEN
+	bAcquitement := FALSE;
+	//On ne peut aquitter que les défauts qui ont disparu ou les warning aquittable
+	IF (TableauErreurRaw[indexLigneActive].IdDefaut <> 0) AND ( NOT TextlistErreur[TableauErreurRaw[indexLigneActive].IdDefaut] OR (TableauErreurRaw[indexLigneActive].TypeDefaut = 2) ) THEN
+		FOR index := indexLigneActive TO NbrErreur DO 
+			TableauErreurRaw[index] :=  TableauErreurRaw[index + 1];	
+		END_FOR	
+		NbrErreur := NbrErreur - 1;
+		IF NbrErreur < 0 THEN NbrErreur := 0; END_IF
+	END_IF
+END_IF
+
+
+//Acquittement de tous les défauts
+IF bAcquitementAll THEN
+	bAcquitementAll := FALSE;
+	NbrErreurSave := NbrErreur;
+	index2 := 0 ;
+	FOR index := 0 TO NbrErreurSave DO 
+		//On ne peut aquitter que les défauts qui ont disparu ou les warning aquittable
+		IF (TableauErreurRaw[index2].IdDefaut <> 0) AND (NOT TextlistErreur[TableauErreurRaw[index2].IdDefaut] OR (TableauErreurRaw[index2].TypeDefaut = 2) ) THEN
+			FOR index3 := index2 TO NbrErreur DO 
+				TableauErreurRaw[index3] :=  TableauErreurRaw[index3 + 1];	
+			END_FOR	
+			NbrErreur := NbrErreur - 1;
+			IF NbrErreur < 0 THEN NbrErreur := 0; END_IF
+		ELSE
+			index2 := index2 + 1;
+			IF index2 > NbrErreurSave  THEN  index2 := NbrErreurSave; END_IF	
+		END_IF
+	END_FOR	
+END_IF
+
+//Mise en forme pour affichage dans la visu
+//Tableau d'alarme
+IF NOT bOrdreCroissant THEN
+	FOR index:=0 TO NbrErreur DO
+		TableauErreurVisu[index].TypeDefaut := TableauErreurRaw[index].EtatDefaut;
+		TableauErreurVisu[index].IDMessage := TableauErreurRaw[index].IdDefaut;
+		TableauErreurVisu[index].DateMessage := TableauErreurRaw[index].DateDefaut;
+	END_FOR
+	indexLigneActive := LigneSelectionTabVisu; //Variable liée au tableau de la visu
+ELSE
+	FOR index:=NbrErreur-1 TO 0 BY -1 DO 
+		TableauErreurVisu[index].TypeDefaut := TableauErreurRaw[(NbrErreur-1) - index].EtatDefaut;
+		TableauErreurVisu[index].IDMessage := TableauErreurRaw[(NbrErreur-1) - index].IdDefaut;
+		TableauErreurVisu[index].DateMessage := TableauErreurRaw[(NbrErreur-1) - index].DateDefaut;
+	END_FOR	
+	indexLigneActive := (NbrErreur-1)- LigneSelectionTabVisu; //Variable liée au tableau de la visu
+END_IF
+IF NbrErreur <= 0 THEN NbrErreurVisu := 1; ELSE NbrErreurVisu := NbrErreur; END_IF
+	
+//Historique d'alarme
+//Bandeau d'alarme
+IF NbrErreur > 0 THEN
+	DernierDefautIDVisu := TableauErreurRaw[NbrErreur-1].IdDefaut;
+	DernierDefautIDImageVisu := TableauErreurRaw[NbrErreur-1].EtatDefaut;
+	//Le changement de couleur n'est pas fonctionnel avec la version 4018.13
+	IF 		TableauErreurRaw[NbrErreur-1].EtatDefaut = 'DP' THEN CouleurBandeauVisu := 16#00FF0000; //Bandeau rouge
+	ELSIF 	TableauErreurRaw[NbrErreur-1].EtatDefaut = 'DD' THEN CouleurBandeauVisu := 16#00FF0066; //Bandeau Rouge clair
+	ELSIF 	TableauErreurRaw[NbrErreur-1].EtatDefaut = 'WP' THEN CouleurBandeauVisu := 16#00FF6600; //Bandeau orange
+	ELSIF 	TableauErreurRaw[NbrErreur-1].EtatDefaut = 'WD' THEN CouleurBandeauVisu := 16#00FF9966; //Bandeau orange clair 
+	ELSIF 	TableauErreurRaw[NbrErreur-1].EtatDefaut = 'WA' THEN CouleurBandeauVisu := 16#003366FF; //Bandeau Bleu
+	END_IF
+ELSE
+	DernierDefautIDVisu := 0;
+	DernierDefautIDImageVisu := '0';
+	CouleurBandeauVisu := 16#00FFFFFF; //Bandeau blanc
+END_IF
+IF nombredefautHistorique <= 0 THEN nombredefautHistoriqueVisu := 1; ELSE nombredefautHistoriqueVisu := nombredefautHistorique; END_IF
+
+//Bandeau alarme
+IF bAckBandeau THEN
+	bAckBandeau := FALSE;
+	IF NbrErreur>0 THEN
+	//On ne peut aquitter que les défauts qui ont disparu ou les warning aquittable
+		IF (TableauErreurRaw[NbrErreur-1].IdDefaut <> 0) AND (NOT TextlistErreur[TableauErreurRaw[NbrErreur-1].IdDefaut] OR (TableauErreurRaw[NbrErreur-1].TypeDefaut = 2)) THEN
+			TableauErreurRaw[NbrErreur-1] :=  TableauErreurRaw[index + 1];	
+			NbrErreur := NbrErreur - 1;
+			IF NbrErreur < 0 THEN NbrErreur := 0; END_IF
+		END_IF	
+	END_IF	
+END_IF
+]]></ST>
+    </Implementation>
+    <Action Name="DefinitionIDErreur" Id="{0719c2a0-cfe3-45bf-819a-9f452e073ba3}">
+      <Implementation>
+        <ST><![CDATA[//Fait le lien entre la text list et la variable PLC booléenne qui remonte l'erreur ou les warning
+//Les erreurs vont de l'index 1 à 249  -> Acquittable que si le défaut n'est plus la
+//Les warnings de 250 à 374 -> Acquittable que si le warning n'est plus la, voir constante "IndexDepartWarning"
+//Les warnings Acquittables de 375 à 499 -> Acquittable dans tout les cas "IndexDepartWarningAcquittable"
+
+
+//Erreurs 
+TextlistErreur[	1	]	 := ErreurPuissance;
+TextlistErreur[	2	]	 := ErreurAXE1;
+TextlistErreur[	3	]	 := ErreurAXE2;
+TextlistErreur[	4	]	 := ErreurXTS;
+TextlistErreur[	5	]	 := ErreurAir;
+(*
+TextlistErreur[	6	]	 := ;
+TextlistErreur[	7	]	 := ;
+TextlistErreur[	8	]	 := ;
+TextlistErreur[	9	]	 := ;
+TextlistErreur[	10	]	 := ;
+TextlistErreur[	11	]	 := ;
+TextlistErreur[	12	]	 := ;
+TextlistErreur[	13	]	 := ;
+TextlistErreur[	14	]	 := ;
+TextlistErreur[	15	]	 := ;
+TextlistErreur[	16	]	 := ;
+TextlistErreur[	17	]	 := ;
+TextlistErreur[	18	]	 := ;
+TextlistErreur[	19	]	 := ;
+TextlistErreur[	20	]	 := ;
+TextlistErreur[	21	]	 := ;
+TextlistErreur[	22	]	 := ;
+TextlistErreur[	23	]	 := ;
+TextlistErreur[	24	]	 := ;
+TextlistErreur[	25	]	 := ;
+TextlistErreur[	26	]	 := ;
+TextlistErreur[	27	]	 := ;
+TextlistErreur[	28	]	 := ;
+TextlistErreur[	29	]	 := ;
+TextlistErreur[	30	]	 := ;
+TextlistErreur[	31	]	 := ;
+TextlistErreur[	32	]	 := ;
+TextlistErreur[	33	]	 := ;
+TextlistErreur[	34	]	 := ;
+TextlistErreur[	35	]	 := ;
+TextlistErreur[	36	]	 := ;
+TextlistErreur[	37	]	 := ;
+TextlistErreur[	38	]	 := ;
+TextlistErreur[	39	]	 := ;
+TextlistErreur[	40	]	 := ;
+TextlistErreur[	41	]	 := ;
+TextlistErreur[	42	]	 := ;
+TextlistErreur[	43	]	 := ;
+TextlistErreur[	44	]	 := ;
+TextlistErreur[	45	]	 := ;
+TextlistErreur[	46	]	 := ;
+TextlistErreur[	47	]	 := ;
+TextlistErreur[	48	]	 := ;
+TextlistErreur[	49	]	 := ;
+TextlistErreur[	50	]	 := ;
+TextlistErreur[	51	]	 := ;
+TextlistErreur[	52	]	 := ;
+TextlistErreur[	53	]	 := ;
+TextlistErreur[	54	]	 := ;
+TextlistErreur[	55	]	 := ;
+TextlistErreur[	56	]	 := ;
+TextlistErreur[	57	]	 := ;
+TextlistErreur[	58	]	 := ;
+TextlistErreur[	59	]	 := ;
+TextlistErreur[	60	]	 := ;
+TextlistErreur[	61	]	 := ;
+TextlistErreur[	62	]	 := ;
+TextlistErreur[	63	]	 := ;
+TextlistErreur[	64	]	 := ;
+TextlistErreur[	65	]	 := ;
+TextlistErreur[	66	]	 := ;
+TextlistErreur[	67	]	 := ;
+TextlistErreur[	68	]	 := ;
+TextlistErreur[	69	]	 := ;
+TextlistErreur[	70	]	 := ;
+TextlistErreur[	71	]	 := ;
+TextlistErreur[	72	]	 := ;
+TextlistErreur[	73	]	 := ;
+TextlistErreur[	74	]	 := ;
+TextlistErreur[	75	]	 := ;
+TextlistErreur[	76	]	 := ;
+TextlistErreur[	77	]	 := ;
+TextlistErreur[	78	]	 := ;
+TextlistErreur[	79	]	 := ;
+TextlistErreur[	80	]	 := ;
+TextlistErreur[	81	]	 := ;
+TextlistErreur[	82	]	 := ;
+TextlistErreur[	83	]	 := ;
+TextlistErreur[	84	]	 := ;
+TextlistErreur[	85	]	 := ;
+TextlistErreur[	86	]	 := ;
+TextlistErreur[	87	]	 := ;
+TextlistErreur[	88	]	 := ;
+TextlistErreur[	89	]	 := ;
+TextlistErreur[	90	]	 := ;
+TextlistErreur[	91	]	 := ;
+TextlistErreur[	92	]	 := ;
+TextlistErreur[	93	]	 := ;
+TextlistErreur[	94	]	 := ;
+TextlistErreur[	95	]	 := ;
+TextlistErreur[	96	]	 := ;
+TextlistErreur[	97	]	 := ;
+TextlistErreur[	98	]	 := ;
+TextlistErreur[	99	]	 := ;
+TextlistErreur[	100	]	 := ;
+TextlistErreur[	101	]	 := ;
+TextlistErreur[	102	]	 := ;
+TextlistErreur[	103	]	 := ;
+TextlistErreur[	104	]	 := ;
+TextlistErreur[	105	]	 := ;
+TextlistErreur[	106	]	 := ;
+TextlistErreur[	107	]	 := ;
+TextlistErreur[	108	]	 := ;
+TextlistErreur[	109	]	 := ;
+TextlistErreur[	110	]	 := ;
+TextlistErreur[	111	]	 := ;
+TextlistErreur[	112	]	 := ;
+TextlistErreur[	113	]	 := ;
+TextlistErreur[	114	]	 := ;
+TextlistErreur[	115	]	 := ;
+TextlistErreur[	116	]	 := ;
+TextlistErreur[	117	]	 := ;
+TextlistErreur[	118	]	 := ;
+TextlistErreur[	119	]	 := ;
+TextlistErreur[	120	]	 := ;
+TextlistErreur[	121	]	 := ;
+TextlistErreur[	122	]	 := ;
+TextlistErreur[	123	]	 := ;
+TextlistErreur[	124	]	 := ;
+TextlistErreur[	125	]	 := ;
+TextlistErreur[	126	]	 := ;
+TextlistErreur[	127	]	 := ;
+TextlistErreur[	128	]	 := ;
+TextlistErreur[	129	]	 := ;
+TextlistErreur[	130	]	 := ;
+TextlistErreur[	131	]	 := ;
+TextlistErreur[	132	]	 := ;
+TextlistErreur[	133	]	 := ;
+TextlistErreur[	134	]	 := ;
+TextlistErreur[	135	]	 := ;
+TextlistErreur[	136	]	 := ;
+TextlistErreur[	137	]	 := ;
+TextlistErreur[	138	]	 := ;
+TextlistErreur[	139	]	 := ;
+TextlistErreur[	140	]	 := ;
+TextlistErreur[	141	]	 := ;
+TextlistErreur[	142	]	 := ;
+TextlistErreur[	143	]	 := ;
+TextlistErreur[	144	]	 := ;
+TextlistErreur[	145	]	 := ;
+TextlistErreur[	146	]	 := ;
+TextlistErreur[	147	]	 := ;
+TextlistErreur[	148	]	 := ;
+TextlistErreur[	149	]	 := ;
+TextlistErreur[	150	]	 := ;
+TextlistErreur[	151	]	 := ;
+TextlistErreur[	152	]	 := ;
+TextlistErreur[	153	]	 := ;
+TextlistErreur[	154	]	 := ;
+TextlistErreur[	155	]	 := ;
+TextlistErreur[	156	]	 := ;
+TextlistErreur[	157	]	 := ;
+TextlistErreur[	158	]	 := ;
+TextlistErreur[	159	]	 := ;
+TextlistErreur[	160	]	 := ;
+TextlistErreur[	161	]	 := ;
+TextlistErreur[	162	]	 := ;
+TextlistErreur[	163	]	 := ;
+TextlistErreur[	164	]	 := ;
+TextlistErreur[	165	]	 := ;
+TextlistErreur[	166	]	 := ;
+TextlistErreur[	167	]	 := ;
+TextlistErreur[	168	]	 := ;
+TextlistErreur[	169	]	 := ;
+TextlistErreur[	170	]	 := ;
+TextlistErreur[	171	]	 := ;
+TextlistErreur[	172	]	 := ;
+TextlistErreur[	173	]	 := ;
+TextlistErreur[	174	]	 := ;
+TextlistErreur[	175	]	 := ;
+TextlistErreur[	176	]	 := ;
+TextlistErreur[	177	]	 := ;
+TextlistErreur[	178	]	 := ;
+TextlistErreur[	179	]	 := ;
+TextlistErreur[	180	]	 := ;
+TextlistErreur[	181	]	 := ;
+TextlistErreur[	182	]	 := ;
+TextlistErreur[	183	]	 := ;
+TextlistErreur[	184	]	 := ;
+TextlistErreur[	185	]	 := ;
+TextlistErreur[	186	]	 := ;
+TextlistErreur[	187	]	 := ;
+TextlistErreur[	188	]	 := ;
+TextlistErreur[	189	]	 := ;
+TextlistErreur[	190	]	 := ;
+TextlistErreur[	191	]	 := ;
+TextlistErreur[	192	]	 := ;
+TextlistErreur[	193	]	 := ;
+TextlistErreur[	194	]	 := ;
+TextlistErreur[	195	]	 := ;
+TextlistErreur[	196	]	 := ;
+TextlistErreur[	197	]	 := ;
+TextlistErreur[	198	]	 := ;
+TextlistErreur[	199	]	 := ;
+TextlistErreur[	200	]	 := ;
+TextlistErreur[	201	]	 := ;
+TextlistErreur[	202	]	 := ;
+TextlistErreur[	203	]	 := ;
+TextlistErreur[	204	]	 := ;
+TextlistErreur[	205	]	 := ;
+TextlistErreur[	206	]	 := ;
+TextlistErreur[	207	]	 := ;
+TextlistErreur[	208	]	 := ;
+TextlistErreur[	209	]	 := ;
+TextlistErreur[	210	]	 := ;
+TextlistErreur[	211	]	 := ;
+TextlistErreur[	212	]	 := ;
+TextlistErreur[	213	]	 := ;
+TextlistErreur[	214	]	 := ;
+TextlistErreur[	215	]	 := ;
+TextlistErreur[	216	]	 := ;
+TextlistErreur[	217	]	 := ;
+TextlistErreur[	218	]	 := ;
+TextlistErreur[	219	]	 := ;
+TextlistErreur[	220	]	 := ;
+TextlistErreur[	221	]	 := ;
+TextlistErreur[	222	]	 := ;
+TextlistErreur[	223	]	 := ;
+TextlistErreur[	224	]	 := ;
+TextlistErreur[	225	]	 := ;
+TextlistErreur[	226	]	 := ;
+TextlistErreur[	227	]	 := ;
+TextlistErreur[	228	]	 := ;
+TextlistErreur[	229	]	 := ;
+TextlistErreur[	230	]	 := ;
+TextlistErreur[	231	]	 := ;
+TextlistErreur[	232	]	 := ;
+TextlistErreur[	233	]	 := ;
+TextlistErreur[	234	]	 := ;
+TextlistErreur[	235	]	 := ;
+TextlistErreur[	236	]	 := ;
+TextlistErreur[	237	]	 := ;
+TextlistErreur[	238	]	 := ;
+TextlistErreur[	239	]	 := ;
+TextlistErreur[	240	]	 := ;
+TextlistErreur[	241	]	 := ;
+TextlistErreur[	242	]	 := ;
+TextlistErreur[	243	]	 := ;
+TextlistErreur[	244	]	 := ;
+TextlistErreur[	245	]	 := ;
+TextlistErreur[	246	]	 := ;
+TextlistErreur[	247	]	 := ;
+TextlistErreur[	248	]	 := ;
+TextlistErreur[	249	]	 := ;
+*)
+
+//warning : 
+
+TextlistErreur[	250	]	 := WarningCarter;
+TextlistErreur[	251	]	 := WarningAir;
+
+(*
+TextlistErreur[	252	]	 := ;
+TextlistErreur[	253	]	 := ;
+TextlistErreur[	254	]	 := ;
+TextlistErreur[	255	]	 := ;
+TextlistErreur[	256	]	 := ;
+TextlistErreur[	257	]	 := ;
+TextlistErreur[	258	]	 := ;
+TextlistErreur[	259	]	 := ;
+TextlistErreur[	260	]	 := ;
+TextlistErreur[	261	]	 := ;
+TextlistErreur[	262	]	 := ;
+TextlistErreur[	263	]	 := ;
+TextlistErreur[	264	]	 := ;
+TextlistErreur[	265	]	 := ;
+TextlistErreur[	266	]	 := ;
+TextlistErreur[	267	]	 := ;
+TextlistErreur[	268	]	 := ;
+TextlistErreur[	269	]	 := ;
+TextlistErreur[	270	]	 := ;
+TextlistErreur[	271	]	 := ;
+TextlistErreur[	272	]	 := ;
+TextlistErreur[	273	]	 := ;
+TextlistErreur[	274	]	 := ;
+TextlistErreur[	275	]	 := ;
+TextlistErreur[	276	]	 := ;
+TextlistErreur[	277	]	 := ;
+TextlistErreur[	278	]	 := ;
+TextlistErreur[	279	]	 := ;
+TextlistErreur[	280	]	 := ;
+TextlistErreur[	281	]	 := ;
+TextlistErreur[	282	]	 := ;
+TextlistErreur[	283	]	 := ;
+TextlistErreur[	284	]	 := ;
+TextlistErreur[	285	]	 := ;
+TextlistErreur[	286	]	 := ;
+TextlistErreur[	287	]	 := ;
+TextlistErreur[	288	]	 := ;
+TextlistErreur[	289	]	 := ;
+TextlistErreur[	290	]	 := ;
+TextlistErreur[	291	]	 := ;
+TextlistErreur[	292	]	 := ;
+TextlistErreur[	293	]	 := ;
+TextlistErreur[	294	]	 := ;
+TextlistErreur[	295	]	 := ;
+TextlistErreur[	296	]	 := ;
+TextlistErreur[	297	]	 := ;
+TextlistErreur[	298	]	 := ;
+TextlistErreur[	299	]	 := ;
+TextlistErreur[	300	]	 := ;
+TextlistErreur[	301	]	 := ;
+TextlistErreur[	302	]	 := ;
+TextlistErreur[	303	]	 := ;
+TextlistErreur[	304	]	 := ;
+TextlistErreur[	305	]	 := ;
+TextlistErreur[	306	]	 := ;
+TextlistErreur[	307	]	 := ;
+TextlistErreur[	308	]	 := ;
+TextlistErreur[	309	]	 := ;
+TextlistErreur[	310	]	 := ;
+TextlistErreur[	311	]	 := ;
+TextlistErreur[	312	]	 := ;
+TextlistErreur[	313	]	 := ;
+TextlistErreur[	314	]	 := ;
+TextlistErreur[	315	]	 := ;
+TextlistErreur[	316	]	 := ;
+TextlistErreur[	317	]	 := ;
+TextlistErreur[	318	]	 := ;
+TextlistErreur[	319	]	 := ;
+TextlistErreur[	320	]	 := ;
+TextlistErreur[	321	]	 := ;
+TextlistErreur[	322	]	 := ;
+TextlistErreur[	323	]	 := ;
+TextlistErreur[	324	]	 := ;
+TextlistErreur[	325	]	 := ;
+TextlistErreur[	326	]	 := ;
+TextlistErreur[	327	]	 := ;
+TextlistErreur[	328	]	 := ;
+TextlistErreur[	329	]	 := ;
+TextlistErreur[	330	]	 := ;
+TextlistErreur[	331	]	 := ;
+TextlistErreur[	332	]	 := ;
+TextlistErreur[	333	]	 := ;
+TextlistErreur[	334	]	 := ;
+TextlistErreur[	335	]	 := ;
+TextlistErreur[	336	]	 := ;
+TextlistErreur[	337	]	 := ;
+TextlistErreur[	338	]	 := ;
+TextlistErreur[	339	]	 := ;
+TextlistErreur[	340	]	 := ;
+TextlistErreur[	341	]	 := ;
+TextlistErreur[	342	]	 := ;
+TextlistErreur[	343	]	 := ;
+TextlistErreur[	344	]	 := ;
+TextlistErreur[	345	]	 := ;
+TextlistErreur[	346	]	 := ;
+TextlistErreur[	347	]	 := ;
+TextlistErreur[	348	]	 := ;
+TextlistErreur[	349	]	 := ;
+TextlistErreur[	350	]	 := ;
+TextlistErreur[	351	]	 := ;
+TextlistErreur[	352	]	 := ;
+TextlistErreur[	353	]	 := ;
+TextlistErreur[	354	]	 := ;
+TextlistErreur[	355	]	 := ;
+TextlistErreur[	356	]	 := ;
+TextlistErreur[	357	]	 := ;
+TextlistErreur[	358	]	 := ;
+TextlistErreur[	359	]	 := ;
+TextlistErreur[	360	]	 := ;
+TextlistErreur[	361	]	 := ;
+TextlistErreur[	362	]	 := ;
+TextlistErreur[	363	]	 := ;
+TextlistErreur[	364	]	 := ;
+TextlistErreur[	365	]	 := ;
+TextlistErreur[	366	]	 := ;
+TextlistErreur[	367	]	 := ;
+TextlistErreur[	368	]	 := ;
+TextlistErreur[	369	]	 := ;
+TextlistErreur[	370	]	 := ;
+TextlistErreur[	371	]	 := ;
+TextlistErreur[	372	]	 := ;
+TextlistErreur[	373	]	 := ;
+TextlistErreur[	374	]	 := ;
+*)
+
+//warnings toujours acquittables:
+
+TextlistErreur[	375	]	 := WarningMaintenance;
+TextlistErreur[	376	]	 := WarningImprimante;
+
+(*
+TextlistErreur[	377	]	 := ;
+TextlistErreur[	378	]	 := ;
+TextlistErreur[	379	]	 := ;
+TextlistErreur[	380	]	 := ;
+TextlistErreur[	381	]	 := ;
+TextlistErreur[	382	]	 := ;
+TextlistErreur[	383	]	 := ;
+TextlistErreur[	384	]	 := ;
+TextlistErreur[	385	]	 := ;
+TextlistErreur[	386	]	 := ;
+TextlistErreur[	387	]	 := ;
+TextlistErreur[	388	]	 := ;
+TextlistErreur[	389	]	 := ;
+TextlistErreur[	390	]	 := ;
+TextlistErreur[	391	]	 := ;
+TextlistErreur[	392	]	 := ;
+TextlistErreur[	393	]	 := ;
+TextlistErreur[	394	]	 := ;
+TextlistErreur[	395	]	 := ;
+TextlistErreur[	396	]	 := ;
+TextlistErreur[	397	]	 := ;
+TextlistErreur[	398	]	 := ;
+TextlistErreur[	399	]	 := ;
+TextlistErreur[	400	]	 := ;
+TextlistErreur[	401	]	 := ;
+TextlistErreur[	402	]	 := ;
+TextlistErreur[	403	]	 := ;
+TextlistErreur[	404	]	 := ;
+TextlistErreur[	405	]	 := ;
+TextlistErreur[	406	]	 := ;
+TextlistErreur[	407	]	 := ;
+TextlistErreur[	408	]	 := ;
+TextlistErreur[	409	]	 := ;
+TextlistErreur[	410	]	 := ;
+TextlistErreur[	411	]	 := ;
+TextlistErreur[	412	]	 := ;
+TextlistErreur[	413	]	 := ;
+TextlistErreur[	414	]	 := ;
+TextlistErreur[	415	]	 := ;
+TextlistErreur[	416	]	 := ;
+TextlistErreur[	417	]	 := ;
+TextlistErreur[	418	]	 := ;
+TextlistErreur[	419	]	 := ;
+TextlistErreur[	420	]	 := ;
+TextlistErreur[	421	]	 := ;
+TextlistErreur[	422	]	 := ;
+TextlistErreur[	423	]	 := ;
+TextlistErreur[	424	]	 := ;
+TextlistErreur[	425	]	 := ;
+TextlistErreur[	426	]	 := ;
+TextlistErreur[	427	]	 := ;
+TextlistErreur[	428	]	 := ;
+TextlistErreur[	429	]	 := ;
+TextlistErreur[	430	]	 := ;
+TextlistErreur[	431	]	 := ;
+TextlistErreur[	432	]	 := ;
+TextlistErreur[	433	]	 := ;
+TextlistErreur[	434	]	 := ;
+TextlistErreur[	435	]	 := ;
+TextlistErreur[	436	]	 := ;
+TextlistErreur[	437	]	 := ;
+TextlistErreur[	438	]	 := ;
+TextlistErreur[	439	]	 := ;
+TextlistErreur[	440	]	 := ;
+TextlistErreur[	441	]	 := ;
+TextlistErreur[	442	]	 := ;
+TextlistErreur[	443	]	 := ;
+TextlistErreur[	444	]	 := ;
+TextlistErreur[	445	]	 := ;
+TextlistErreur[	446	]	 := ;
+TextlistErreur[	447	]	 := ;
+TextlistErreur[	448	]	 := ;
+TextlistErreur[	449	]	 := ;
+TextlistErreur[	450	]	 := ;
+TextlistErreur[	451	]	 := ;
+TextlistErreur[	452	]	 := ;
+TextlistErreur[	453	]	 := ;
+TextlistErreur[	454	]	 := ;
+TextlistErreur[	455	]	 := ;
+TextlistErreur[	456	]	 := ;
+TextlistErreur[	457	]	 := ;
+TextlistErreur[	458	]	 := ;
+TextlistErreur[	459	]	 := ;
+TextlistErreur[	460	]	 := ;
+TextlistErreur[	461	]	 := ;
+TextlistErreur[	462	]	 := ;
+TextlistErreur[	463	]	 := ;
+TextlistErreur[	464	]	 := ;
+TextlistErreur[	465	]	 := ;
+TextlistErreur[	466	]	 := ;
+TextlistErreur[	467	]	 := ;
+TextlistErreur[	468	]	 := ;
+TextlistErreur[	469	]	 := ;
+TextlistErreur[	470	]	 := ;
+TextlistErreur[	471	]	 := ;
+TextlistErreur[	472	]	 := ;
+TextlistErreur[	473	]	 := ;
+TextlistErreur[	474	]	 := ;
+TextlistErreur[	475	]	 := ;
+TextlistErreur[	476	]	 := ;
+TextlistErreur[	477	]	 := ;
+TextlistErreur[	478	]	 := ;
+TextlistErreur[	479	]	 := ;
+TextlistErreur[	480	]	 := ;
+TextlistErreur[	481	]	 := ;
+TextlistErreur[	482	]	 := ;
+TextlistErreur[	483	]	 := ;
+TextlistErreur[	484	]	 := ;
+TextlistErreur[	485	]	 := ;
+TextlistErreur[	486	]	 := ;
+TextlistErreur[	487	]	 := ;
+TextlistErreur[	488	]	 := ;
+TextlistErreur[	489	]	 := ;
+TextlistErreur[	490	]	 := ;
+TextlistErreur[	491	]	 := ;
+TextlistErreur[	492	]	 := ;
+TextlistErreur[	493	]	 := ;
+TextlistErreur[	494	]	 := ;
+TextlistErreur[	495	]	 := ;
+TextlistErreur[	496	]	 := ;
+TextlistErreur[	497	]	 := ;
+TextlistErreur[	498	]	 := ;
+TextlistErreur[	499	]	 := ;
+*)
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="GestionAlarme">
+      <LineId Id="3" Count="181" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="GestionAlarme.DefinitionIDErreur">
+      <LineId Id="2" Count="519" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

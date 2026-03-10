@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="UP_DOWN_RATE" Id="{2b904833-df29-435a-84b5-20d513b28ddc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK UP_DOWN_RATE
+VAR_INPUT
+    IN_CONS      : REAL;    // Consigne cible à atteindre
+    IN_UP_RATE   : REAL;    // Pas d'incrémentation (valeur ajoutée à chaque pas)
+    IN_DOWN_RATE : REAL;    // Pas de décrémentation (valeur retirée à chaque pas)
+    TIME_STEP    : TIME;    // Intervalle entre chaque évolution (ex : T#1s)
+    MODE         : INT;     // Mode de fonctionnement : 0 = UP+DOWN, 1 = DOWN seulement, 2 = UP seulement
+END_VAR
+
+VAR_OUTPUT
+    OUT_CONS     : REAL;    // Valeur évolutive vers la consigne
+END_VAR
+
+VAR
+    ton_step     : TON;     // Temporisateur cyclique pour le pas de temps
+    r_trig_step  : R_TRIG;  // Détecteur de front montant du temporisateur
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// --- Temporisateur cyclique ---
+ton_step(IN := NOT ton_step.Q, PT := TIME_STEP);
+
+// --- Détection du front montant du timer ---
+r_trig_step(CLK := ton_step.Q);
+
+// --- Collage instantané si besoin ---
+CASE MODE OF
+    2: // --- Mode UP uniquement ---
+        IF OUT_CONS > IN_CONS THEN
+            OUT_CONS := IN_CONS;   // Collage immédiat si consigne descend d’un coup
+        END_IF
+    1: // --- Mode DOWN uniquement ---
+        IF OUT_CONS < IN_CONS THEN
+            OUT_CONS := IN_CONS;   // Collage immédiat si consigne monte d’un coup
+        END_IF
+END_CASE
+
+// --- Mise à jour de la sortie uniquement au front montant du timer ---
+IF r_trig_step.Q THEN
+    CASE MODE OF
+        0: // --- Mode UP+DOWN (les deux directions) ---
+            IF OUT_CONS < IN_CONS THEN
+                OUT_CONS := OUT_CONS + IN_UP_RATE;         // On incrémente
+                IF OUT_CONS > IN_CONS THEN
+                    OUT_CONS := IN_CONS;                   // On ne dépasse jamais la consigne
+                END_IF
+            ELSIF OUT_CONS > IN_CONS THEN
+                OUT_CONS := OUT_CONS - IN_DOWN_RATE;       // On décrémente
+                IF OUT_CONS < IN_CONS THEN
+                    OUT_CONS := IN_CONS;
+                END_IF
+            END_IF
+        1: // --- Mode DOWN uniquement ---
+            IF OUT_CONS > IN_CONS THEN
+                OUT_CONS := OUT_CONS - IN_DOWN_RATE;       // On décrémente seulement
+                IF OUT_CONS < IN_CONS THEN
+                    OUT_CONS := IN_CONS;
+                END_IF
+            END_IF
+        2: // --- Mode UP uniquement ---
+            IF OUT_CONS < IN_CONS THEN
+                OUT_CONS := OUT_CONS + IN_UP_RATE;         // On incrémente seulement
+                IF OUT_CONS > IN_CONS THEN
+                    OUT_CONS := IN_CONS;
+                END_IF
+            END_IF
+    END_CASE
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="UP_DOWN_RATE">
+      <LineId Id="209" Count="48" />
+      <LineId Id="54" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="d_Gestion_Pause_Modes" Id="{0b4b8cc0-5de3-482e-873a-aa6a935cfa38}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM d_Gestion_Pause_Modes
+VAR
+	R_TRIG_Pause: R_TRIG;
+	RS_Commande_Pause: RS;
+	RS_Statut_Pause: RS;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Gestion des alarmes de sécurité qui met en pause les recettes automatiques et manuelles*)
+
+(**********************************************Defaut du mode 1 Douche avec vidange*)
+Alarme_Secu_Mode_1 := (Mode_Auto.Mode_1 OR Mode_Manu.Mode_1)
+	AND (Def_Discord_Alim_Prise OR Defaut_Pompe_Relevage OR Defaut_Com_Vanne_Thermo OR Defaut_Com_Vanne_General
+	OR Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm
+	OR Defaut_Discord_Vanne_Alim_Douche_Ouv OR Defaut_Discord_Vanne_Alim_Douche_Ferm);
+
+(**********************************************Defaut du mode 2 Douche sans vidange*)
+Alarme_Secu_Mode_2 := (Mode_Auto.Mode_2 OR Mode_Manu.Mode_2)
+	AND (Def_Discord_Alim_Prise OR Defaut_Pompe_Relevage OR Defaut_Com_Vanne_Thermo OR Defaut_Com_Vanne_General
+	OR Defaut_Discord_Vanne_Alim_Douche_Ouv OR Defaut_Discord_Vanne_Alim_Douche_Ferm);
+
+(**********************************************Defaut du mode 4 Lavabo avec vidange*)
+Alarme_Secu_Mode_4 := (Mode_Auto.Mode_4 OR Mode_Manu.Mode_4)
+	AND (Def_Discord_Alim_Prise OR Defaut_Pompe_Relevage OR Defaut_Com_Vanne_Thermo OR Defaut_Com_Vanne_General
+	OR Defaut_Discord_Vanne_Vid_Lavabo_Ouv OR Defaut_Discord_Vanne_Vid_Lavabo_Ferm
+	OR Defaut_Discord_Vanne_Alim_Lavabo_Ouv OR Defaut_Discord_Vanne_Alim_Lavabo_Ferm);
+
+(**********************************************Defaut du mode 5 Lavabo sans vidange*)
+Alarme_Secu_Mode_5 := (Mode_Auto.Mode_5 OR Mode_Manu.Mode_5)
+	AND (Def_Discord_Alim_Prise OR Defaut_Pompe_Relevage OR Defaut_Com_Vanne_Thermo OR Defaut_Com_Vanne_General
+	OR Defaut_Discord_Vanne_Alim_Lavabo_Ouv OR Defaut_Discord_Vanne_Alim_Lavabo_Ferm);
+
+(**********************************************Defaut du mode 6 prise*)
+Alarme_Secu_Mode_6 := (Mode_Auto.Mode_6 OR Mode_Manu.Mode_6)
+	AND (Defaut_Discord_PC_Cab OR Def_Prise_Porte_Ouverte
+	OR Defaut_Discord_Vanne_Alim_Douche_Ferm OR Defaut_Discord_Vanne_Alim_Lavabo_Ferm
+	OR Defaut_Discord_Vanne_Alim_Douchette_Ferm OR Defaut_Differentiel_Prise_Elec);
+
+(**********************************************Defaut du mode 7 mode vidange*)
+IF(Option_Douche)					(*Type de cabine douche uniquement*)
+	THEN
+	Alarme_Secu_Mode_7 := (Mode_Auto.Mode_7 OR Mode_Manu.Mode_7)
+	AND (Defaut_Pompe_Relevage
+	OR Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm);
+END_IF;
+IF(Option_Lavabo)						(*Type de cabine lavabo uniquement*)
+	THEN
+	Alarme_Secu_Mode_7 := (Mode_Auto.Mode_7 OR Mode_Manu.Mode_7)
+	AND (Defaut_Pompe_Relevage
+	OR Defaut_Discord_Vanne_Vid_Lavabo_Ouv OR Defaut_Discord_Vanne_Vid_Lavabo_Ferm);
+END_IF;
+IF(Option_Lavabo AND Option_Douche)	(*Type de cabine lavabo ET douche*)
+	THEN
+	Alarme_Secu_Mode_7 := (Mode_Auto.Mode_7 OR Mode_Manu.Mode_7)
+	AND (Defaut_Pompe_Relevage
+	OR Defaut_Discord_Vanne_Vid_Lavabo_Ouv OR Defaut_Discord_Vanne_Vid_Lavabo_Ferm
+	OR Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm);
+END_IF;
+
+(**********************************************Defaut du mode 18 Lavage NEP chaud*)
+Alarme_Secu_Mode_18 := (Mode_Auto.Mode_18 OR Mode_Manu.Mode_18)
+	AND (Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm
+	OR Defaut_Discord_Vanne_Alim_NEP_Ouv OR Defaut_Discord_Vanne_Alim_NEP_Ferm);
+
+(**********************************************Defaut du mode 19 Lavage NEP chaud*)
+Alarme_Secu_Mode_18 := (Mode_Auto.Mode_19 OR Mode_Manu.Mode_19)
+	AND (Defaut_Discord_Vanne_Vid_Douche_Ouv OR Defaut_Discord_Vanne_Vid_Douche_Ferm
+	OR Defaut_Discord_Vanne_Alim_NEP_Ouv OR Defaut_Discord_Vanne_Alim_NEP_Ferm);
+
+(**********************************************Gestion de la pause*)
+R_TRIG_Pause(CLK:= Bp_Pause);
+RS_Commande_Pause(
+SET:=  ((NOT RS_Commande_Pause.Q1 AND R_TRIG_Pause.Q)
+					OR Alarme_Secu_Mode_1 OR Alarme_Secu_Mode_2 OR Alarme_Secu_Mode_3 OR Alarme_Secu_Mode_4 OR Alarme_Secu_Mode_5
+					OR Alarme_Secu_Mode_6 OR Alarme_Secu_Mode_7 OR Alarme_Secu_Mode_8 OR Alarme_Secu_Mode_10 OR Alarme_Secu_Mode_11
+					OR Alarme_Secu_Mode_12 OR Alarme_Secu_Mode_13 OR Alarme_Secu_Mode_14 OR Alarme_Secu_Mode_15 OR Alarme_Secu_Mode_16
+					OR Alarme_Secu_Mode_17 OR Alarme_Secu_Mode_18 OR Alarme_Secu_Mode_19 OR Alarme_Secu_Mode_23 OR Alarme_Secu_Mode_24),
+RESET1:= ((RS_Commande_Pause.Q1 AND R_TRIG_Pause.Q)
+					AND  (NOT Alarme_Secu_Mode_1 AND NOT Alarme_Secu_Mode_2 AND NOT Alarme_Secu_Mode_3 AND NOT Alarme_Secu_Mode_4 AND NOT Alarme_Secu_Mode_5
+					AND NOT Alarme_Secu_Mode_6 AND NOT Alarme_Secu_Mode_7 AND NOT Alarme_Secu_Mode_8 AND NOT Alarme_Secu_Mode_10 AND NOT Alarme_Secu_Mode_11
+					AND NOT Alarme_Secu_Mode_12 AND NOT Alarme_Secu_Mode_13 AND NOT Alarme_Secu_Mode_14 AND NOT Alarme_Secu_Mode_15 AND NOT Alarme_Secu_Mode_16
+					 AND NOT Alarme_Secu_Mode_17 AND NOT Alarme_Secu_Mode_18 AND NOT Alarme_Secu_Mode_19 AND NOT Alarme_Secu_Mode_23 AND NOT Alarme_Secu_Mode_24))
+					OR (NOT Mode_Cabine_Automatique AND NOT Mode_Cabine_Manuel),
+Q1=> Comande_Pause);
+
+(**********************************************Gestion de la commande pause. Seulement pour affichage IHM*)
+RS_Statut_Pause(
+SET:=(Alarme_Secu_Mode_1 OR Alarme_Secu_Mode_2 OR Alarme_Secu_Mode_3 OR Alarme_Secu_Mode_4 OR Alarme_Secu_Mode_5
+					OR Alarme_Secu_Mode_6 OR Alarme_Secu_Mode_7 OR Alarme_Secu_Mode_8 OR Alarme_Secu_Mode_10 OR Alarme_Secu_Mode_11
+					OR Alarme_Secu_Mode_12 OR Alarme_Secu_Mode_13 OR Alarme_Secu_Mode_14 OR Alarme_Secu_Mode_15 OR Alarme_Secu_Mode_16
+					OR Alarme_Secu_Mode_17 OR Alarme_Secu_Mode_18 OR Alarme_Secu_Mode_19 OR Alarme_Secu_Mode_23 OR Alarme_Secu_Mode_24),
+RESET1:= Bp_Pause AND (NOT Alarme_Secu_Mode_1 OR NOT Alarme_Secu_Mode_2 OR NOT Alarme_Secu_Mode_3 OR NOT Alarme_Secu_Mode_4 OR NOT Alarme_Secu_Mode_5
+					OR NOT Alarme_Secu_Mode_6 OR NOT Alarme_Secu_Mode_7 OR NOT Alarme_Secu_Mode_8 OR NOT Alarme_Secu_Mode_10 OR NOT Alarme_Secu_Mode_11
+					OR NOT Alarme_Secu_Mode_12 OR NOT Alarme_Secu_Mode_13 OR NOT Alarme_Secu_Mode_14 OR NOT Alarme_Secu_Mode_15 OR NOT Alarme_Secu_Mode_16
+					 OR NOT Alarme_Secu_Mode_17 OR NOT Alarme_Secu_Mode_18 OR NOT Alarme_Secu_Mode_19 OR NOT Alarme_Secu_Mode_23 OR NOT Alarme_Secu_Mode_24)
+					OR (NOT Mode_Cabine_Automatique AND NOT Mode_Cabine_Manuel),
+Q1=> Statut_Pause_Force);
+
+Attente_Reset_Pause := (Alarme_Secu_Mode_1 OR Alarme_Secu_Mode_2 OR Alarme_Secu_Mode_3 OR Alarme_Secu_Mode_4 OR Alarme_Secu_Mode_5
+					OR Alarme_Secu_Mode_6 OR Alarme_Secu_Mode_7 OR Alarme_Secu_Mode_8 OR Alarme_Secu_Mode_10 OR Alarme_Secu_Mode_11
+					OR Alarme_Secu_Mode_12 OR Alarme_Secu_Mode_13 OR Alarme_Secu_Mode_14 OR Alarme_Secu_Mode_15 OR Alarme_Secu_Mode_16
+					OR Alarme_Secu_Mode_17 OR Alarme_Secu_Mode_18 OR Alarme_Secu_Mode_19 OR Alarme_Secu_Mode_23 OR Alarme_Secu_Mode_24);]]></ST>
+    </Implementation>
+    <LineIds Name="d_Gestion_Pause_Modes">
+      <LineId Id="6" Count="93" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

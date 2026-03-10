@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Humidificateur" Id="{0490d890-8ebd-4ebe-a87d-ab9ffe454730}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Humidificateur
+VAR_INPUT
+	Enable				:BOOL;
+	Cmd_Humidificateur	:BOOL;
+	Cons_Humi_Dem		:REAL;	(*Consigne humidificateur demandé (venant de la Régulation) / en %*)
+	Info_Defaut			:BOOL;	(*VAR_INPUT	Info défaut hygrostat/ 1 = Défaut*)
+	Inverse_SAN			:BOOL;	(*Inversion de la sortie SAN / 1 = Sens inverse / 0 = Sens normal*)
+	SAN_OUT_MIN			:REAL;	(*Valeur minimal de la sortie SAN / en point automate*)
+	SAN_OUT_MAX			:REAL;	(*Valeur maximal de la sortie SAN / en point automate*)
+END_VAR
+
+VAR_OUTPUT
+	SAN_CONS_HUMI	:INT;	(*Consigne a appliqué (pour SAN) / en %*)
+	STOR_CMD_HUMI	:BOOL;	(*VAR_OUTPUT	Commande a appliqué / 1 = Marche*)
+END_VAR
+
+VAR
+	val_x				:REAL;
+	val_b				:REAL;
+	val_a				:REAL;
+	val_y				:REAL;
+	val_final				:REAL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion consigne **************************************************************)
+IF (Enable AND NOT Info_Defaut)
+	THEN (* Gestion sortie analogique *)
+		(* Mise à l'echelle sortie ****)
+		val_x := Cons_Humi_Dem;
+		val_b := SAN_OUT_MAX - (val_a * 100.0);
+		val_a := (SAN_OUT_MAX - SAN_OUT_MIN) / 100.0;
+		val_y := (val_a * val_x) + val_b;
+
+		(* Inversion de la sortie ANA ****)
+		IF (Inverse_SAN)
+			THEN
+				val_final := SAN_OUT_MAX - val_y;
+			ELSE
+				val_final := val_y;
+		END_IF;
+		SAN_CONS_HUMI := REAL_TO_INT(LIMIT(SAN_OUT_MIN,val_final, SAN_OUT_MAX));
+		STOR_CMD_HUMI := Cmd_Humidificateur;
+	ELSE (* Gestion sortie TOR PWM *)
+		SAN_CONS_HUMI := 0;
+		STOR_CMD_HUMI := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Humidificateur">
+      <LineId Id="23" Count="21" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

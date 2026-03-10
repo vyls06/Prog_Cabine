@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="a5_Ecriture_InterCom" Id="{9a8577e8-f3cb-44c6-a38b-de3a4676b985}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM a5_Ecriture_InterCom
+VAR
+	Position_Soufflage: REAL;
+	Position_Extraction: REAL;
+	Mesure_Debit_Souf: REAL;
+	Mesure_Debit_Ext: REAL;
+	Com_Debit_Ext: REAL;
+	Dmd_Mise_En_Temp: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Temperature_Cabine := Tab_MES_Sonde_Temp_Amb.R_MesCor;
+Hygrometrie_Cabine := Tab_MES_Sonde_Hygro_Amb.R_MesCor;
+Position_Soufflage := Posi_Relative_Reg_Souf / 100.0;
+Position_Extraction := Cons_Actionneur_Reg_Etanche_Ext;
+Com_Debit_Ext := Debit_Relative_Reg_Souf;
+Mesure_Debit_Souf := Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor;
+Mesure_Debit_Ext := Tab_MES_Sonde_Gros_Debit_Extraction.R_MesCor;
+Dmd_Mise_En_Temp := E_Vanne_Alim_Lavabo_Ouv OR E_Vanne_Alim_Douche_Ouv OR S_Cmd_ElectroValve_Alim_Lavabo OR S_Cmd_ElectroValve_Alim_Douche;
+
+(**********************************************Gestion écriture inter com*)
+Tab_Com_Send[0] := 		Temperature_Cabine;
+Tab_Com_Send[1] := 		Hygrometrie_Cabine;
+Tab_Com_Send[2] := 		FCV_02_soufflage.Cons_Pos_Dem;
+Tab_Com_Send[3] := 		FCV_01_extraction.Cons_Pos_Dem;
+Tab_Com_Send[4] := 		Sel_Etats_Cabine;
+Tab_Com_Send[5] := 		Position_Extraction;
+Tab_Com_Send[6] := 		Position_Soufflage;
+Tab_Com_Send[7] := 		Mesure_Debit_Souf;
+Tab_Com_Send[8] := 		Mesure_Debit_Ext;
+Tab_Com_Send[9] := 		BOOL_TO_REAL(Dmd_Mise_En_Temp);
+Tab_Com_Send[10] := 	BOOL_TO_REAL(Defaut_Sonde_Temp_Cabine);
+Tab_Com_Send[11] := 	Mode_Manu.Numero_Mode;
+Tab_Com_Send[12] := 	BOOL_TO_REAL(Mode_Cabine_Depollution OR Mode_Auto.Mode_10);
+]]></ST>
+    </Implementation>
+    <LineIds Name="a5_Ecriture_InterCom">
+      <LineId Id="9" Count="20" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="30" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

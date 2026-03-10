@@ -1,0 +1,536 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="b_SCL_Mesures" Id="{84e05c88-e3fa-46e7-88aa-0a23a4d5937d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM b_SCL_Mesures
+VAR
+(*Mesure sonde de température d'ambiance*)
+	Objet_Sonde_Temp_Amb			:Objet_Sonde_V1;
+(*Mesure sonde d'hygrométrie d'ambiance*)
+	Objet_Sonde_Hygro_Amb 			:Objet_Sonde_V1;
+(*Mesure sonde de température d'eau mitigée*)
+	Objet_Sonde_Temp_Eau_Mitig		:Objet_Sonde_V1;
+(*Mesure Gros débit de soufflage*)
+	Objet_Sonde_Gros_Debit_Soufflage 	:Objet_Sonde_V1;
+	TON_F1: TON;
+	Filtre_V1_Soufflage: Filtre_V1;
+(*Mesure Gros débit d'extraction*)
+	Objet_Sonde_Gros_Debit_Extraction 	:Objet_Sonde_V1;
+	TON_F2: TON;
+	Filtre_V1_Extraction: Filtre_V1;
+(*Mesure Petit débit d'extraction*)
+	Objet_Sonde_Petit_Debit_Extraction 	:Objet_Sonde_V1;
+	TON_F3: TON;
+	E_Sonde_Petit_Debit_Extraction_1 :INT;
+	Filtre_V1_BasDebit: Filtre_V1;
+	Calcul_1: REAL;
+	Calcul_2: REAL;
+	Calcul_3: REAL;
+	Calcul_4: REAL;
+	TON_PD :TON;
+(*Mesure débit d'eau d'alimentation de la douche*)
+	Objet_Sonde_Debit_Alim_Douche 	:Objet_Sonde_V1;
+	TON_F4: TON;
+	MES_MIN_Douche: REAL;
+(*Mesure débit d'eau d'alimentation du lavabo*)
+	Objet_Sonde_Debit_Alim_Lavabo	:Objet_Sonde_V1;
+	TON_F5: TON;
+	MES_MIN_Lavabo: REAL;
+(*Mesure sonde de pression de la cabine*)
+	Objet_Sonde_Press_Cab			:Objet_Sonde_V1;
+(*Mesure Pression ByPass*)
+	Objet_Sonde_Press_Bypass 	:Objet_Sonde_V1;
+	TON_F6: TON;
+	E_Sonde_Pression_ByPass_1 :INT;
+	Filtre_V1_ByPass: Filtre_V1;
+	Calcul_5: REAL;
+	Calcul_6: REAL;
+	TON_P1 :TON;
+(*Mesure retour d'information du registre étanche extraction*)
+	SCL_Pos_Reg_Etanche_Ext	:SCL;
+(*Mesure sonde de pression de soufflage general*)
+	Objet_Sonde_V1_Press_Souf: Objet_Sonde_V1;
+(*Mesure sonde de pression d'extraction general*)
+	Objet_Sonde_V1_Press_Ext: Objet_Sonde_V1;
+(*Mesure sonde de température batterie eau glacée*)
+	Objet_Sonde_Temp_Batt_EG		:Objet_Sonde_V1;
+(*Mesure sonde de température de soufflage*)
+	Objet_Sonde_Temp_Souf			:Objet_Sonde_V1;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Mesure sonde de température d'ambiance*)
+IF(Option_Sonde_Temp_Hygro_Amb OR Option_Sonde_Temp_Amb) (*Gestion des options*)
+	THEN	E_Sonde_Temp_Amb := E_Sonde_Temp_Amb;
+	ELSE	E_Sonde_Temp_Amb := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Temp_Amb(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Temp_Amb),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= -20.0,
+	MES_MAX:= 80.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Temp_Amb);
+Tab_MES_Sonde_Temp_Amb.R_MesCor := Tab_MES_Sonde_Temp_Amb.R_MesCor;
+
+(**********************************************Mesure sonde d'hygrométrie d'ambiance*)
+IF(Option_Sonde_Temp_Hygro_Amb) (*Gestion des options*)
+	THEN	E_Sonde_Hygro_Amb := E_Sonde_Hygro_Amb;
+	ELSE	E_Sonde_Hygro_Amb := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Hygro_Amb(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Hygro_Amb),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 5.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= 0.0,
+	MES_MAX:= 100.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Hygro_Amb);
+Tab_MES_Sonde_Hygro_Amb.R_MesCor := Tab_MES_Sonde_Hygro_Amb.R_MesCor;
+
+(**********************************************Mesure sonde de température d'eau mitigée*)
+IF(Option_Sonde_Temp_EauMitig) (*Gestion des options*)
+	THEN	E_Sonde_Temp_Eau_Mitig := E_Sonde_Temp_Eau_Mitig;
+	ELSE	E_Sonde_Temp_Eau_Mitig := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Temp_Eau_Mitig(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Temp_Eau_Mitig),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= -20.0,
+	MES_MAX:= 80.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Temp_Eau_Mitig);
+Tab_MES_Sonde_Temp_Eau_Mitig.R_MesCor := Tab_MES_Sonde_Temp_Eau_Mitig.R_MesCor;
+
+(**********************************************Mesure Gros débit de soufflage*)
+IF(Option_RegSouf_Ultrason)
+THEN
+	(*Remise à zéro en cas de fermeture du registre et consigne inférieur pendant 30 secondes*)
+	E_Sonde_Gros_Debit_Soufflage_1 := E_Sonde_Gros_Debit_Soufflage;
+	TON_F1(IN:= (E_Sonde_Gros_Debit_Soufflage_1 < TOL_RAZ_MES_Deb_Souf), PT:= t#30s);
+	IF(TON_F1.Q)
+		THEN
+		E_Sonde_Gros_Debit_Soufflage := 0;
+	END_IF;
+
+	(*Sélection de l'échelle maximum de mesure en fonction de la cabine seche ou humide / Humide : 662m3/h et seche : *)
+	IF (Option_Cabine_Seche)
+		THEN
+		Mes_Out_Max := 579.0;
+	END_IF;
+	IF (Option_Cabine_Humide)
+		THEN
+		Mes_Out_Max := 579.0;
+	END_IF;
+ELSE
+	TON_F1(IN:=FALSE);
+	E_Sonde_Gros_Debit_Soufflage_1 := 0;
+	E_Sonde_Gros_Debit_Soufflage := 0;
+END_IF
+
+(*Objet sonde*)
+Objet_Sonde_Gros_Debit_Soufflage(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Gros_Debit_Soufflage),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 10.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= 0.0,
+	MES_MAX:= Mes_Out_Max,
+	Filtre_Actif:= TRUE,
+	Temps_Echantillonage:= T#500ms,
+	Tab_Sonde:= Tab_MES_Sonde_Gros_Debit_Soufflage);
+Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor := Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor;
+
+(**********************************************Mesure Gros débit d'extraction*)
+IF(Option_RegExt_Ultrason)
+	THEN
+	(*Remise à zéro en cas de fermeture du registre et consigne inférieur pendant 30 secondes*)
+	E_Sonde_Gros_Debit_Extraction_1 := E_Sonde_Gros_Debit_Extraction;
+	TON_F2(IN:= (E_Sonde_Gros_Debit_Extraction_1 < TOL_RAZ_MES_Deb_Ext), PT:= t#30s);
+	IF(TON_F2.Q)
+		THEN
+		E_Sonde_Gros_Debit_Extraction := 0;
+	END_IF;
+ELSE
+	TON_F2(IN:=FALSE);
+	E_Sonde_Gros_Debit_Extraction_1 := 0;
+	E_Sonde_Gros_Debit_Extraction := 0;
+END_IF
+
+(*Objet sonde*)
+Objet_Sonde_Gros_Debit_Extraction(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Gros_Debit_Extraction),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 10.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= 0.0,
+	MES_MAX:= Mes_Out_Max,
+	Filtre_Actif:= TRUE,
+	Temps_Echantillonage:= T#500ms,
+	Tab_Sonde:= Tab_MES_Sonde_Gros_Debit_Extraction);
+Tab_MES_Sonde_Gros_Debit_Extraction.R_MesCor := Tab_MES_Sonde_Gros_Debit_Extraction.R_MesCor;
+
+(**********************************************Mesure Petit débit d'extraction*)
+IF(Option_Bas_Debit) (*Gestion des options*)
+	THEN
+	(*Remise à zéro en cas d'arrêt du moteur et consigne inférieur pendant 30 secondes*)
+	E_Sonde_Petit_Debit_Extraction := E_Sonde_Petit_Debit_Extraction;
+	E_Sonde_Petit_Debit_Extraction_1 := E_Sonde_Petit_Debit_Extraction;
+	TON_F3(IN:= (E_Sonde_Petit_Debit_Extraction_1 < TOL_RAZ_MES_Petit_Deb), PT:= t#30s);
+	IF( Arret_Petit_Debit  AND TON_F3.Q)
+		THEN
+		E_Sonde_Petit_Debit_Extraction := 0;
+	END_IF;
+ELSE
+	TON_F3(IN:=FALSE);
+	E_Sonde_Petit_Debit_Extraction_1 := 0;
+	E_Sonde_Petit_Debit_Extraction := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Petit_Debit_Extraction(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Petit_Debit_Extraction),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 0.0,
+	EAN_MIN:= 1638, (*0,5V*)
+	EAN_MAX:= 14745, (*4,5V*)
+	MES_MIN:= 0.0,
+	MES_MAX:= 300.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Petit_Debit_Extraction);
+Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor := Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor;
+
+(**********************************************Mesure débit d'eau d'alimentation de la douche*)
+IF(Option_Debitmetre_Douche) (*Gestion des options*)
+	THEN
+	E_Sonde_Debit_Alim_Douche := E_Sonde_Debit_Alim_Douche;
+	MES_MIN_Douche := 0.0;
+	(*Remise à zéro du débit d'eau en cas de fermeture de la vanne*)
+	TON_F4(IN:= (NOT S_Cmd_ElectroValve_Alim_Douche), PT:= T#2S);
+	IF(TON_F4.Q)
+		THEN
+		E_Sonde_Debit_Alim_Douche := 0;
+		MES_MIN_Douche := 0.0;
+	END_IF;
+	ELSE
+	TON_F4(IN:=FALSE);
+	E_Sonde_Debit_Alim_Douche := 0;
+	MES_MIN_Douche := 0.0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Debit_Alim_Douche(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Debit_Alim_Douche) * Coef_Correction_DebitEau,
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 0.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= MES_MIN_Douche,
+	MES_MAX:= 30.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Debit_Alim_Douche);
+Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor := Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor;
+
+(**********************************************Mesure débit d'eau d'alimentation du lavabo*)
+IF(Option_Debitmetre_Lavabo) (*Gestion des options*)
+	THEN
+	E_Sonde_Debit_Alim_Lavabo := E_Sonde_Debit_Alim_Lavabo;
+	MES_MIN_Lavabo := 0.0;
+	(*Remise à zéro du débit d'eau en cas de fermeture de la vanne*)
+	TON_F5(IN:= (NOT S_Cmd_ElectroValve_Alim_Lavabo), PT:= t#2s);
+	IF(TON_F5.Q)
+		THEN
+		E_Sonde_Debit_Alim_Lavabo := 0;
+		MES_MIN_Lavabo := 0.0;
+	END_IF;
+	ELSE
+	TON_F5(IN:=FALSE);
+	E_Sonde_Debit_Alim_Lavabo := 0;
+	MES_MIN_Lavabo := 0.0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Debit_Alim_Lavabo(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Debit_Alim_Lavabo) * Coef_Correction_DebitEau,
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 0.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= MES_MIN_Lavabo,
+	MES_MAX:= 30.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Debit_Alim_Lavabo);
+Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor := Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor;
+
+(**********************************************Mesure sonde pression cabine*)
+IF(Option_Capteur_Press_Cab) (*Gestion des options*)
+	THEN	E_Sonde_Pression_Cabine := E_Sonde_Pression_Cabine;
+	ELSE	E_Sonde_Pression_Cabine := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Press_Cab(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Pression_Cabine),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 5.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= -50.0,
+	MES_MAX:= 50.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Press_Cab);
+Tab_MES_Sonde_Press_Cab.R_MesCor := Tab_MES_Sonde_Press_Cab.R_MesCor;
+
+(**********************************************Mesure pression ByPass*)
+IF(Option_Mot_ByPass) (*Gestion des options*)
+	THEN
+	(*Remise à zéro en cas d'arrêt du moteur et consigne inférieur pendant 30 secondes*)
+	E_Sonde_Pression_ByPass := E_Sonde_Pression_ByPass;
+	E_Sonde_Pression_ByPass_1 := E_Sonde_Pression_ByPass;
+	TON_F6(IN:= (E_Sonde_Pression_ByPass_1 < TOL_RAZ_MES_Bypass), PT:= t#30s);
+	IF(TON_F6.Q)
+		THEN
+		E_Sonde_Pression_ByPass := 0;
+	END_IF;
+	ELSE
+	TON_F6(IN:=FALSE);
+	E_Sonde_Pression_ByPass_1 := 0;
+	E_Sonde_Pression_ByPass := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Press_Bypass(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Pression_ByPass),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 0.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 16383.5,
+	MES_MIN:= 0.0,
+	MES_MAX:= 300.0,
+	Filtre_Actif:= TRUE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_MES_Sonde_Press_ByPass);
+Tab_MES_Sonde_Press_ByPass.R_MesCor := Tab_MES_Sonde_Press_ByPass.R_MesCor;
+
+(**********************************************Mesure retour d'information du registre étanche extraction*)
+IF(Option_Reg_Etanche_Ext) (*Gestion des options*)
+	THEN	E_Retour_Pos_Reg_Etanche_Ext := E_Retour_Pos_Reg_Etanche_Ext;
+	ELSE	E_Retour_Pos_Reg_Etanche_Ext := 0;
+END_IF;
+
+(*Mise à l'échelle de la mesure*)
+SCL_Pos_Reg_Etanche_Ext(
+	IN_INT:= E_Retour_Pos_Reg_Etanche_Ext,
+	LIM_MIN_IN_REAL:= 6553.4,
+	LIM_MAX_IN_REAL:= 32767.0,
+	LIM_MIN_OUT_REAL:= 0.0,
+	LIM_MAX_OUT_REAL:= 100.0,
+	OUT_REAL=> MES_Pos_Reg_Etanche_Ext);
+
+(**********************************************Mesure debit extraction bas débit*)
+(*******Convertion de la pression en débit**********)
+Calcul_1 := EXPT(Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor,4);
+Calcul_2 := EXPT(Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor,3);
+Calcul_3 := EXPT(Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor,2);
+Calcul_4 := EXPT(Tab_MES_Sonde_Petit_Debit_Extraction.R_MesCor,1);
+MES_Petit_Debit_m3h_Extraction :=  (-0.000000000905 * Calcul_1) + (0.00000114 * Calcul_2) - (0.000476 * Calcul_3) + (0.118 * Calcul_4) + 0.00303;
+
+(*******Mise à zéro de la mesure en cas d'arrête*********)
+TON_PD(IN:= (TON_F3.Q OR NOT Option_Bas_Debit), PT:= T#2s);
+IF (TON_PD.Q)
+	THEN
+	MES_Petit_Debit_m3h_Extraction := 0.0;
+	ELSE
+	MES_Petit_Debit_m3h_Extraction := MES_Petit_Debit_m3h_Extraction;
+END_IF;
+
+(**********************************************Mesure debit ByPass*)
+(*******Convertion de la pression en débit**********)
+Calcul_5 := EXPT(Tab_MES_Sonde_Press_ByPass.R_MesCor,2);
+Calcul_6 := EXPT(Tab_MES_Sonde_Press_ByPass.R_MesCor,1);
+MES_Debit_ByPass_m3h :=  (0.0035 * Calcul_5) + (0.8986 * Calcul_6) + 10.289;
+
+(*******Mise à zéro de la mesure en cas d'arrête*********)
+TON_P1(IN:= (TON_F6.Q OR NOT Option_Mot_ByPass), PT:= T#2s);
+IF (TON_P1.Q)
+	THEN
+	MES_Debit_ByPass_m3h := 0.0;
+	ELSE
+	MES_Debit_ByPass_m3h := MES_Debit_ByPass_m3h;
+END_IF;
+
+(**********************************************Mesure debit extraction et soufflage en Vol/h*)
+Filtre_V1_Extraction(Mesure:= Tab_MES_Sonde_Gros_Debit_Extraction.R_MesCor, Temps_Echantillonage:= T#2s);
+Filtre_V1_Soufflage(Mesure:= Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor, Temps_Echantillonage:= T#2s);
+Filtre_V1_BasDebit(Mesure:= MES_Petit_Debit_m3h_Extraction, Temps_Echantillonage:= T#1s);
+Filtre_V1_ByPass(Mesure:= MES_Debit_ByPass_m3h, Temps_Echantillonage:= T#1s);
+
+IF (Enable_PID_Bas_Deb_Ext)
+	THEN
+	MES_Debit_Volh_Soufflage 		:= MES_Petit_Debit_m3h_Extraction / MAX(1,Volume_Cabine);
+ELSE
+	MES_Debit_Volh_Soufflage			:= Filtre_V1_Soufflage.Mesure_Echantillonner / MAX(1,Volume_Cabine);
+END_IF;
+MES_Debit_Volh_Extraction 		:= Filtre_V1_Extraction.Mesure_Echantillonner / MAX(1,Volume_Cabine);
+MES_Petit_Debit_Volh_Extraction 	:= MES_Petit_Debit_m3h_Extraction / MAX(1,Volume_Cabine);
+MES_Debit_ByPass_Volh 			:= Filtre_V1_ByPass.Mesure_Echantillonner / MAX(1,Volume_Cabine);
+
+(**********************************************Mesure de la temperature d'ambiance en °F*)
+MES_Sonde_Temp_Amb_F := LIMIT(0.0, ((Tab_MES_Sonde_Temp_Amb.R_MesCor * 1.8) + 32), 100.0);
+
+(**********************************************Mesure de la temperature de l'eau mitige de l'arrivée d'eau en °C et °F*)
+IF(Option_Sonde_Temp_EauMitig) (*Option gestion régulation température eau mitigée*)
+	THEN
+	MES_Temp_Eau_Mitige_Cabine := Tab_MES_Sonde_Temp_Eau_Mitig.R_MesCor;
+	MES_Temp_Eau_Mitige_Cabine_F := (MES_Temp_Eau_Mitige_Cabine * 1.8) + 32;
+	ELSE
+	MES_Temp_Eau_Mitige_Cabine := 0.0;
+	MES_Temp_Eau_Mitige_Cabine_F := 0.0;
+END_IF;
+
+(**********************************************Mesure de la temperature de l'eau mitige de l'arrivée d'eau en °C et °F*)
+IF(Option_Vanne_Thermo_General) (*Option vanne thermostatique présente pour toute les cabines*)
+	THEN
+	MES_Temp_Eau_Mitige_General_F := INT_TO_REAL(Temp_Eau_Mitige) / 10.0;
+	MES_Temp_Eau_Mitige_General := LIMIT(0.0, ((MES_Temp_Eau_Mitige_General_F - 32.0) / 1.8), 100.0);
+	ELSE
+	MES_Temp_Eau_Mitige_General_F := 0.0;
+	//MES_Temp_Eau_Mitige_General := 0.0;
+END_IF;
+
+(**********************************************Mesure sonde de pression de soufflage general*)
+IF(Option_Press_SoufExt_General) (*Gestion des options*)
+	THEN	E_Sonde_press_Souf := E_Sonde_press_Souf;
+	ELSE	E_Sonde_press_Souf := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_V1_Press_Souf(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_press_Souf),
+	Enable_Alarme:= TRUE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= 0.0,
+	MES_MAX:= 500.0,
+	Filtre_Actif:= TRUE,
+	Temps_Echantillonage:= T#500ms,
+	Tab_Sonde:= Tab_Mes_Sonde_Pression_Souf);
+Tab_Mes_Sonde_Pression_Souf.R_MesCor := Tab_Mes_Sonde_Pression_Souf.R_MesCor;
+
+(**********************************************Mesure sonde de pression d'extraction general*)
+IF(Option_Press_SoufExt_General) (*Gestion des options*)
+	THEN	E_Sonde_press_Ext := E_Sonde_press_Ext;
+	ELSE	E_Sonde_press_Ext := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_V1_Press_Ext(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_press_Ext),
+	Enable_Alarme:= TRUE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= 0.0,
+	MES_MAX:= 500.0,
+	Filtre_Actif:= TRUE,
+	Temps_Echantillonage:= T#500ms,
+	Tab_Sonde:= Tab_Mes_Sonde_Pression_Ext);
+Tab_Mes_Sonde_Pression_Ext.R_MesCor := Tab_Mes_Sonde_Pression_Ext.R_MesCor;
+
+(*********************************************Mesure sonde de température batterie eau glacée*)
+IF(Option_Temp_Batterie_EG) (*Gestion des options*)
+	THEN	E_Sonde_Temp_Batt_EG := E_Sonde_Temp_Batt_EG;
+	ELSE	E_Sonde_Temp_Batt_EG := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Temp_Batt_EG(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Temp_Batt_EG),
+	Enable_Alarme:= FALSE,
+	Status_DEF_EAN:= FALSE,
+	Tempo_AL:= T#60s,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= -15.0,
+	MES_MAX:= 35.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_Mes_Sonde_Temp_BatEG);
+Tab_Mes_Sonde_Temp_BatEG.R_MesCor := Tab_Mes_Sonde_Temp_BatEG.R_MesCor;
+
+(*********************************************Mesure sonde de température au soufflage*)
+IF(TRUE) (*Gestion des options*)
+	THEN	E_Sonde_Temp_Souf := E_Sonde_Temp_Souf;
+	ELSE	E_Sonde_Temp_Souf := 0;
+END_IF;
+
+(*Objet sonde*)
+Objet_Sonde_Temp_Souf(
+	Mesure_EAN:= INT_TO_REAL(E_Sonde_Temp_Souf),
+	Enable_Alarme:= TRUE,
+	Status_DEF_EAN:= Defaut_Sonde_Temp_Souf,
+	Tempo_AL:= T#5S,
+	Hyst_AL:= 1.0,
+	EAN_MIN:= 0.0,
+	EAN_MAX:= 32767.0,
+	MES_MIN:= -20.0,
+	MES_MAX:= 80.0,
+	Filtre_Actif:= FALSE,
+	Temps_Echantillonage:= T#1s,
+	Tab_Sonde:= Tab_Mes_Sonde_Temp_Souf);
+Tab_Mes_Sonde_Temp_Souf.R_MesCor := Tab_Mes_Sonde_Temp_Souf.R_MesCor;]]></ST>
+    </Implementation>
+    <LineIds Name="b_SCL_Mesures">
+      <LineId Id="53" Count="446" />
+      <LineId Id="553" Count="20" />
+      <LineId Id="552" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Moteur_EC" Id="{511febd6-d91e-4d50-a3e1-09947eddf32b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Moteur_EC
+VAR_INPUT
+	Enable			:BOOL; (*Activation de l'objet*)
+	Cons_Vit_Dem	:REAL; (*Consigne variateur demandé (venant de la Régulation) / en %*)
+	Cmd_Ma_Dem	:BOOL; (*Commande marche variateur demandé (venant de la Régulation) / 1 = Marche*)
+	Pres_Mes_Freq	:BOOL; (*Présence de la mesure fréquence (si pas de mesure la mesure fréquence sera calculé par LE bloc) / 1 = Présent / 0 = Absent*)
+	Info_Freq		:REAL; (*Info fréquence variateur / en Hz*)
+	Freq_Min		:REAL; (*Fréquence MIN variateur / en Hz*)
+	Freq_Max		:REAL; (*Fréquence MAX variateur / en Hz*)
+	Info_Marche		:BOOL; (*Info marche variateur (recopie ETOR) / 1 = Marche*)
+	Info_Defaut		:BOOL; (*Info défaut variateur (recopie ETOR) / 1 = Défaut*)
+	ModeOccupe		:BOOL; (*Mode occupé / inoccupé / 1 = Occupé / 0 = Inoccupé*)
+	Sel_Cons_Fixe	:BOOL; (*Selection consigne fixe ou variable / 1 = Fixe / 0 = Variable*)
+	Inverse_SAN		:BOOL; (*Inversion de la sortie SAN / 1 = Sens inverse / 0 = Sens normal*)
+	SAN_MIN		:REAL; (*Valeur minimal de la sortie SAN / en point automate*)
+	SAN_MAX		:REAL; (*Valeur maximal de la sortie SAN / en point automate*)
+END_VAR
+
+VAR_OUTPUT
+	SAN_CONS_VAR		:INT; (*Consigne a appliqué au variateur (pour SAN) / en %*)
+	STOR_CMD_MA_VAR	:BOOL; (*Commande marche a appliqué au variateur (pour STOR) / 1 = Marche*)
+	STOR_RESET_VAR	:BOOL; (*Demande reset a appliqué au variateur (pour STOR) / 1 = Reset*)
+END_VAR
+
+VAR
+	CONS_INT_VAR	:REAL;
+	Cmd_Ma_Int	:BOOL;
+	CONS_VAR	:REAL;
+	Mes_Freq	:REAL;
+	val_01	:REAL;
+	val_02	:REAL;
+	val_x	:REAL;
+	val_b	:REAL;
+	val_a	:REAL;
+	val_y	:REAL;
+	val_final	:REAL;
+	val_0x	:REAL;
+	val_0b	:REAL;
+	val_0a	:REAL;
+	val_0y	:REAL;
+	Val_Calcul1	:REAL;
+END_VAR
+
+VAR_IN_OUT
+	Tab_Var	:Objet_Moteur_EC; (*Tableau des valeurs*)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion consigne **************************************************************)
+IF Tab_Var.Mot_Ecriture.0
+	THEN
+		CONS_INT_VAR := Tab_Var.W_ConsForcage;
+		Cmd_Ma_Int := Tab_Var.Mot_Ecriture.1;
+	ELSE
+		IF Cmd_Ma_Dem
+			THEN
+				IF Tab_Var.Mot_Lecture.4 (* Gestion consigne fixe *)
+					THEN
+						IF Tab_Var.Mot_Lecture.3
+							THEN
+								CONS_INT_VAR := Tab_Var.W_ConsOccupe;
+							ELSE
+								CONS_INT_VAR := Tab_Var.W_ConsInoccupe;
+						END_IF;
+					ELSE (* Gestion consigne varaible *)
+						CONS_INT_VAR := Cons_Vit_Dem;
+				END_IF;
+			ELSE
+				CONS_INT_VAR := 0.0;
+		END_IF;
+		Cmd_Ma_Int := Cmd_Ma_Dem;
+END_IF;
+CONS_VAR := LIMIT(Tab_Var.W_LimiteMinCons,CONS_INT_VAR,Tab_Var.W_LimiteMaxCons);
+
+
+(* Gestion mesure fréquence **************************************************************)
+IF Pres_Mes_Freq
+	THEN
+		Mes_Freq := Info_Freq;
+	ELSE
+		(* Mise à l'échelle de la fréquence *)
+		val_01 := Freq_Max - Freq_Min;
+		val_02 := Tab_Var.W_LimiteMaxCons - Tab_Var.W_LimiteMinCons;
+		val_0x := CONS_VAR;
+		val_0a := val_01 / MAX(1.0,val_02);
+		val_0b := Freq_Max - (val_0a * Tab_Var.W_LimiteMaxCons);
+		val_0y := (val_0a * val_0x) + val_0b;
+		Mes_Freq := val_0y;
+END_IF;
+Tab_Var.R_InfoFreq := LIMIT(Freq_Min,Mes_Freq,Freq_Max);
+
+
+(* Gestion sortie analogique **************************************************************)
+(* Mise à l'echelle sortie ****)
+val_x := CONS_VAR;
+val_b := SAN_Max - (val_a * 100.0);
+val_a := (SAN_Max - SAN_Min) / 100.0;
+val_y := (val_a * val_x) + val_b;
+
+(* Inversion de la sortie ANA ****)
+IF (Enable)
+	THEN
+	IF (Inverse_SAN)
+		THEN
+			val_final := SAN_Max - val_y;
+		ELSE
+			val_final := val_y;
+	END_IF;
+	Val_Calcul1 := LIMIT(SAN_Min,val_final, SAN_Max);
+	SAN_CONS_VAR := REAL_TO_INT(Val_Calcul1);
+	ELSE
+	SAN_CONS_VAR := 0;
+END_IF;
+
+
+(* Gestion sortie TOR **************************************************************)
+IF (Enable)
+	THEN
+	STOR_CMD_MA_VAR := Cmd_Ma_Int AND NOT Info_Defaut;
+	STOR_RESET_VAR 	:= Tab_Var.Mot_Ecriture.2;
+	ELSE
+	STOR_CMD_MA_VAR := FALSE;
+	STOR_RESET_VAR 	:= FALSE;
+END_IF;
+
+(* Recopie pour lecture GTC *********************************************************)
+Tab_Var.Mot_Lecture.0			:= STOR_CMD_MA_VAR;
+Tab_Var.Mot_Lecture.1			:= Info_Defaut;
+Tab_Var.Mot_Lecture.2			:= STOR_CMD_MA_VAR;
+Tab_Var.Mot_Lecture.3			:= ModeOccupe;
+Tab_Var.Mot_Lecture.4			:= Sel_Cons_Fixe;
+
+Tab_Var.R_LimiteMinFreq		:= Freq_Min;
+Tab_Var.R_LimiteMaxFreq		:= Freq_Max;
+Tab_Var.R_InfoCons			:= CONS_VAR;]]></ST>
+    </Implementation>
+    <LineIds Name="Moteur_EC">
+      <LineId Id="46" Count="86" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="n2_Regulation_Temp" Id="{36d38e1d-7e89-41c2-84fa-ddc6d7287bd3}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM n2_Regulation_Temp
+VAR
+	TON_1: TON;
+	TON_2: TON;
+	PID_Temp: PID;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de l'enable de la régulation PID*)
+(*Gestion de la régulation de la batterie uniquement s'il n'y a pas de défaut et s'il y ' a présence d'un débit de soufflage*)
+TON_1(IN:= (Tab_MES_Sonde_Gros_Debit_Soufflage.R_MesCor > 50.0), PT:= T#1m);
+IF(NOT Defaut_Klixon_BattElec AND TON_1.Q AND Option_Batt_Elec)
+	THEN
+	Enable_PID_Temp_Amb := TRUE;
+	ELSE
+	Enable_PID_Temp_Amb := FALSE;
+END_IF;
+
+(**********************************************Régulation PID*)
+PID_Temp(
+	ACTUAL:= Tab_MES_Sonde_Temp_Amb.R_MesCor,
+	SET_POINT:= Cons_Temp_Amb,
+	KP:= Gain_PID_Temp_Amb,
+	TN:= Integral_PID_Temp_Amb,
+	TV:= Derivee_PID_Temp_Amb,
+	Y_MANUAL:= 0.0,
+	Y_OFFSET:= 0.0,
+	Y_MIN:= 0.0,
+	Y_MAX:= 100.0,
+	RESET:= NOT Enable_PID_Temp_Amb,
+	Y=> S_Cmd_PID_Temp_Amb);
+
+Cons_Actionneur_BattElec := S_Cmd_PID_Temp_Amb;
+(*Gestion de la commande du contacteur si demande PID supérieure à 5%*)
+TON_2(IN:= (S_Cmd_PID_Temp_Amb > 5.0), PT:= T#1m);
+IF(TON_2.Q AND Enable_PID_Temp_Amb)
+	THEN
+	Cmd_Appli_BattElec := TRUE;
+	ELSE
+	Cmd_Appli_BattElec := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="n2_Regulation_Temp">
+      <LineId Id="6" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

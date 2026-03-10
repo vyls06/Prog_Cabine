@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_LocalServer" Id="{29ea5bb6-eb78-442f-b15b-ac740087d6d2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_LocalServer
+VAR_INPUT
+	sLocalHost					: STRING(15);(* own IP address! *)
+	nLocalPort					: UDINT := 0;
+	bEnable						: BOOL;
+END_VAR
+VAR_OUTPUT
+	bListening					: BOOL;
+	hListener 					: T_HSOCKET;
+	nAcceptedClients				: UDINT;
+	bBusy						: BOOL;
+	bError 						: BOOL;
+	nErrId						: UDINT;
+END_VAR
+VAR
+	fbListen	 					: FB_SocketListen := ( sSrvNetID := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	fbClose						: FB_SocketClose := ( sSrvNetID := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	fbConnectTON				: TON := ( PT := T#3s );
+	eStep						: E_ServerSteps;
+	fbRemoteClient				: ARRAY[1..1] OF FB_RemoteClient;
+	i							: UDINT;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE eStep OF
+
+	SERVER_STATE_IDLE:
+		IF bEnable XOR bListening THEN
+			bBusy := TRUE;
+			bError := FALSE;
+			nErrId := 0;
+			IF bEnable THEN
+				fbConnectTON( IN := FALSE );
+				eStep := SERVER_STATE_LISTENER_OPEN_START;
+			ELSE
+				eStep := SERVER_STATE_REMOTE_CLIENTS_CLOSE;
+			END_IF
+		ELSIF bListening THEN
+			eStep := SERVER_STATE_REMOTE_CLIENTS_COMM;
+		END_IF
+
+	SERVER_STATE_LISTENER_OPEN_START:
+		fbConnectTON( IN := TRUE, PT := PLCPRJ_RECONNECT_TIME );
+		IF fbConnectTON.Q THEN
+			fbConnectTON( IN := FALSE );
+			fbListen(  bExecute := FALSE  );
+			fbListen(	sLocalHost	:= sLocalHost,
+					nLocalPort	:= nLocalPort,
+					bExecute	:= TRUE );
+			eStep := SERVER_STATE_LISTENER_OPEN_WAIT;
+		END_IF
+
+	SERVER_STATE_LISTENER_OPEN_WAIT:
+		fbListen( bExecute := FALSE );
+		IF NOT fbListen.bBusy THEN
+			IF NOT fbListen.bError THEN
+				bListening 	:= TRUE;
+				hListener 	:= fbListen.hListener;
+				eStep 		:= SERVER_STATE_IDLE;
+				LogMessage( 'LISTENER socket OPENED!', hListener );
+			ELSE
+				LogError( 'FB_SocketListen',  fbListen.nErrId );
+				nErrId := fbListen.nErrId;
+				eStep := SERVER_STATE_ERROR;
+			END_IF
+		END_IF
+
+	SERVER_STATE_REMOTE_CLIENTS_COMM:
+		eStep := SERVER_STATE_IDLE;
+		nAcceptedClients := 0;
+
+		FOR i:= 1 TO MAX_CLIENT_CONNECTIONS DO
+			fbRemoteClient[ i ]( hListener := hListener, bEnable := TRUE );
+			IF NOT  fbRemoteClient[ i ].bBusy AND fbRemoteClient[ i ].bError THEN (*FB_SocketAccept returned error!*)
+				eStep := SERVER_STATE_REMOTE_CLIENTS_CLOSE;
+				EXIT;
+			END_IF
+
+			(* count the number of connected remote clients *)
+			IF fbRemoteClient[ i ].bAccepted THEN
+				nAcceptedClients := nAcceptedClients + 1;
+			END_IF
+
+		END_FOR
+
+	SERVER_STATE_REMOTE_CLIENTS_CLOSE:
+		nAcceptedClients := 0;
+		eStep := SERVER_STATE_LISTENER_CLOSE_START; (* close listener socket too *)
+		FOR i:= 1 TO MAX_CLIENT_CONNECTIONS DO
+			fbRemoteClient[ i ]( bEnable := FALSE );(* close all remote client (accepted) sockets *)
+			(* check if all remote client sockets are closed *)
+			IF fbRemoteClient[ i ].bAccepted THEN
+				eStep := SERVER_STATE_REMOTE_CLIENTS_CLOSE; (* stay here and close all remote clients first *)
+				nAcceptedClients := nAcceptedClients + 1;
+			END_IF
+		END_FOR
+
+	SERVER_STATE_LISTENER_CLOSE_START:
+		fbClose( bExecute := FALSE );
+		fbClose(	hSocket	:= hListener,
+				bExecute:= TRUE );
+		eStep := SERVER_STATE_LISTENER_CLOSE_WAIT;
+
+	SERVER_STATE_LISTENER_CLOSE_WAIT:
+		fbClose( bExecute := FALSE );
+		IF NOT fbClose.bBusy THEN
+			LogMessage( 'LISTENER socket CLOSED!', hListener );
+			bListening := FALSE;
+			MEMSET( ADR(hListener), 0, SIZEOF(hListener));
+			IF fbClose.bError THEN
+				LogError( 'FB_SocketClose (listener)',  fbClose.nErrId );
+				nErrId := fbClose.nErrId;
+				eStep := SERVER_STATE_ERROR;
+			ELSE
+				bBusy := FALSE;
+				bError := FALSE;
+				nErrId := 0;
+				eStep := SERVER_STATE_IDLE;
+			END_IF
+		END_IF
+
+	SERVER_STATE_ERROR:
+		bError := TRUE;
+		IF bListening THEN
+			eStep := SERVER_STATE_REMOTE_CLIENTS_CLOSE;
+		ELSE
+			bBusy := FALSE;
+			eStep := SERVER_STATE_IDLE;
+		END_IF
+
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_LocalServer">
+      <LineId Id="24" Count="106" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

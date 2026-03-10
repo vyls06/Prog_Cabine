@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="t_Enr_Variables" Id="{2d9cb15f-26f2-4518-bf80-36e2ddbbcab4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM t_Enr_Variables
+VAR
+	WritePersistentData_1: WritePersistentData;
+ 	 bStart                : BOOL := TRUE;
+  	 bError                : BOOL;
+   	 bBusy                 : BOOL;
+   	 nErrorId              : UDINT;
+	Enregistrement_Manu: BOOL;
+	TP_RAZ_Enr_Manu :TP;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[TP_RAZ_Enr_Manu(IN:= Enregistrement_Manu, PT:= T#2S);
+Enregistrement_Manu := (SEL(Enregistrement_Manu, Enregistrement_Manu, FALSE) OR TP_RAZ_Enr_Manu.Q);
+
+(******************Gestion enregistrement des varaibles perssitantes********************************)
+WritePersistentData_1(
+	NETID:= '',
+	PORT:= 851,
+	START:= Enregistrement_Manu OR bStart,
+	TMOUT:= T#1s,
+	BUSY=> bBusy,
+	ERR=> bError,
+	ERRID=>nErrorId);
+bStart := FALSE;]]></ST>
+    </Implementation>
+    <LineIds Name="t_Enr_Variables">
+      <LineId Id="51" Count="11" />
+      <LineId Id="22" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="PWM" Id="{f89b96dc-4b2f-4cc1-b16c-ae53cc6d2620}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK PWM
+VAR_INPUT
+	ENABLE					:BOOL;		(*Autorisation de marche du bloc / 1 = Marche*)
+	IN_BaseTemps			:REAL;		(*Base de temps du PWM / En sec*)
+	IN_T_ON_Max			:REAL;		(*Temps à ON max autorisé pour la sortie / En sec*)
+	TIME_Temp_ON_Min		:TIME;		(*Temps à ON min autorisé pour la sortie / En TIME*)
+	IN_Cons					:REAL;		(*Consigne demandé / 0...100,0 %*)
+END_VAR
+VAR_OUTPUT
+	OUT_PWM				:BOOL;		(*Sortie du PWM / 1 = Marche*)
+	OUT_Info_Temps_Cycle	:INT;		(*Temps de cycle restant / En minutes*)
+END_VAR
+VAR
+	Temp_ON				:REAL;
+	TP_1					:TP;
+	TIME_BaseTemps		:TIME;
+	TIME_Temp_ON			:TIME;
+	DINT_BaseTemps		:DINT;
+	DINT_Temp_ON			:DINT;
+	Clignotant_V2_1			:BLINK;
+	front						:BOOL;
+	Temp_T_ON_voulu		:REAL;
+	Temp_ON_bis			:REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF(ENABLE)
+	THEN
+		IF (IN_Cons = 0.0)
+			THEN
+				OUT_PWM := FALSE;
+			ELSE
+				(* Cacule temps PWM *)
+				Temp_T_ON_voulu := IN_T_ON_Max;
+				Temp_ON := (IN_BaseTemps / 100.0) * IN_Cons;
+
+				(* Sécurité Temp On Max *)
+				IF Temp_ON > Temp_T_ON_voulu
+					THEN
+						Temp_ON_bis := Temp_T_ON_voulu;
+					ELSE
+						Temp_ON_bis := Temp_ON;
+				END_IF;	
+
+				DINT_BaseTemps := REAL_TO_DINT(IN_BaseTemps);
+				TIME_BaseTemps := DINT_TO_TIME(DINT_BaseTemps * DINT#1000);
+
+				DINT_Temp_ON := REAL_TO_DINT(Temp_ON_bis * 10.0);
+				TIME_Temp_ON := DINT_TO_TIME(DINT_Temp_ON * DINT#100);
+
+				(* Sécurité si Temp ON < 0.2 sec on n'active pas la sortie *)
+				IF TIME_Temp_ON > TIME_Temp_ON_Min
+					THEN
+						Clignotant_V2_1(ENABLE:= TRUE, TIMELOW:=T#1s, TIMEHIGH:=TIME_BaseTemps);
+						front := Clignotant_V2_1.OUT;
+
+						TP_1(IN := front,PT := TIME_Temp_ON);
+						OUT_PWM := TP_1.Q;
+					ELSE
+						OUT_PWM := FALSE;
+				END_IF;
+
+		END_IF;
+	ELSE
+		OUT_PWM := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="PWM">
+      <LineId Id="32" Count="38" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

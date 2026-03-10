@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Gache" Id="{59f99360-74a3-4323-b21a-7f8fab64e049}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Gache
+VAR_INPUT
+	Cmd_Gache 	:BOOL; (*Commande de la prise*)
+	Reset_Gache	:BOOL; (*Commande reset du défaut de discordance*)
+	Enable_Forcage :BOOL;
+	Forcage :BOOL;
+END_VAR
+VAR_OUTPUT
+	STOR_Gache	:BOOL; (*Commande de la sortie TOR de la Gache*)
+	Def_Discord_Gache	:BOOL; (*Statut défaut discordance Gache*)
+END_VAR
+VAR
+	TON_1: 				TON;
+	RS_1: 				RS;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*============================Gestion de la commande de la gache================================*)
+IF (Enable_Forcage)
+	THEN
+	IF(Forcage  AND NOT Def_Discord_Gache)
+		THEN
+		STOR_Gache := TRUE;
+		ELSE
+		STOR_Gache := FALSE;
+	END_IF;
+	ELSE
+	IF (Cmd_Gache  AND NOT Def_Discord_Gache)
+		THEN
+		STOR_Gache := TRUE;
+		ELSE
+		STOR_Gache := FALSE;
+	END_IF;
+END_IF;
+
+(*============================Gestion défaut discordance gache================================*)
+TON_1(IN:= ( FALSE(*STOR_Gache AND NOT Statut_Porte*))  , PT:= t#5s );
+RS_1(SET:= TON_1.Q, RESET1:= Reset_Gache);
+Def_Discord_Gache := RS_1.Q1;]]></ST>
+    </Implementation>
+    <LineIds Name="Gache">
+      <LineId Id="15" Count="21" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

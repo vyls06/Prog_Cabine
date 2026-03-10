@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="s_InterCom_Esclave" Id="{981a53f4-60b7-42fb-b9dc-746cc8ec333d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM s_InterCom_Esclave
+VAR
+	fbServer						: FB_LocalServer;
+	bEnableServer				: BOOL := TRUE;
+	fbSocketCloseAll				: FB_SocketCloseAll :=  ( sSrvNetID := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	bCloseAll					: BOOL := TRUE;
+	TON_Def_Client: TON;
+	TON_Def_Com: TON;
+	i :INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbServer(  sLocalHost := Own_Ip_Adress, nLocalPort := 200 );
+
+IF (bCloseAll OR NOT Option_InterCom) THEN (*On PLC reset or program download close all old connections *)
+	bCloseAll := FALSE;
+	fbSocketCloseAll( bExecute:= TRUE );
+ELSE
+	fbSocketCloseAll( bExecute:= FALSE );
+END_IF
+
+IF (Option_InterCom)
+	THEN
+	IF NOT fbSocketCloseAll.bBusy THEN
+		fbServer( bEnable := bEnableServer );
+	END_IF
+	(*Gestion du defaut de communication*)
+	TON_Def_Client(IN:= (fbServer.nAcceptedClients = 0), PT:= T#10s); (*Si aucun accepté au démarrage de l'automate*)
+	TON_Def_Com(IN:= (fbServer.fbRemoteClient[1].fbServerDataExcha.bError OR TON_Def_Client.Q), PT:= T#20s);
+	Defaut_Com_Client := TON_Def_Com.Q;
+	(*Initilisation des lectures et ecritures en cas de défaut com*)
+	IF (Defaut_Com_Client)
+		THEN
+		FOR i := 0 TO 29 BY 1 DO
+		Tab_Com_Send[i] := 0;
+		Tab_Com_Receive[i] := 0;
+		END_FOR;
+	END_IF;
+	ELSE
+	TON_Def_Client(IN:=FALSE);
+	Defaut_Com_Client := FALSE;
+	FOR i := 0 TO 29 BY 1 DO
+	Tab_Com_Send[i] := 0;
+	Tab_Com_Receive[i] := 0;
+	END_FOR;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="s_InterCom_Esclave">
+      <LineId Id="10" Count="33" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

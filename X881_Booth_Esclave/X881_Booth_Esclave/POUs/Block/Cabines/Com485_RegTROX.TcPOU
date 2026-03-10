@@ -1,0 +1,511 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="Com485_RegTROX" Id="{9ccb4330-b574-4b36-b929-d3e9d9d5bb00}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Com485_RegTROX
+VAR_INPUT
+	Adresse_RS485		:BYTE;
+	rEcriture_Cons_Deb	: REAL;
+	rEcriture_Cons_Max 	: REAL;
+	rEcriture_Cons_Min 	: REAL;
+	Ecriture_ls_m3h		: INT := 1; (*(0=l/s - 1=m3/h - 6 =cfm)*)
+	Ecr_Interface_Mode	: INT := 1; (*0=Consigne via 0-10V / 1=Consigne via Modbus*)
+	Etat_Ma_Ventil		: BOOL;
+	TOL_Defaut_Discord	: REAL;
+	Start_Chenillard	: BOOL;
+	EF_Forcage			: BOOL;
+	E_Forcage			: REAL;
+END_VAR
+VAR_OUTPUT
+	Com_Ok 				: BOOL;
+	Com_Error 			: BOOL;
+	MES_Pos				: REAL;
+	rDebit_Relative 	: REAL;
+	Lec_Cons_Appli		: INT;
+	Lecture_Cons_Max 	: INT;
+	Lecture_Cons_Min 	: INT;
+	Lecture_ls_m3h 		: INT; (*(0=l/s - 1=m3/h - 6 =cfm)*)
+	Lec_Interface_Mode	: INT; (*0=Consigne via 0-10V / 1=Consigne via Modbus*)
+	etape				: INT := 0;
+	Defaut_Com			: BOOL;
+	Defaut_Discord_Debit	: BOOL;
+	Next_Chenillard		: BOOL;
+END_VAR
+VAR
+	Last_Error			: MODBUS_ERRORS;
+	ValeursLues1 		:ARRAY[1..4] OF INT;
+	ValeursLues2 		:ARRAY[1..2] OF INT;
+	ValeursLues3  		:ARRAY[1..3] OF INT;
+	Posi_Relative 		: INT;
+	Posi_Absolue		 :INT;
+	Debit_Absolue 		: INT;
+	Lecture_Etat 			: INT;
+	Lecture_Adresse 		: INT;
+	Lecture_Software 		: INT;
+	
+	Ecriture_Cons_Deb	: INT;
+	Ecriture_Cons_Max 	: INT;
+	Ecriture_Cons_Min 	: INT;
+	Debit_Relative 		: INT;
+
+	Changement_Ecr_Cons: BOOL;
+	Changement_Ecr_Interface_Mode : BOOL;
+	Changement_Ecr_ls_m3h : BOOL;
+	Changement_Ecr_Cons_Min : BOOL;
+	Changement_Ecr_Cons_Max : BOOL;
+	
+(*Gestion du registre de soufflage*)
+	F_TRIG_3: F_TRIG;
+	F_TRIG_4: F_TRIG;
+	F_TRIG_5: F_TRIG;
+	F_TRIG_6: F_TRIG;
+	F_TRIG_7: F_TRIG;
+	F_TRIG_8: F_TRIG;
+	F_TRIG_9: F_TRIG;
+	F_TRIG_10: F_TRIG;
+	F_TRIG_11: F_TRIG;
+	F_TRIG_12: F_TRIG;		
+	F_TRIG_13: F_TRIG;
+
+(*Autres*)
+	TON_1: TON;
+	TON_2: TON;
+	TON_3: TON;
+	TON_4: TON;
+	TON_5: TON;
+	TON_6: TON;
+	TON_7: TON;
+	TON_8: TON;
+	TON_9: TON;
+	TON_10: TON;
+	TON_11: TON;
+
+(********Gestion des défauts de communication*)
+	TON_Com :TON;
+	RS_Def_Com: RS;
+
+(********Gestion des défauts de discrodance du débit*)
+	Var_ABS_Debit		:REAL;
+	TON_DefDiscord		:TON;
+	R_TRIG_Start: R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Gestion du forçage de la consigne
+IF (EF_Forcage) THEN
+	rEcriture_Cons_Deb := E_Forcage;
+	ELSE
+	rEcriture_Cons_Deb := rEcriture_Cons_Deb;
+END_IF
+
+// Conversion des variables
+Ecriture_Cons_Deb := REAL_TO_INT(rEcriture_Cons_Deb);
+Ecriture_Cons_Max := REAL_TO_INT(rEcriture_Cons_Max);
+Ecriture_Cons_Min := REAL_TO_INT(rEcriture_Cons_Min);
+rDebit_Relative := INT_TO_REAL(Debit_Relative);
+
+(**********************************************Gestion de la communication avec le registre d'extraction numéro 7*)
+(*Information ouverture du registre*)
+Posi_Relative := ValeursLues1[1];
+(*Mesure du débit du registre*)
+Debit_Relative := ValeursLues1[4];
+Lec_Cons_Appli := Lec_Cons_Appli;
+MES_Pos := Posi_Relative / 100.0; (*Récupération de la valeur de position du registre de soufflage*)
+(*Information des consignes Min/Max applicable au registre*)
+Lecture_Cons_Max := ValeursLues3[2];
+Lecture_Cons_Min := ValeursLues3[1];
+(*Information d'état de l'unité de lecture du débit (0=l/s - 1=m3/h - 6 =cfm)*)
+Lecture_ls_m3h := Lecture_ls_m3h;
+(*Autres informations*)
+Posi_Absolue := ValeursLues1[2];
+Debit_Absolue := ValeursLues1[3];
+Lecture_Etat := ValeursLues2[2];
+Lecture_Adresse := Lecture_Adresse;
+Lecture_Software := ValeursLues2[1];
+Lec_Interface_Mode := ValeursLues3[3]; (*0=Consigne via 0-10V / 1=Consigne via Modbus*)
+
+(*Changement de consigne pour l'ecriture Modbus*)
+IF((Lec_Cons_Appli <> Ecriture_Cons_Deb))
+	THEN
+	Changement_Ecr_Cons := TRUE;
+	ELSE
+	Changement_Ecr_Cons := FALSE;
+END_IF;
+
+(*Changement de l'ecriture interface mode*)
+IF((Lec_Interface_Mode <> Ecr_Interface_Mode))
+	THEN
+	Changement_Ecr_Interface_Mode := TRUE;
+	ELSE
+	Changement_Ecr_Interface_Mode := FALSE;
+END_IF;
+
+(*Changement de l'ecriture de l'unité du débit*)
+IF((Lecture_ls_m3h <> Ecriture_ls_m3h))
+	THEN
+	Changement_Ecr_ls_m3h := TRUE;
+	ELSE
+	Changement_Ecr_ls_m3h := FALSE;
+END_IF;
+
+(*Changement de l'ecriture de la consigne minimmum*)
+IF((Lecture_Cons_Min <> Ecriture_Cons_Min))
+	THEN
+	Changement_Ecr_Cons_Min := TRUE;
+	ELSE
+	Changement_Ecr_Cons_Min := FALSE;
+END_IF;
+
+(*Changement de l'ecriture de la consigne maximum*)
+IF((Lecture_Cons_Max <> Ecriture_Cons_Max))
+	THEN
+	Changement_Ecr_Cons_Max := TRUE;
+	ELSE
+	Changement_Ecr_Cons_Max := FALSE;
+END_IF;
+
+(**********************************************Gestion sécurité anti-blocage*)
+(*En cas de blocage de la variable etape à 1*)
+TON_1(IN:=(etape = 1) , PT:= T#3s);
+IF (TON_1.Q) THEN etape := 3; END_IF;
+
+(*En cas de blocage de la variable etape à 3*)
+TON_2(IN:=(etape = 3) , PT:= T#3s);
+IF (TON_2.Q) THEN etape := 5; END_IF;
+
+(*En cas de blocage de la variable etape à 5*)
+TON_3(IN:=(etape = 5) , PT:= T#3s);
+IF (TON_3.Q) THEN etape := 7; END_IF;
+
+(*En cas de blocage de la variable etape à 7*)
+TON_4(IN:=(etape = 7) , PT:= T#3s);
+IF (TON_4.Q) THEN etape := 9; END_IF;
+
+(*En cas de blocage de la variable etape à 9*)
+TON_5(IN:=(etape = 9) , PT:= T#3s);
+IF (TON_5.Q) THEN etape := 11; END_IF;
+
+(*En cas de blocage de la variable etape à 11*)
+TON_6(IN:=(etape = 11) , PT:= T#3s);
+IF (TON_6.Q) THEN etape := 13; END_IF;
+
+(*En cas de blocage de la variable etape à 13*)
+TON_7(IN:=(etape = 13) , PT:= T#3s);
+IF (TON_7.Q) THEN etape := 15; END_IF;
+
+(*En cas de blocage de la variable etape à 15*)
+TON_8(IN:=(etape = 15) , PT:= T#3s);
+IF (TON_8.Q) THEN etape := 17; END_IF;
+
+(*En cas de blocage de la variable etape à 17*)
+TON_9(IN:=(etape = 17) , PT:= T#3s);
+IF (TON_9.Q) THEN etape := 19; END_IF;
+
+(*En cas de blocage de la variable etape à 19*)
+TON_10(IN:=(etape = 19) , PT:= T#3s);
+IF (TON_10.Q) THEN etape := 21; END_IF;
+
+(*En cas de blocage de la variable etape à 21*)
+TON_11(IN:=(etape = 21) , PT:= T#3s);
+IF (TON_11.Q) THEN etape := 0; END_IF;
+
+CASE etape OF
+	0: (*Etape Attente*)
+		R_TRIG_Start(CLK:= Start_Chenillard);
+		IF (R_TRIG_Start.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+		Next_Chenillard := FALSE;
+	(* Lecture Registre ultrason soufflage*)
+	1:	MB.ReadRegs(	Execute := NOT MB.BUSY,
+						UnitID := Adresse_RS485,
+						Quantity := 4,								(* Lecture de 4 mots *)
+						MBAddr := 16#4,							(*A partir de l'adresse 4*)
+						cbLength := SIZEOF(ValeursLues1),
+						pMemoryAddr := ADR(ValeursLues1),
+						Timeout := T#1000ms);
+		F_TRIG_3(CLK:= MB.BUSY);
+		IF(F_TRIG_3.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	2:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	3:	MB.ReadRegs(	Execute := (NOT MB.BUSY),
+						UnitID := Adresse_RS485,
+						Quantity := 2,								(* Lecture de 2 mots *)
+						MBAddr := 16#67,							(*A partir de l'adresse 103*)
+						cbLength := SIZEOF(ValeursLues2),
+						pMemoryAddr := ADR(ValeursLues2),
+						Timeout := T#1000ms);
+		F_TRIG_4(CLK:= MB.BUSY);
+		IF(F_TRIG_4.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	4:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	5:	MB.ReadRegs(	Execute := (NOT MB.BUSY),
+						UnitID := Adresse_RS485,
+						Quantity := 3,								(* Lecture de 3 mots *)
+						MBAddr := 16#78,							(*A partir de l'adresse 120*)
+						cbLength := SIZEOF(ValeursLues3),
+						pMemoryAddr := ADR(ValeursLues3),
+						Timeout := T#1000ms);
+		F_TRIG_5(CLK:= MB.BUSY);
+		IF(F_TRIG_5.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	6:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	7:	MB.ReadRegs(	Execute := (NOT MB.BUSY),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Lecture de 1 mots *)
+						MBAddr := 16#82,							(*A partir de l'adresse 130*)
+						cbLength := SIZEOF(Lecture_Adresse),
+						pMemoryAddr := ADR(Lecture_Adresse),
+						Timeout := T#1000ms);
+		F_TRIG_6(CLK:= MB.BUSY);
+		IF(F_TRIG_6.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	8:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	9:	MB.ReadRegs(	Execute := (NOT MB.BUSY),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Lecture de 1 mots *)
+						MBAddr := 16#C9,							(*A partir de l'adresse 201*)
+						cbLength := SIZEOF(Lecture_ls_m3h),
+						pMemoryAddr := ADR(Lecture_ls_m3h),
+						Timeout := T#1000ms);
+		F_TRIG_7(CLK:= MB.BUSY);
+		IF(F_TRIG_7.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	10:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	11:	MB.WriteSingleRegister(	Execute := (NOT MB.BUSY AND Changement_Ecr_Cons_Min),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Ecriture de 1 mots *)
+						MBAddr := 16#78,							(*A partir de l'adresse 120*)
+						cbLength := SIZEOF(Ecriture_Cons_Min),
+						pMemoryAddr := ADR(Ecriture_Cons_Min),
+						Timeout := T#1000ms);
+		F_TRIG_8(CLK:= MB.BUSY);
+		IF(F_TRIG_8.Q OR NOT Changement_Ecr_Cons_Min)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	12:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	13:	MB.WriteSingleRegister(	Execute := (NOT MB.BUSY AND Changement_Ecr_Cons_Max),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Ecriture de 1 mots *)
+						MBAddr := 16#79,							(*A partir de l'adresse 121*)
+						cbLength := SIZEOF(Ecriture_Cons_Max),
+						pMemoryAddr := ADR(Ecriture_Cons_Max),
+						Timeout := T#1000ms);
+		F_TRIG_9(CLK:= MB.BUSY);
+		IF(F_TRIG_9.Q OR NOT Changement_Ecr_Cons_Max)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	14:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	15:	MB.WriteSingleRegister(	Execute := (NOT MB.BUSY  AND Changement_Ecr_ls_m3h),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Ecriture de 1 mots *)
+						MBAddr := 16#C9,							(*A partir de l'adresse 201*)
+						cbLength := SIZEOF(Ecriture_ls_m3h),
+						pMemoryAddr := ADR(Ecriture_ls_m3h),
+						Timeout := T#1000ms);
+		F_TRIG_10(CLK:= MB.BUSY);
+		IF(F_TRIG_10.Q OR NOT Changement_Ecr_ls_m3h)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	16:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+		
+	17:	MB.ReadRegs(	Execute := (NOT MB.BUSY),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Lecture de 1 mots *)
+						MBAddr := 16#14,							(*A partir de l'adresse 20*)
+						cbLength := SIZEOF(Lec_Cons_Appli),
+						pMemoryAddr := ADR(Lec_Cons_Appli),
+						Timeout := T#1000ms);
+		F_TRIG_11(CLK:= MB.BUSY);
+		IF(F_TRIG_11.Q)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	18:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+	
+	19:	MB.WriteSingleRegister(	Execute := (NOT MB.BUSY AND Changement_Ecr_Cons),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Ecriture de 1 mots *)
+						MBAddr := 16#14,							(*A partir de l'adresse 20*)
+						cbLength := SIZEOF(Ecriture_Cons_Deb),
+						pMemoryAddr := ADR(Ecriture_Cons_Deb),
+						Timeout := T#1000ms);
+		F_TRIG_12(CLK:= MB.BUSY);
+		IF(F_TRIG_12.Q OR NOT Changement_Ecr_Cons)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	20:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		etape := etape + 1;
+
+	21:	MB.WriteSingleRegister(	Execute := (NOT MB.BUSY AND Changement_Ecr_Interface_Mode),
+						UnitID := Adresse_RS485,
+						Quantity := 1,								(* Ecriture de 1 mots *)
+						MBAddr := 16#7A,							(*A partir de l'adresse 122*)
+						cbLength := SIZEOF(Ecr_Interface_Mode),
+						pMemoryAddr := ADR(Ecr_Interface_Mode),
+						Timeout := T#1000ms);
+		F_TRIG_13(CLK:= MB.BUSY);
+		IF(F_TRIG_13.Q OR NOT Changement_Ecr_Interface_Mode)
+			THEN
+			etape := etape + 1;
+		END_IF;
+	22:	IF MB.Error THEN
+			Com_Ok := FALSE;
+			Com_Error := TRUE;
+			Last_Error := MB.ErrorId;
+		ELSE
+			Com_Ok := TRUE;
+			Com_Error := FALSE;
+			Last_Error := 0;
+		END_IF
+		Next_Chenillard := TRUE;
+		etape := 0;
+END_CASE
+
+(**********************************************Gestion des défauts de communication*)
+TON_Com(IN:= (Com_Ok) , PT:= t#4s );
+RS_Def_Com(		SET:= (Com_Error),
+				RESET1:= (TON_Com.Q));
+Defaut_Com := RS_Def_Com.Q1;
+
+(**********************************************gestion défaut discordance de la mesure de débit*)
+Var_ABS_Debit := ABS(Lec_Cons_Appli - Debit_Relative);
+TON_DefDiscord(IN:= (Var_ABS_Debit > TOL_Defaut_Discord) AND Etat_Ma_Ventil, PT:= t#3600s);
+IF(TON_DefDiscord.Q)
+	THEN
+	Defaut_Discord_Debit := TRUE;
+	ELSE
+	Defaut_Discord_Debit := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Com485_RegTROX">
+      <LineId Id="734" Count="0" />
+      <LineId Id="738" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="739" Count="0" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="740" Count="0" />
+      <LineId Id="735" Count="0" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="559" Count="2" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="88" Count="351" />
+      <LineId Id="441" Count="12" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="456" Count="15" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

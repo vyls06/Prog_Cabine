@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="i_Protocol_Auto" Id="{27f80f24-fb25-422d-aec8-beb4bebaa087}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM i_Protocol_Auto
+VAR
+(*Validation de la recette sélectionnée*)
+	n: INT;
+	i: INT;
+	R_TRIG_RAZ_etape: R_TRIG;
+(*initialisation des valeurs*)
+	j: INT;
+(*Execution de la recette en mode auto*)
+	R_TRIG_Dem: R_TRIG;
+	R_TRIG1: R_TRIG;
+(*Gestion de la poste de ventilation*)
+	F_TRIG_Fin_Post_Ventil: F_TRIG;
+	TON_PV: TON;
+	R_TRIG_PV: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*MEMSET(ADR(Tab_Nom_Recette),0,SIZEOF(Tab_Nom_Recette));
+MEMSET(ADR(Tab_Mode_Texte),0,SIZEOF(Tab_Mode_Texte));*)
+
+(************************************************************************************************************************Gestion Arrêt du grafcet*)
+Mode_Arret_Auto := 	(Reset_Mode_Auto(*Fin de la recette*)
+					OR ((Numero_Mode_Auto = 1) AND Mode_Auto.Mode_END) (*Fin de la recette*)
+					OR (Mode_Auto.Mode_12 AND Defaut_Discord_Deb_Eau_Douche)
+					OR (Mode_Auto.Mode_13 AND Defaut_Discord_Deb_Eau_Douche)
+					OR (Mode_Auto.Mode_14 AND Defaut_Discord_Deb_Eau_Lavabo)
+					OR (Mode_Auto.Mode_15 AND Defaut_Discord_Deb_Eau_Lavabo)
+					OR Defaut_Debordement_Douche OR Defaut_Debordement_Lavabo)
+					OR (Mode_Auto.Mode_4 AND Defaut_Discord_Deb_Eau_Lavabo AND Option_Debitmetre_Lavabo)
+					OR (Mode_Auto.Mode_5 AND Defaut_Discord_Deb_Eau_Lavabo AND Option_Debitmetre_Lavabo)
+					OR (Mode_Auto.Mode_1 AND Defaut_Discord_Deb_Eau_Douche AND Option_Debitmetre_Douche)
+					OR (Mode_Auto.Mode_2 AND Defaut_Discord_Deb_Eau_Douche AND Option_Debitmetre_Douche)
+					OR (RS_MEnCond.Q1 AND Defaut_Arret_Mode25 AND Option_Cabine_Climatique) //RS_MEnCond.Q1 Correspond au démarrage de la CTA durant une recette
+					OR Defaut_Discord_Reg_Etanche_Ext OR Defaut_Sonde_Temp_Eau_Mitig;
+
+(************************************************************************************************************************Validation de la recette sélectionnée*)
+IF(Validation_Recette_Auto AND NOT Mode_Arret_Auto)
+	THEN
+	(*Remise à zéro du nombre d'étape total avant le calcul du nombre d'étape total*)
+	R_TRIG_RAZ_etape(CLK:= Validation_Recette_Auto);
+	IF (R_TRIG_RAZ_etape.Q) THEN Nbre_Etape_Totale := 0; END_IF;
+	(*Transfert dans la recette 0 de la recettte sélectionnée*)
+	FOR i := 1 TO 29 BY 1 DO
+		Tab_Recette_Auto[0, i, 1] := Tab_Recette_Auto[Numero_Recette_Sel, i, 1];
+		Tab_Recette_Auto[0, i, 2] := Tab_Recette_Auto[Numero_Recette_Sel, i, 2];
+		Tab_Recette_Auto[0, i, 3] := Tab_Recette_Auto[Numero_Recette_Sel, i, 3];
+		Tab_Recette_Auto[0, i, 4] := Tab_Recette_Auto[Numero_Recette_Sel, i, 4];
+		Tab_Recette_Auto[0, i, 5] := Tab_Recette_Auto[Numero_Recette_Sel, i, 5];
+		Tab_Recette_Auto[0, i, 6] := Tab_Recette_Auto[Numero_Recette_Sel, i, 6];
+		Tab_Recette_Auto[0, i, 7] := Tab_Recette_Auto[Numero_Recette_Sel, i, 7];
+		Tab_Recette_Auto[0, i, 8] := Tab_Recette_Auto[Numero_Recette_Sel, i, 8];
+		Tab_Recette_Auto[0, i, 9] := Tab_Recette_Auto[Numero_Recette_Sel, i, 9];
+		Tab_Recette_Auto[0, i, 10] := Tab_Recette_Auto[Numero_Recette_Sel, i, 10];
+		Tab_Recette_Auto[0, i, 11] := Tab_Recette_Auto[Numero_Recette_Sel, i, 11];
+		Tab_Recette_Auto[0, i, 12] := Tab_Recette_Auto[Numero_Recette_Sel, i, 12];
+		Tab_Recette_Auto[0, i, 13] := Tab_Recette_Auto[Numero_Recette_Sel, i, 13];
+		Tab_Recette_Auto[0, i, 14] := Tab_Recette_Auto[Numero_Recette_Sel, i, 14];
+		Tab_Recette_Auto[0, i, 15] := Tab_Recette_Auto[Numero_Recette_Sel, i, 15];
+	END_FOR;
+	(*Calcul etape total*)
+	FOR n := 1 TO 29 BY 1 DO
+		IF(Tab_Recette_Auto[Numero_Recette_Sel, n, 1] = 99)
+			THEN
+			Nbre_Etape_Totale := n - 1;
+			n := 29;
+		END_IF;
+	END_FOR;
+	ELSE;
+	R_TRIG_RAZ_etape(CLK:= FALSE);
+	i := 0;
+	n := 0;
+END_IF;
+
+(************************************************************************************************************************Démarrage du mode auto*)
+IF(Mode_Cabine_Automatique AND (Numero_Mode_Auto = 0) AND NOT Mode_Arret_Auto)
+	THEN
+	Numero_Mode_Auto := 1;
+END_IF;
+
+(*Gestion du case du mode auto*)
+CASE Numero_Mode_Auto OF
+(*******************************************************************************************Etape 0 : Attente*)
+0:
+j:=0; (*Initlisation de la variable boucle FOR d'initialisation*)
+Mode_Auto(
+	Enable:= 					(FALSE),
+	Numero_Etape:= 				Numero_Etape_Actuel);
+
+(*******************************************************************************************Etape 1 :Execution de la recette en mode auto*)
+1:
+R_TRIG_Dem(CLK:= (Numero_Mode_Auto = 1));
+(*Démarrage de l'étape 1 de la recette*)
+IF(R_TRIG_Dem.Q)
+	THEN
+	Numero_Etape_Actuel := Numero_Etape_Actuel + 1;
+END_IF;
+
+(*Bloc fontion recette*)
+Mode_Auto(
+	Enable:= 					(Numero_Mode_Auto = 1),
+	Numero_Etape:= 				Numero_Etape_Actuel,
+	Numero_Mode:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 1],
+	Tempo_Transition_seconde:=	Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 2],
+	Tempo_Transition_Minute:=	Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 3],
+	Tempo_Transition_Heure:= 	Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 4],
+	Cons_Volume_Eau_Douche:= 	Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 6],
+	Cons_Volume_Eau_Lavabo:=	Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 6],
+	Cons_Deb_Soufflage:= 		Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 7],
+	Cons_Deb_Extraction:=		Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 8],
+	Cons_Temperature_Eau:= 		Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 9],
+	Cons_Nbre_Chasse:= 			Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 10],
+	Cons_Para_11:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 11],
+	Cons_Para_12:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 12],
+	Cons_Para_13:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 13],
+	Cons_Para_14:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 14],
+	Cons_Para_15:= 				Tab_Recette_Auto[0, LIMIT(1,Numero_Etape_Actuel,30), 15],);
+
+(*Lecture des consignes actuel en cours de fonctionnement pour chaque étape (Valeurs en entrées du bloc Mode)*)
+Numero_Mode_Actuel 				:= (Mode_Auto.Numero_Mode);
+Tempo_Transition_seconde_Actuel := (Mode_Auto.Tempo_Transition_seconde);
+Tempo_Transition_Minute_Actuel 	:= (Mode_Auto.Tempo_Transition_Minute);
+Tempo_Transition_Heure_Actuel 	:= (Mode_Auto.Tempo_Transition_Heure);
+Cons_Volume_Eau_Douche_Actuel 	:= (Mode_Auto.Cons_Volume_Eau_Douche);
+Cons_Volume_Eau_Lavabo_Actuel	:= (Mode_Auto.Cons_Volume_Eau_Lavabo);
+Cons_Deb_Soufflage_Actuel 		:= (Mode_Auto.Cons_Deb_Soufflage);
+Cons_Deb_Extraction_Actuel 		:= (Mode_Auto.Cons_Deb_Extraction);
+Cons_Temperature_Eau_Actuel 	:= (Mode_Auto.Cons_Temperature_Eau);
+Cons_Para_Nbre_Chasse_Eau 		:= (Mode_Auto.Cons_Nbre_Chasse);
+Cons_Para_11_Actuel 			:= (Mode_Auto.Cons_Para_11);
+Cons_Para_12_Actuel 			:= (Mode_Auto.Cons_Para_12);
+Cons_Para_13_Actuel 			:= (Mode_Auto.Cons_Para_13);
+Cons_Para_14_Actuel 			:= (Mode_Auto.Cons_Para_14);
+Cons_Para_15_Actuel 			:= (Mode_Auto.Cons_Para_15);
+
+(*Lecture des consignes appliquée en cours de fonctionnement pour chaque étape (Valeurs en sorties du bloc Mode)*)
+(*Affichage du texte du mode en cours*)
+MEMSET(ADR(Lecture_Texte_Choisi_FR),0,SIZEOF(Lecture_Texte_Choisi_FR));
+MEMSET(ADR(Lecture_Texte_Choisi_ENG),0,SIZEOF(Lecture_Texte_Choisi_ENG));
+Lecture_Texte_Choisi_FR 	:= Mode_Auto.Out_Texte_FR;
+Lecture_Texte_Choisi_ENG	:= Mode_Auto.Out_Texte_ENG;
+(*Gestion du décompte du temps restant*)
+Temp_Restant_Seconde 			:= Mode_Auto.Out_Restant_Seconde;
+Temp_Restant_Minute 			:= Mode_Auto.Out_Restant_Minute;
+Temp_Restant_Heure 				:= Mode_Auto.Out_Restant_Heure;
+(*Gestion du décompte du nombre de chasse*)
+Nbre_Chasse_Total := Mode_Auto.Cons_Nbre_Chasse;
+Nbre_Chasse_EnCours := MAX(Mode_Auto.Cpt_Chasse_PV, Mode_Auto.Cpt_Chasse_GV);
+(*Débit d'eau, consigne de ventilation et consigne de température d'eau*)
+IF (S_Cmd_Vanne_Alim_Douche OR S_Cmd_ElectroValve_Alim_Douche) THEN
+Lect_Volume_Eau_Douche 			:= LIMIT(0,(Mode_Auto.Out_Volume_Eau_Douche - Trop_Plein_Douche + Garde_Deau_Douche),150);
+ELSE Lect_Volume_Eau_Douche := 0.0; END_IF;
+IF (S_Cmd_Vanne_Alim_Lavabo OR S_Cmd_ElectroValve_Alim_Lavabo) THEN
+Lect_Volume_Eau_Lavabo			:= LIMIT(0,(Mode_Auto.Out_Volume_Eau_Lavabo - Trop_Plein_Lavabo + Garde_Deau_Lavabo),150);
+ELSE Lect_Volume_Eau_Lavabo := 0.0; END_IF;
+Cons_Deb_Soufflage_Appli 		:= Mode_Auto.Out_Debit_Souf;
+Cons_Deb_Extraction_Appli 		:= Mode_Auto.Out_Debit_Ext;
+Cons_Temperature_Eau_Appli 		:= Mode_Auto.Out_Temp_Eau;
+Cons_Para_Nbre_Chasse_Eau 		:= Mode_Auto.Cons_Nbre_Chasse;
+Cons_Para_11_Appli 				:= Mode_Auto.Out_Para_11;
+Cons_Para_12_Appli 				:= Mode_Auto.Out_Para_12;
+Cons_Para_13_Appli 				:= Mode_Auto.Out_Para_13;
+Cons_Para_14_Appli 				:= Mode_Auto.Out_Para_14;
+Cons_Para_15_Appli 				:= Mode_Auto.Out_Para_15;
+
+(*Passage à l'étape suivante*)
+R_TRIG1(CLK:= Mode_Auto.Fin_Action);
+IF(R_TRIG1.Q)
+	THEN
+	Numero_Etape_Actuel := Numero_Etape_Actuel + 1;
+END_IF;
+
+(*Fin de la recette*)
+IF(Mode_Arret_Auto)
+	THEN
+	Numero_Mode_Auto := 3;
+END_IF;
+
+(*******************************************************************************************Gestion vérification de la poste de ventilation*)
+3:
+(*Attente de quelques secondes si demmande de post ventilation*)
+TON_PV(IN:= (NOT Dmd_Post_Ventilation), PT:= T#1s);
+R_TRIG_PV(CLK:= TON_PV.Q);
+ (*Démarrage de la recette à la fin de la post ventilation*)
+F_TRIG_Fin_Post_Ventil(CLK:= Dmd_Post_Ventilation);
+IF(F_TRIG_Fin_Post_Ventil.Q OR R_TRIG_PV.Q)
+	THEN
+	Numero_Mode_Auto := 2;
+END_IF;
+MEMSET(ADR(Lecture_Texte_Choisi_FR),0,SIZEOF(Lecture_Texte_Choisi_FR));
+MEMSET(ADR(Lecture_Texte_Choisi_ENG),0,SIZEOF(Lecture_Texte_Choisi_ENG));
+IF (Dmd_Post_Ventilation) (*Affichage du texte post ventilation*)
+	THEN
+	Lecture_Texte_Choisi_FR 	:= 'POST VENTILATION EN COURS';
+	Lecture_Texte_Choisi_ENG	:= 'POST VENTILATION IN PROCESS';
+END_IF;
+Mode_Auto(
+	Enable:= 					FALSE,
+	Numero_Etape:= 				0,
+	Numero_Mode:= 				0,
+	Tempo_Transition_seconde:=	0,
+	Tempo_Transition_Minute:=	0,
+	Tempo_Transition_Heure:= 	0,
+	Cons_Volume_Eau_Douche:= 	0,
+	Cons_Volume_Eau_Lavabo:=	0,
+	Cons_Deb_Soufflage:= 		0,
+	Cons_Deb_Extraction:=		0,
+	Cons_Temperature_Eau:= 		0,
+	Cons_Nbre_Chasse:= 			0,
+	Cons_Para_11:= 				0,
+	Cons_Para_12:= 				0,
+	Cons_Para_13:= 				0,
+	Cons_Para_14:= 				0,
+	Cons_Para_15:= 				0);
+
+(*******************************************************************************************Etape 2 : Initialisation des valeurs*)
+2:
+FOR j := 1 TO 29 BY 1 DO
+	Tab_Recette_Auto[0, j, 1] := 0;
+	Tab_Recette_Auto[0, j, 2] := 0;
+	Tab_Recette_Auto[0, j, 3] := 0;
+	Tab_Recette_Auto[0, j, 4] := 0;
+	Tab_Recette_Auto[0, j, 5] := 0;
+	Tab_Recette_Auto[0, j, 6] := 0;
+	Tab_Recette_Auto[0, j, 7] := 0;
+	Tab_Recette_Auto[0, j, 8] := 0;
+	Tab_Recette_Auto[0, j, 9] := 0;
+	Tab_Recette_Auto[0, j, 10] := 0;
+	Tab_Recette_Auto[0, j, 11] := 0;
+	Tab_Recette_Auto[0, j, 12] := 0;
+	Tab_Recette_Auto[0, j, 13] := 0;
+	Tab_Recette_Auto[0, j, 14] := 0;
+	Tab_Recette_Auto[0, j, 15] := 0;
+
+	Tab_Enr_Recette[0, j, 1] := 0;
+	Tab_Enr_Recette[0, j, 2] := 0;
+	Tab_Enr_Recette[0, j, 3] := 0;
+	Tab_Enr_Recette[0, j, 4] := 0;
+	Tab_Enr_Recette[0, j, 5] := 0;
+	Tab_Enr_Recette[0, j, 6] := 0;
+	Tab_Enr_Recette[0, j, 7] := 0;
+	Tab_Enr_Recette[0, j, 8] := 0;
+	Tab_Enr_Recette[0, j, 9] := 0;
+	Tab_Enr_Recette[0, j, 10] := 0;
+	Tab_Enr_Recette[0, j, 11] := 0;
+	Tab_Enr_Recette[0, j, 12] := 0;
+	Tab_Enr_Recette[0, j, 13] := 0;
+	Tab_Enr_Recette[0, j, 14] := 0;
+	Tab_Enr_Recette[0, j, 15] := 0;
+END_FOR;
+
+Numero_Etape_Actuel := 0;
+Nbre_Etape_Totale := 0;
+
+R_TRIG_Dem(CLK:=FALSE);
+R_TRIG1(CLK:=FALSE);
+F_TRIG_Fin_Post_Ventil(CLK:= FALSE);
+TON_PV(IN:= (FALSE));
+R_TRIG_PV(CLK:= FALSE);
+
+Numero_Mode_Actuel 				:= 0;
+Tempo_Transition_seconde_Actuel := 0;
+Tempo_Transition_Minute_Actuel 	:= 0;
+Tempo_Transition_Heure_Actuel 	:= 0;
+Cons_Volume_Eau_Douche_Actuel 	:= 0;
+Cons_Volume_Eau_Lavabo_Actuel	:= 0;
+Cons_Deb_Soufflage_Actuel 		:= 0;
+Cons_Deb_Extraction_Actuel 		:= 0;
+Cons_Temperature_Eau_Actuel 	:= 0;
+Cons_Para_Nbre_Chasse_Eau 		:= 0;
+Cons_Para_11_Actuel 			:= 0;
+Cons_Para_12_Actuel 			:= 0;
+Cons_Para_13_Actuel 			:= 0;
+Cons_Para_14_Actuel 			:= 0;
+Cons_Para_15_Actuel 			:= 0;
+
+Mode_Auto(
+	Enable:= 					FALSE,
+	Numero_Etape:= 				0,
+	Numero_Mode:= 				0,
+	Tempo_Transition_seconde:=	0,
+	Tempo_Transition_Minute:=	0,
+	Tempo_Transition_Heure:= 	0,
+	Cons_Volume_Eau_Douche:= 	0,
+	Cons_Volume_Eau_Lavabo:=	0,
+	Cons_Deb_Soufflage:= 		0,
+	Cons_Deb_Extraction:=		0,
+	Cons_Temperature_Eau:= 		0,
+	Cons_Nbre_Chasse:= 			0,
+	Cons_Para_11:= 				0,
+	Cons_Para_12:= 				0,
+	Cons_Para_13:= 				0,
+	Cons_Para_14:= 				0,
+	Cons_Para_15:= 				0);
+
+Cons_Dimmer_Auto				:= 254;
+Cons_Appl_Rouge_Auto			:= 254;
+Cons_Appl_Vert_Auto				:= 254;
+Cons_Appl_Bleu_Auto				:= 254;
+Cons_Appl_Blanc_Auto			:= 254;
+
+MEMSET(ADR(Lecture_Texte_Choisi_FR),0,SIZEOF(Lecture_Texte_Choisi_FR));
+MEMSET(ADR(Lecture_Texte_Choisi_ENG),0,SIZEOF(Lecture_Texte_Choisi_ENG));
+
+Lecture_Texte_Choisi_FR			:= '';
+Lecture_Texte_Choisi_ENG		:= '';
+Temp_Restant_Seconde 			:= 0.0;
+Temp_Restant_Minute 			:= 0.0;
+Temp_Restant_Heure 				:= 0.0;
+Lect_Volume_Eau_Douche 			:= 0.0;
+Lect_Volume_Eau_Lavabo			:= 0.0;
+Cons_Deb_Soufflage_Appli 		:= 0.0;
+Cons_Deb_Extraction_Appli 		:= 0.0;
+Cons_Temperature_Eau_Appli 		:= 0.0;
+Cons_Para_Nbre_Chasse_Eau 		:= 0.0;
+Cons_Para_11_Appli 				:= 0.0;
+Cons_Para_12_Appli 				:= 0.0;
+Cons_Para_13_Appli 				:= 0.0;
+Cons_Para_14_Appli 				:= 0.0;
+Cons_Para_15_Appli 				:= 0.0;
+
+(*Retour à l'étape 0 à la fin de l'initialisation*)
+Numero_Mode_Auto := 0;
+END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="i_Protocol_Auto">
+      <LineId Id="663" Count="120" />
+      <LineId Id="974" Count="0" />
+      <LineId Id="973" Count="0" />
+      <LineId Id="792" Count="21" />
+      <LineId Id="965" Count="0" />
+      <LineId Id="815" Count="23" />
+      <LineId Id="957" Count="0" />
+      <LineId Id="981" Count="0" />
+      <LineId Id="980" Count="0" />
+      <LineId Id="976" Count="3" />
+      <LineId Id="975" Count="0" />
+      <LineId Id="985" Count="16" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="840" Count="108" />
+      <LineId Id="618" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,1009 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{118d8019-df74-4845-9440-944053f5acbd}</ProjectGuid>
+    <Name>X881_Booth_Esclave</Name>
+    <Application>{75519934-b910-4db0-bf78-d16016334a22}</Application>
+    <TypeSystem>{78703f10-f08d-481a-b9be-d5290179c1fc}</TypeSystem>
+    <Implicit_Task_Info>{a9a92048-72da-4112-84b8-765677e1a18f}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{dd709b42-3699-4b36-b958-d2c0cca3fa20}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{6d20c69b-abbf-4680-a9c4-afed4f99e0a2}</Implicit_Jitter_Distribution>
+    <LibraryReferences>{2caa99d9-b510-4404-b82d-3fc6497df76c}</LibraryReferences>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Data types" />
+    <Folder Include="Data types\Com_IP" />
+    <Folder Include="Data types\Autres" />
+    <Folder Include="Data types\Objets" />
+    <Folder Include="Global Variables" />
+    <Folder Include="POUs" />
+    <Folder Include="POUs\Block" />
+    <Folder Include="POUs\Block\Cabines" />
+    <Folder Include="POUs\Block\Autres" />
+    <Folder Include="POUs\Block\Com_Ip" />
+    <Folder Include="POUs\Block\Objets" />
+    <Folder Include="POUs\Gestion_Enceinte_Clim" />
+    <Folder Include="POUs\Visualisation" />
+    <Folder Include="Visualizations" />
+    <Folder Include="Visualizations\Visualizations" />
+    <Folder Include="Visualizations\Visualizations\Fonds" />
+    <Folder Include="Visualizations\Visualizations\GestionAlarme" />
+    <Folder Include="Visualizations\Visualizations\GestionAlarme\Programme" />
+    <Folder Include="Visualizations\Visualizations\GestionAlarme\Structures" />
+    <Folder Include="Visualizations\Visualizations\Images" />
+    <Folder Include="Visualizations\Visualizations\Images\Anim\Clean" />
+    <Folder Include="Visualizations\Visualizations\Images\Button" />
+    <Folder Include="Visualizations\Visualizations\Images\Fond" />
+    <Folder Include="Visualizations\Visualizations\Images\Anim" />
+    <Folder Include="Visualizations\Visualizations\Images\Logos" />
+    <Folder Include="Visualizations\Visualizations\Images\Autres" />
+    <Folder Include="Visualizations\Visualizations\Images\Action_Cabine" />
+    <Folder Include="Visualizations\Visualizations\Mes_Textes" />
+    <Folder Include="Visualizations\Visualizations\Objets" />
+    <Folder Include="Visualizations\Visualizations\PopUp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Data types\Autres\ST_Alarmes.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Com_IP\E_ClientSteps.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Com_IP\E_DataExchaSteps.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Com_IP\E_ServerSteps.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_BatElec.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_Moteur_EC.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_Mot_TOR.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_Pressostat.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_Registre.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_RegulPI.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data types\Objets\Objet_Sonde.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Global Variables\Global_Variables.TcGVL">
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Global Variables\GVL_RegTROX.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Global Variables\GVL_Visu.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="Global Variables\Variable_Configuration.TcGVL" />
+    <Compile Include="GlobalTextList.TcGTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\a1_MAIN.TcPOU" />
+    <Compile Include="POUs\a2_Gestion_ES.TcPOU" />
+    <Compile Include="POUs\a3_Ecriture_Bit.TcPOU" />
+    <Compile Include="POUs\a4_Lecture_Bit.TcPOU" />
+    <Compile Include="POUs\a5_Ecriture_InterCom.TcPOU" />
+    <Compile Include="POUs\a6_Lecture_InterCom.TcPOU" />
+    <Compile Include="POUs\Block\Autres\Blinck_V2.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\Dew_Point.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\Filtre_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\Prise.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\PWM.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\RTC_Time.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\SCL.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\SCL_Real.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\Sontay_4RM.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\TON_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Autres\UP_DOWN_RATE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Com485_Dalcnet.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Com485_RegTROX.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Gache.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Humidificateur.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Integr_Vol_Eau.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Mode.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Registre_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Cabines\Servomoteur_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\FB_LocalServer.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\FB_RemoteClient.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\FB_ServerDataExcha.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\LogError.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\LogMessage.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Com_Ip\SCODE_CODE.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\BatElec.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Moteur_EC.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Objet_Mot_TOR_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Objet_PI_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Objet_Pressostat_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Objet_Registre_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Block\Objets\Objet_Sonde_V1.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\b_SCL_Mesures.TcPOU" />
+    <Compile Include="POUs\c_Gestion_Defaut.TcPOU" />
+    <Compile Include="POUs\d_Gestion_Pause_Modes.TcPOU" />
+    <Compile Include="POUs\e_Gestion_Horraire.TcPOU" />
+    <Compile Include="POUs\f_Gestion_Etats.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\B_Gestion_Defaut.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\C0_Gestion_Consignes.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\C_Regul_Temp.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\D_Regul_Humi.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\E_Cons_Cmd_Actionneurs.TcPOU" />
+    <Compile Include="POUs\Gestion_Enceinte_Clim\F_Gestion_Actionneurs.TcPOU" />
+    <Compile Include="POUs\g_Gestion_Texte_Modes.TcPOU" />
+    <Compile Include="POUs\h_Enr_Recette.TcPOU" />
+    <Compile Include="POUs\i_Protocol_Auto.TcPOU" />
+    <Compile Include="POUs\j_Protocol_Manu.TcPOU" />
+    <Compile Include="POUs\l_Cons_LED.TcPOU" />
+    <Compile Include="POUs\n0_Regulation_Bas_Deb.TcPOU" />
+    <Compile Include="POUs\n1_Regulation_Press.TcPOU" />
+    <Compile Include="POUs\n2_Regulation_Temp.TcPOU" />
+    <Compile Include="POUs\n3_Regul_Temp_EauMitig.TcPOU" />
+    <Compile Include="POUs\o_Cons_Cmd_Actionneurs.TcPOU" />
+    <Compile Include="POUs\p_Com_Modbus_RS485.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\q_Gestion_Actionneurs_ANA.TcPOU" />
+    <Compile Include="POUs\r_Gestion_Actionneurs_TOR.TcPOU" />
+    <Compile Include="POUs\s_InterCom_Esclave.TcPOU" />
+    <Compile Include="POUs\t_Enr_Variables.TcPOU" />
+    <Compile Include="POUs\Visualisation\Alarmes.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Visualisation\Visu.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Recipe Manager.TcRMO" />
+    <Compile Include="Standard.TcTTO" />
+    <Compile Include="Tache_test.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualization Manager.TcVMO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Accueil.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Depollution.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Fonds\masque.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\GestionAlarme\Programme\GestionAlarme.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\GestionAlarme\Structures\Erreur_Struct.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\GestionAlarme\Structures\Erreur_StructVisu.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Images\ImagePool_Clean.TcIPO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_2.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_3.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_4.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_5.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_6.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_7.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Mes_Textes\Noms_Modes.TcTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\ModeManuel.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Nettoyage.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Images\ImagePool.TcIPO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Images\ImagePool_Action.TcIPO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Images\ImagePool_Buttons.TcIPO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Maintenance_1.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\menu.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Mes_Textes\Etats_Cabine.TcTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Objets\Door.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Objets\Sink.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Objets\Drain.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Objets\Plug.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\PopUp\Actionneurs.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\PopUp\Alarmes.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\PopUp\PopUp_Alarms.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\PopUp\PopUp_Hight_Level.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Recet_EnCours.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="Visualizations\Visualizations\Sel_Recettes.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="VISU_TASK.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderReference Include="CmpBitmapPool">
+      <DefaultResolution>CmpBitmapPool, * (System)</DefaultResolution>
+      <Namespace>CmpBitmapPool</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="RecipeManagement">
+      <DefaultResolution>Recipe Management, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>Recipe_Management</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemMeter">
+      <DefaultResolution>VisuElemMeter, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemMeter</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElems">
+      <DefaultResolution>VisuElems, 3.5.13.40 (System)</DefaultResolution>
+      <Namespace>VisuElems</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsSpecialControls">
+      <DefaultResolution>VisuElemsSpecialControls, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemsSpecialControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsWinControls">
+      <DefaultResolution>VisuElemsWinControls, 3.5.13.20 (System)</DefaultResolution>
+      <Namespace>VisuElemsWinControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemTextEditor">
+      <DefaultResolution>VisuElemTextEditor, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuElemTextEditor</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="system_visuinputs">
+      <DefaultResolution>visuinputs, 3.5.13.0 (system)</DefaultResolution>
+      <Namespace>visuinputs</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuNativeControl">
+      <DefaultResolution>VisuNativeControl, 3.5.13.0 (System)</DefaultResolution>
+      <Namespace>VisuNativeControl</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Standard">
+      <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Standard</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_SUPS">
+      <DefaultResolution>Tc2_SUPS, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_SUPS</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_System">
+      <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_System</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Utilities">
+      <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Utilities</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Module">
+      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Module</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="VisuDialogs">
+      <DefaultResolution>VisuDialogs, * (System)</DefaultResolution>
+      <Namespace>VisuDialogs</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="VisuUserManagement">
+      <DefaultResolution>VisuUserMgmt, * (System)</DefaultResolution>
+      <Namespace>VisuUserManagement</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+    </PlaceholderReference>
+  </ItemGroup>
+  <ItemGroup>
+    <LibraryReference Include="BASIC,3.3.3.0,OSCAT">
+      <Namespace>OSCAT_BASIC</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_ModbusRTU,3.6.1.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_ModbusRTU</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_SerialCom,3.4.6.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_SerialCom</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_SystemCX,3.5.3.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_SystemCX</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Tc2_TcpIp,3.4.2.0,Beckhoff Automation GmbH">
+      <Namespace>Tc2_TcpIp</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="Util,3.5.11.0,System">
+      <Namespace>Util</Namespace>
+    </LibraryReference>
+    <LibraryReference Include="VisuSymbols,3.5.10.0,System">
+      <Namespace>VisuSymbols</Namespace>
+    </LibraryReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="X881_Booth_Esclave.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderResolution Include="CAA Callback">
+      <Resolution>CAA Callback Extern, 3.5.11.0 (CAA Technical Workgroup)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CAA MemBlockMan">
+      <Resolution>CAA Memory Block Manager Extern, 3.5.13.0 (CAA Technical Workgroup)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CAA Memory">
+      <Resolution>CAA Memory, 3.5.12.0 (CAA Technical Workgroup)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CAA ResMan">
+      <Resolution>CAA Ressource Manager Extern, 3.5.11.0 (CAA Technical Workgroup)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CAA Types">
+      <Resolution>CAA Types Extern, 3.5.13.0 (CAA Technical Workgroup)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CBML">
+      <Resolution>Common Behaviour Model, 3.5.13.0 (3S - Smart Software Solutions GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpApp">
+      <Resolution>CmpApp, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpBitmapPool">
+      <Resolution>CmpBitmapPool, 3.5.7.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpDynamicText">
+      <Resolution>CmpDynamicText, 3.5.9.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpEventMgr">
+      <Resolution>CmpEventMgr, 3.5.12.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpIecTask">
+      <Resolution>CmpIecTask, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpLog">
+      <Resolution>CmpLog, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpSchedule">
+      <Resolution>CmpSchedule, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpTargetVisu">
+      <Resolution>CmpTargetVisu, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="CmpVisuHandler">
+      <Resolution>CmpVisuHandler, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Collections">
+      <Resolution>Collections, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Component Manager">
+      <Resolution>Component Manager, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="FloatingPointUtils">
+      <Resolution>FloatingPointUtils, 3.5.9.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="RecipeManagement">
+      <Resolution>Recipe Management, 3.5.13.2 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Standard">
+      <Resolution>Tc2_Standard, 3.4.5.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Standard64">
+      <Resolution>Tc2_Standard, 3.4.5.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="StringUtils">
+      <Resolution>StringUtils, 3.5.13.20 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysCpuHandling">
+      <Resolution>SysCpuHandling, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysDir">
+      <Resolution>SysDir, 3.5.12.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysFile">
+      <Resolution>SysFile, 3.5.9.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysMem">
+      <Resolution>SysMem, 3.5.12.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysProcess">
+      <Resolution>SysProcess, 3.5.7.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysSem">
+      <Resolution>SysSem, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysShm">
+      <Resolution>SysShm, 3.5.8.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysTarget">
+      <Resolution>SysTarget, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElemBase">
+      <Resolution>VisuElemBase, 3.5.13.40 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElemMeter">
+      <Resolution>VisuElemMeter, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElems">
+      <Resolution>VisuElems, 3.5.13.40 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElemsSpecialControls">
+      <Resolution>VisuElemsSpecialControls, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElemsWinControls">
+      <Resolution>VisuElemsWinControls, 3.5.13.20 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuElemTextEditor">
+      <Resolution>VisuElemTextEditor, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuInputs">
+      <Resolution>VisuInputs, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="system_visuinputs">
+      <Resolution>VisuInputs, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="System_VisuNativeControl">
+      <Resolution>VisuNativeControl, 3.5.13.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysTime">
+      <Resolution>SysTime, 3.5.9.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysTimeCore">
+      <Resolution>SysTimeCore, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="SysTimeRtc">
+      <Resolution>SysTimeRtc, 3.5.5.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc2_SerialCom">
+      <Resolution>Tc2_SerialCom, 3.4.6.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc2_Standard">
+      <Resolution>Tc2_Standard, 3.4.5.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc2_SUPS">
+      <Resolution>Tc2_SUPS, 3.4.6.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc2_System">
+      <Resolution>Tc2_System, 3.9.1.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc2_Utilities">
+      <Resolution>Tc2_Utilities, 3.10.1.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc3_EventLogger">
+      <Resolution>Tc3_EventLogger, 3.3.13.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Tc3_Module">
+      <Resolution>Tc3_Module, 3.4.5.0 (Beckhoff Automation GmbH)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="TextListUtils">
+      <Resolution>TextListUtils, 3.5.8.10 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="Util">
+      <Resolution>Util, 3.5.11.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="VisuDialogs">
+      <Resolution>VisuDialogs, 3.5.12.0 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="VisuUserManagement">
+      <Resolution>VisuUserMgmt, 3.5.13.32 (System)</Resolution>
+    </PlaceholderResolution>
+    <PlaceholderResolution Include="VisuUtils">
+      <Resolution>Visu Utils, 3.5.12.0 (System)</Resolution>
+    </PlaceholderResolution>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\close-doors.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\door-open.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\drain_Close.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\drain_Open.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Flush_Empty.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Flush_Full.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Plug_Offe.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Plug_On.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Shower_Close.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Shower_Open.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Sink_Close.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Action_Cabine\Sink_Open.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\clean.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean3.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean4.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean5.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean6.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\Clean\clean7.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\fan %281%29.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\fan_45.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Anim\fan_Gray.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Autres\caution.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Autres\checked.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Autres\cross.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Autres\warning.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Appuie_Sombre.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_NonAppuie_Sombre.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_Blue.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_BlueC.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_Gray.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_Green.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_Orange.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_Off_Red.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_Blue.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_BlueC.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_Gray.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_Green.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_Orange.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Button_On_Red.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Green_Bottom.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Green_Top.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Red_Bottom.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Red_Top.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Selecteur_left.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Selecteur_middle.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Button\Selecteur_right - Copie.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Cabine-2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Cabine_1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Fond\accueil.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Fond\Fond_Degr.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Logos\english.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Logos\Enoleo_Logo-complet-vert.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Logos\France.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Logos\Logo_OS.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Visualizations\Visualizations\Images\Logos\QR_OS.jpg">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <ProjectExtensions>
+    <PlcProjectOptions>
+      <XmlArchive>
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
+      <v n="Name">"&lt;ProjectRoot&gt;"</v>
+      <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+        <v>{8F99A816-E488-41E4-9FA3-846536012284}</v>
+        <o>
+          <v n="Name">"{8F99A816-E488-41E4-9FA3-846536012284}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{29BD8D0C-3586-4548-BB48-497B9A01693F}</v>
+        <o>
+          <v n="Name">"{29BD8D0C-3586-4548-BB48-497B9A01693F}"</v>
+          <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+            <v>Rules</v>
+            <o>
+              <v n="Name">"Rules"</v>
+              <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+                <v>167</v>
+                <o>
+                  <v n="Name">"167"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>False</v>
+                  </d>
+                </o>
+                <v>4</v>
+                <o>
+                  <v n="Name">"4"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>False</v>
+                  </d>
+                </o>
+                <v>33</v>
+                <o>
+                  <v n="Name">"33"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>False</v>
+                  </d>
+                </o>
+                <v>6</v>
+                <o>
+                  <v n="Name">"6"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>False</v>
+                  </d>
+                </o>
+                <v>27</v>
+                <o>
+                  <v n="Name">"27"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>False</v>
+                  </d>
+                </o>
+                <v>28</v>
+                <o>
+                  <v n="Name">"28"</v>
+                  <d n="SubKeys" t="Hashtable" />
+                  <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+                    <v>bActive</v>
+                    <v>True</v>
+                  </d>
+                </o>
+              </d>
+              <d n="Values" t="Hashtable" />
+            </o>
+          </d>
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{40450F57-0AA3-4216-96F3-5444ECB29763}</v>
+        <o>
+          <v n="Name">"{40450F57-0AA3-4216-96F3-5444ECB29763}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String">
+            <v>ActiveVisuExtensions_0</v>
+            <v>"IR0whWr8bwdyBwAA2CM5uwAAAAC4AQAAabXwRAAAAAABAAAAAAAAAAEaUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwACTHsANgBkADQAMgBlADkAMQA4AC0AZQA2AGEANQAtADQAYgAyAGMALQA5ADEANwBiAC0AZQAwADcAMwAxAGIANwA2ADYAYgAxAGYAfQADDkMAbwBtAHAAYQBuAHkABDBCAGUAYwBrAGgAbwBmAGYAIABBAHUAdABvAG0AYQB0AGkAbwBuACAARwBtAGIASAAFDlYAZQByAHMAaQBvAG4ABg4xAC4AMAAuADMALgAwAAcMQQBjAHQAaQB2AGUACAhiAG8AbwBsAAkITgBhAG0AZQAKJFYAaQBzAHUARQBsAGUAbQBFAHYAZQBuAHQAVABhAGIAbABlAAsWUAByAG8AZgBpAGwAZQBEAGEAdABhAAxMewAxADYAZQA1ADUAYgA2ADAALQA3ADAANAAzAC0ANABhADYAMwAtAGIANgA1AGIALQA2ADEANAA3ADEAMwA4ADcAOABkADQAMgB9AA0STABpAGIAcgBhAHIAaQBlAHMADkx7ADMAYgBmAGQANQA0ADUAOQAtAGIAMAA3AGYALQA0AGQANgBlAC0AYQBlADEAYQAtAGEAOAAzADMANQA2AGEANQA1ADEANAAyAH0AD0x7ADkAYwA5ADUAOAA5ADYAOAAtADIAYwA4ADUALQA0ADEAYgBiAC0AOAA4ADcAMQAtADgAOQA1AGYAZgAxAGYAZQBkAGUAMQBhAH0AEAZpAG4AdAARClUAcwBhAGcAZQASClQAaQB0AGwAZQATDFMAeQBzAHQAZQBtABQSVgBpAHMAdQBFAGwAZQBtAHMAFRhWAGkAcwB1AEUAbABlAG0AQgBhAHMAZQAWFFYAaQBzAHUASQBuAHAAdQB0AHMAFyZEAGUAdgBQAGwAYQBjAGUAaABvAGwAZABlAHIAcwBVAHMAZQBkABgiUABsAHUAZwBpAG4AQwBvAG4AcwB0AHIAYQBpAG4AdABzABlMewA0ADMAZAA1ADIAYgBjAGUALQA5ADQAMgBjAC0ANAA0AGQANwAtADkAZQA5ADQALQAxAGIAZgBkAGYAMwAxADAAZQA2ADMAYwB9ABocQQB0AEwAZQBhAHMAdABWAGUAcgBzAGkAbwBuABsUUABsAHUAZwBpAG4ARwB1AGkAZAAcFlMAeQBzAHQAZQBtAC4ARwB1AGkAZAAdSGEAZgBjAGQANQA0ADQANgAtADQAOQAxADQALQA0AGYAZQA3AC0AYgBiADcAOAAtADkAYgBmAGYAZQBiADcAMABmAGQAMQA3AB4UVQBwAGQAYQB0AGUASQBuAGYAbwAfTHsAYgAwADMAMwA2ADYAYQA4AC0AYgA1AGMAMAAtADQAYgA5AGEALQBhADAAMABlAC0AZQBiADgANgAwADEAMQAxADAANABjADMAfQAgDlUAcABkAGEAdABlAHMAIUx7ADEAOAA2ADgAZgBmAGMAOQAtAGUANABmAGMALQA0ADUAMwAyAC0AYQBjADAANgAtADEAZQAzADkAYgBiADUANQA3AGIANgA5AH0AIkx7AGEANQBiAGQANAA4AGMAMwAtADAAZAAxADcALQA0ADEAYgA1AC0AYgAxADYANAAtADUAZgBjADYAYQBkADIAYgA5ADYAYgA3AH0AIxZPAGIAagBlAGMAdABzAFQAeQBwAGUAJFRVAHAAZABhAHQAZQBMAGEAbgBnAHUAYQBnAGUATQBvAGQAZQBsAEYAbwByAEMAbwBuAHYAZQByAHQAaQBiAGwAZQBMAGkAYgByAGEAcgBpAGUAcwAlEEwAaQBiAFQAaQB0AGwAZQAmFEwAaQBiAEMAbwBtAHAAYQBuAHkAJx5VAHAAZABhAHQAZQBQAHIAbwB2AGkAZABlAHIAcwAoOFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ASABhAHMAaAB0AGEAYgBsAGUAKRJ2AGkAcwB1AGUAbABlAG0AcwAqDHMAeQBzAHQAZQBtACtINgBjAGIAMQBjAGQAZQAxAC0AZAA1AGQAYwAtADQAYQAzAGIALQA5ADAANQA0AC0AMgAxAGYAYQA3ADUANgBhADMAZgBhADQALChJAG4AdABlAHIAZgBhAGMAZQBWAGUAcgBzAGkAbwBuAEkAbgBmAG8ALUx7AGMANgAxADEAZQA0ADAAMAAtADcAZgBiADkALQA0AGMAMwA1AC0AYgA5AGEAYwAtADQAZQAzADEANABiADUAOQA5ADYANAAzAH0ALhhNAGEAagBvAHIAVgBlAHIAcwBpAG8AbgAvGE0AaQBuAG8AcgBWAGUAcgBzAGkAbwBuADAMTABlAGcAYQBjAHkAMTBMAGEAbgBnAHUAYQBnAGUATQBvAGQAZQBsAFYAZQByAHMAaQBvAG4ASQBuAGYAbwAyMEwAbwBhAGQATABpAGIAcgBhAHIAaQBlAHMASQBuAHQAbwBQAHIAbwBqAGUAYwB0ADMaQwBvAG0AcABhAHQAaQBiAGkAbABpAHQAeQDQAAIaBtADAS0E0AUBLQbQBwitAdAJAS0K0AsMGgfQDQ4aAUUNDwTQAA8aBEUFEAQBAAAAAAAAAAMAAAAAAAAA0BEQrQIAAADQEgEtCtADAS0T0AAPGgRFBRAEAwAAAAUAAAANAAAAFAAAANAREK0BAAAA0BIBLRTQAwEtE9AADxoERQUQBAMAAAAFAAAADQAAABQAAADQERCtBAAAANASAS0V0AMBLRPQAA8aBEUFEAQDAAAABQAAAA0AAAAAAAAA0BEQrQQAAADQEgEtFtADAS0T0BcIrQFFGBkB0AAZGgJFGhAEAwAAAAUAAAANAAAAAAAAANAbHC0d0B4fGgJFICEC0AAiGgVFBRAEAwAAAAMAAAAAAAAACgAAANAjEK0AAAAA0AkBLSTQJQEtFNAmAS0T0AAiGgVFBRAEAwAAAAMAAAAAAAAACgAAANAjEK0BAAAA0AkBLSTQJQEtFNAmAS0TmicoAUUAAQLQAAEtKdAAAS0q0AAcLSvQLC0aA9AuEK0BAAAA0C8QrRcAAADQMAitANAxLRoD0C4QrQIAAADQLxCtAwAAANAwCK0A0DIIrQDQMwitAA=="</v>
+            <v>ActiveVisuExtensionsLength</v>
+            <v>0</v>
+            <v>ActiveVisuProfile</v>
+            <v>"IR0whWr8bwfwBwAAiD2qpQAAAABVAgAA37x72QAAAAABAAAAAAAAAAEaUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwACTHsAZgA5ADUAYgBiADQAMgA2AC0ANQA1ADIANAAtADQAYgA0ADUALQA5ADQAMAAwAC0AZgBiADAAZgAyAGUANwA3AGUANQAxAGIAfQADCE4AYQBtAGUABDBUAHcAaQBuAEMAQQBUACAAMwAuADEAIABCAHUAaQBsAGQAIAA0ADAAMgA0AC4ANwAFFlAAcgBvAGYAaQBsAGUARABhAHQAYQAGTHsAMQA2AGUANQA1AGIANgAwAC0ANwAwADQAMwAtADQAYQA2ADMALQBiADYANQBiAC0ANgAxADQANwAxADMAOAA3ADgAZAA0ADIAfQAHEkwAaQBiAHIAYQByAGkAZQBzAAhMewAzAGIAZgBkADUANAA1ADkALQBiADAANwBmAC0ANABkADYAZQAtAGEAZQAxAGEALQBhADgAMwAzADUANgBhADUANQAxADQAMgB9AAlMewA5AGMAOQA1ADgAOQA2ADgALQAyAGMAOAA1AC0ANAAxAGIAYgAtADgAOAA3ADEALQA4ADkANQBmAGYAMQBmAGUAZABlADEAYQB9AAoOVgBlAHIAcwBpAG8AbgALBmkAbgB0AAwKVQBzAGEAZwBlAA0KVABpAHQAbABlAA4aVgBpAHMAdQBFAGwAZQBtAE0AZQB0AGUAcgAPDkMAbwBtAHAAYQBuAHkAEAxTAHkAcwB0AGUAbQARElYAaQBzAHUARQBsAGUAbQBzABIwVgBpAHMAdQBFAGwAZQBtAHMAUwBwAGUAYwBpAGEAbABDAG8AbgB0AHIAbwBsAHMAEyhWAGkAcwB1AEUAbABlAG0AcwBXAGkAbgBDAG8AbgB0AHIAbwBsAHMAFCRWAGkAcwB1AEUAbABlAG0AVABlAHgAdABFAGQAaQB0AG8AcgAVIlYAaQBzAHUATgBhAHQAaQB2AGUAQwBvAG4AdAByAG8AbAAWFHYAaQBzAHUAaQBuAHAAdQB0AHMAFwxzAHkAcwB0AGUAbQAYGFYAaQBzAHUARQBsAGUAbQBCAGEAcwBlABkmRABlAHYAUABsAGEAYwBlAGgAbwBsAGQAZQByAHMAVQBzAGUAZAAaCGIAbwBvAGwAGyJQAGwAdQBnAGkAbgBDAG8AbgBzAHQAcgBhAGkAbgB0AHMAHEx7ADQAMwBkADUAMgBiAGMAZQAtADkANAAyAGMALQA0ADQAZAA3AC0AOQBlADkANAAtADEAYgBmAGQAZgAzADEAMABlADYAMwBjAH0AHRxBAHQATABlAGEAcwB0AFYAZQByAHMAaQBvAG4AHhRQAGwAdQBnAGkAbgBHAHUAaQBkAB8WUwB5AHMAdABlAG0ALgBHAHUAaQBkACBIYQBmAGMAZAA1ADQANAA2AC0ANAA5ADEANAAtADQAZgBlADcALQBiAGIANwA4AC0AOQBiAGYAZgBlAGIANwAwAGYAZAAxADcAIRRVAHAAZABhAHQAZQBJAG4AZgBvACJMewBiADAAMwAzADYANgBhADgALQBiADUAYwAwAC0ANABiADkAYQAtAGEAMAAwAGUALQBlAGIAOAA2ADAAMQAxADEAMAA0AGMAMwB9ACMOVQBwAGQAYQB0AGUAcwAkTHsAMQA4ADYAOABmAGYAYwA5AC0AZQA0AGYAYwAtADQANQAzADIALQBhAGMAMAA2AC0AMQBlADMAOQBiAGIANQA1ADcAYgA2ADkAfQAlTHsAYQA1AGIAZAA0ADgAYwAzAC0AMABkADEANwAtADQAMQBiADUALQBiADEANgA0AC0ANQBmAGMANgBhAGQAMgBiADkANgBiADcAfQAmFk8AYgBqAGUAYwB0AHMAVAB5AHAAZQAnVFUAcABkAGEAdABlAEwAYQBuAGcAdQBhAGcAZQBNAG8AZABlAGwARgBvAHIAQwBvAG4AdgBlAHIAdABpAGIAbABlAEwAaQBiAHIAYQByAGkAZQBzACgQTABpAGIAVABpAHQAbABlACkUTABpAGIAQwBvAG0AcABhAG4AeQAqHlUAcABkAGEAdABlAFAAcgBvAHYAaQBkAGUAcgBzACs4UwB5AHMAdABlAG0ALgBDAG8AbABsAGUAYwB0AGkAbwBuAHMALgBIAGEAcwBoAHQAYQBiAGwAZQAsEnYAaQBzAHUAZQBsAGUAbQBzAC1INgBjAGIAMQBjAGQAZQAxAC0AZAA1AGQAYwAtADQAYQAzAGIALQA5ADAANQA0AC0AMgAxAGYAYQA3ADUANgBhADMAZgBhADQALihJAG4AdABlAHIAZgBhAGMAZQBWAGUAcgBzAGkAbwBuAEkAbgBmAG8AL0x7AGMANgAxADEAZQA0ADAAMAAtADcAZgBiADkALQA0AGMAMwA1AC0AYgA5AGEAYwAtADQAZQAzADEANABiADUAOQA5ADYANAAzAH0AMBhNAGEAagBvAHIAVgBlAHIAcwBpAG8AbgAxGE0AaQBuAG8AcgBWAGUAcgBzAGkAbwBuADIMTABlAGcAYQBjAHkAMzBMAGEAbgBnAHUAYQBnAGUATQBvAGQAZQBsAFYAZQByAHMAaQBvAG4ASQBuAGYAbwA0MEwAbwBhAGQATABpAGIAcgBhAHIAaQBlAHMASQBuAHQAbwBQAHIAbwBqAGUAYwB0ADUaQwBvAG0AcABhAHQAaQBiAGkAbABpAHQAeQDQAAIaA9ADAS0E0AUGGgfQBwgaAUUHCQjQAAkaBEUKCwQDAAAABQAAAA0AAAAAAAAA0AwLrQIAAADQDQEtDtAPAS0Q0AAJGgRFCgsEAwAAAAUAAAANAAAAKAAAANAMC60BAAAA0A0BLRHQDwEtENAACRoERQoLBAMAAAAFAAAADQAAAAAAAADQDAutAgAAANANAS0S0A8BLRDQAAkaBEUKCwQDAAAABQAAAA0AAAAUAAAA0AwLrQIAAADQDQEtE9APAS0Q0AAJGgRFCgsEAwAAAAUAAAANAAAAAAAAANAMC60CAAAA0A0BLRTQDwEtENAACRoERQoLBAMAAAAFAAAADQAAAAAAAADQDAutAgAAANANAS0V0A8BLRDQAAkaBEUKCwQDAAAABQAAAA0AAAAAAAAA0AwLrQIAAADQDQEtFtAPAS0X0AAJGgRFCgsEAwAAAAUAAAANAAAAKAAAANAMC60EAAAA0A0BLRjQDwEtENAZGq0BRRscAdAAHBoCRR0LBAMAAAAFAAAADQAAAAAAAADQHh8tINAhIhoCRSMkAtAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAAAAANADAS0n0CgBLRHQKQEtENAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAQAAANADAS0n0CgBLRHQKQEtEJoqKwFFAAEC0AABLSzQAAEtF9AAHy0t0C4vGgPQMAutAQAAANAxC60XAAAA0DIarQDQMy8aA9AwC60CAAAA0DELrQMAAADQMhqtANA0Gq0A0DUarQA="</v>
+          </d>
+        </o>
+        <v>{A3BBA713-63D7-4de6-BEC2-E3BAAD8789F8}</v>
+        <o>
+          <v n="Name">"{A3BBA713-63D7-4de6-BEC2-E3BAAD8789F8}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{C70B7845-2722-4a9b-A0EA-88C877A4B36F}</v>
+        <o>
+          <v n="Name">"{C70B7845-2722-4a9b-A0EA-88C877A4B36F}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String">
+            <v>MaxAuthenticationTrials</v>
+            <v>3</v>
+            <v>UserList</v>
+            <o t="UserList">
+              <a n="Users" cet="User">
+                <o>
+                  <v n="Id">{f930bc58-0697-4a45-8b91-646784b4ab0f}</v>
+                  <v n="Name">"Owner"</v>
+                  <v n="FullName">""</v>
+                  <v n="Description">""</v>
+                  <v n="Active">true</v>
+                </o>
+              </a>
+            </o>
+            <v>MaxTimeOfInactivity</v>
+            <v>10</v>
+            <v>EnableMaxTimeOfInactivity</v>
+            <v>true</v>
+            <v>EnableNewHashFormat</v>
+            <v>false</v>
+            <v>GroupList</v>
+            <o t="GroupList">
+              <a n="Groups" cet="Group">
+                <o>
+                  <v n="Id">{55ca54a5-c16b-4510-aa97-8df142c568fb}</v>
+                  <v n="Name">"Everyone"</v>
+                  <v n="Description">""</v>
+                  <v n="IsEveryoneGroup">true</v>
+                  <v n="IsOwnerGroup">false</v>
+                  <l n="UserMembers" t="ArrayList" cet="Guid">
+                    <v>f930bc58-0697-4a45-8b91-646784b4ab0f</v>
+                  </l>
+                  <l n="GroupMembers" t="ArrayList" />
+                </o>
+                <o>
+                  <v n="Id">{9d4ad1d9-8c4c-4ecd-ad69-f5b9dfcf7414}</v>
+                  <v n="Name">"Owner"</v>
+                  <v n="Description">""</v>
+                  <v n="IsEveryoneGroup">false</v>
+                  <v n="IsOwnerGroup">true</v>
+                  <l n="UserMembers" t="ArrayList" cet="Guid">
+                    <v>f930bc58-0697-4a45-8b91-646784b4ab0f</v>
+                  </l>
+                  <l n="GroupMembers" t="ArrayList" />
+                </o>
+              </a>
+            </o>
+            <v>UserAuthentication</v>
+            <o t="UserAuthentication">
+              <d n="UserToPasswordHash" t="Hashtable" ckt="Guid" cvt="String">
+                <v>f930bc58-0697-4a45-8b91-646784b4ab0f</v>
+                <v>d41d8cd98f00b204e9800998ecf8427e</v>
+              </d>
+            </o>
+            <v>EnableMaxAuthenticationTrials</v>
+            <v>true</v>
+          </d>
+        </o>
+        <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
+        <o>
+          <v n="Name">"{192FAD59-8248-4824-A8DE-9177C94C195A}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{246001F4-279D-43AC-B241-948EB31120E1}</v>
+        <o>
+          <v n="Name">"{246001F4-279D-43AC-B241-948EB31120E1}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String" cvt="Boolean">
+            <v>UnicodeStrings</v>
+            <v>False</v>
+          </d>
+        </o>
+      </d>
+      <d n="Values" t="Hashtable" />
+    </o>
+        </Data>
+        <TypeList>
+          <Type n="ArrayList">System.Collections.ArrayList</Type>
+          <Type n="Boolean">System.Boolean</Type>
+          <Type n="Group">{daecd4be-1e2b-4335-a125-4a1ac83ea49f}</Type>
+          <Type n="GroupList">{bf4dffda-f055-446d-9d7a-5f126720896b}</Type>
+          <Type n="Guid">System.Guid</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+          <Type n="User">{cd83029e-13b0-491e-9e4b-921adda0d86b}</Type>
+          <Type n="UserAuthentication">{3635a671-97f5-41bb-9e29-0ebb9795975c}</Type>
+          <Type n="UserList">{9fe6b547-6bc8-4f11-b589-b517860c5891}</Type>
+        </TypeList>
+      </XmlArchive>
+    </PlcProjectOptions>
+  </ProjectExtensions>
+</Project>

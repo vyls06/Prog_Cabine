@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <ImagePool Name="ImagePool_Action" Id="{26965f3e-8fb1-4937-aaf3-9f1b1b96a7b9}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="ImagePoolObject">
+          <v n="UniqueIdGenerator">"15"</v>
+          <l n="BitmapPool" t="ArrayList" cet="ImagePoolItem">
+            <o>
+              <v n="BitmapID">"close-doors"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\close-doors.png"</v>
+              <v n="ItemID">1</v>
+            </o>
+            <o>
+              <v n="BitmapID">"door-open"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\door-open.png"</v>
+              <v n="ItemID">4</v>
+            </o>
+            <o>
+              <v n="BitmapID">"drain_Close"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\drain_Close.png"</v>
+              <v n="ItemID">5</v>
+            </o>
+            <o>
+              <v n="BitmapID">"drain_Open"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\drain_Open.png"</v>
+              <v n="ItemID">6</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Flush_Empty"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Flush_Empty.png"</v>
+              <v n="ItemID">7</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Flush_Full"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Flush_Full.png"</v>
+              <v n="ItemID">8</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Shower_Close"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Shower_Close.png"</v>
+              <v n="ItemID">9</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Shower_Open"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Shower_Open.png"</v>
+              <v n="ItemID">10</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Sink_Close"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Sink_Close.png"</v>
+              <v n="ItemID">11</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Sink_Open"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Sink_Open.png"</v>
+              <v n="ItemID">12</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Plug_Offe"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Plug_Offe.png"</v>
+              <v n="ItemID">2</v>
+            </o>
+            <o>
+              <v n="BitmapID">"Plug_On"</v>
+              <v n="FileID">"5ce3da45-db07-42e7-a21c-a00fff4ed8f6|Visualizations\Visualizations\Images\Action_Cabine\Plug_On.png"</v>
+              <v n="ItemID">15</v>
+            </o>
+            <o>
+              <v n="BitmapID">""</v>
+              <v n="FileID">""</v>
+              <v n="ItemID">13</v>
+            </o>
+          </l>
+          <v n="GuidInit">{10aac8ed-538e-4086-8b87-3f5542c67f00}</v>
+          <v n="GuidReInit">{f3211e7c-ed16-4fe0-9d4d-1fc94eb762ba}</v>
+          <v n="GuidExitX">{a5ad2deb-b713-4013-a96f-ac60798c8a6a}</v>
+          <v n="ValidIds">false</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="Boolean">System.Boolean</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="ImagePoolItem">{215b2719-0347-4e4d-ba85-8bcd66946f66}</Type>
+        <Type n="ImagePoolObject">{bb0b9044-714e-4614-ad3e-33cbdf34d16b}</Type>
+        <Type n="Int32">System.Int32</Type>
+        <Type n="String">System.String</Type>
+      </TypeList>
+    </XmlArchive>
+  </ImagePool>
+</TcPlcObject>

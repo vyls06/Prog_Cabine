@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="n1_Regulation_Press" Id="{5363c157-1eed-4e3c-9f5a-c64ce61280b8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM n1_Regulation_Press
+VAR
+	TON_1 :TON;
+	PID_Press: PID;
+	Valeur_Trunc_Press: REAL;
+	Gain_Negatif: REAL;
+	Enable_PID_Press :BOOL;
+	TOF_1: TOF;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(**********************************************Gestion de l'enable de la régulation PID*)
+(*Gestion de la régulation de la pression uniquement si consigne supérieur à au minimum du bas débit*)
+TON_1(IN:= ((Cons_Actionneur_Registre_Ext_m3h > ((Cons_Max_Bas_Deb_Ext + 0.5) * Volume_Cabine))) AND Option_Regul_Deb_Ou_Press, PT:= T#2s);
+IF((TON_1.Q AND NOT Mode_Auto.Mode_25) OR Dmd_Post_Ventilation)
+	THEN
+	Enable_PID_Press := TRUE;
+	ELSE
+	Enable_PID_Press := FALSE;
+END_IF;
+
+(*Gestion d'un TOF afin d'éviter de fermer trop rapidement le registre car le registre soufflage est plus lent*)
+TOF_1(IN:= Enable_PID_Press, PT:= T#30s);
+Enable_PID_Press_Cab := TOF_1.Q;
+
+Valeur_Trunc_Press := DINT_TO_REAL(TRUNC(Tab_MES_Sonde_Press_Cab.R_MesCor));
+Gain_Negatif := Gain_PID_Press_Cab *  -1.0;
+
+(**********************************************Régulation PID*)
+PID_Press(
+	ACTUAL:= Valeur_Trunc_Press,
+	SET_POINT:= Cons_Press_Cab,
+	KP:= Gain_Negatif,
+	TN:= Integral_PID_Press_Cab,
+	TV:= Derivee_PID_Press_Cab,
+	Y_MANUAL:= 0.0,
+	Y_OFFSET:= 0.0,
+	Y_MIN:= 0.0,
+	Y_MAX:= 100.0,
+	RESET:= NOT Enable_PID_Press_Cab,
+	Y=> S_Cmd_PID_Press_Cab);
+
+S_Ecart_Regul_PID_Pression := SEL(Enable_PID_Press_Cab, 0.0, ABS(PID_Press.ERROR));]]></ST>
+    </Implementation>
+    <LineIds Name="n1_Regulation_Press">
+      <LineId Id="9" Count="31" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

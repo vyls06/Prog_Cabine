@@ -1,0 +1,536 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="Visu" Id="{dd274978-c71b-498f-b2b8-f73445349049}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Visu
+VAR
+	Info_PLC: FB_GetLocalAmsNetId;
+	Start: BOOL;
+	//Clignotement pour gérer des animations :
+	Tmr         	: TON;   	// temporisateur On-Delay standard
+    RTrig       	: R_TRIG;	// détecteur de front montant
+	Tmr1         	: TON;   	// temporisateur On-Delay standard
+    RTrig1       	: R_TRIG;	// détecteur de front montant
+	Tmr2         	: TON;   	// temporisateur On-Delay standard
+    RTrig2       	: R_TRIG;	// détecteur de front montant
+	Var_Test1		: WSTRING(511);
+	Var_Test2		: WSTRING;
+	Var_test3		: TIME;
+	Var_test4		: BOOL;
+	// Gestion de l'affichage de la couleur de la cabine :	
+    Opacite 		: BYTE := 66; // Opacité (0 = transparent, 255 = opaque)
+	Opacite1 		: BYTE := 150; // Opacité (0 = transparent, 255 = opaque)
+	//Gestion du pop-up actionneurs
+	On_Off_Ventilation	:BOOL;
+	//Gestion de la page Nettoyage
+	Cpt_Clean		:INT;
+	R_TRIG_Inc: R_TRIG;
+	//Gestion de la page Recet_EnCours	
+	R_TRIG_RecetEnCours: R_TRIG;
+	RS_VolEau_Douche: RS;
+	RS_VolEau_Lavabo: RS;
+	//Gestion de la page Mode_Manu	
+	R_TRIG_RecetEnCours_Manu: R_TRIG;
+	RS_VolEau_Douche_Manu: RS;
+	RS_VolEau_Lavabo_Manu: RS;
+	Manu_Tot_Second:DINT;
+	Heure_Limite_Douche:REAL;
+	Minute_Limite_Douche:REAL;
+	Seconde_Limite_Douche:REAL;
+	Heure_Limite_Lavabo:REAL;
+	Minute_Limite_Lavabo:REAL;
+	Seconde_Limite_Lavabo:REAL;
+	Heure_Limite_WC:REAL;
+	Minute_Limite_WC:REAL;
+	Seconde_Limite_WC:REAL;
+	//Gestion de la page menu
+	R_Trig_Init: R_TRIG;
+	TON_Menu: TON;
+	R_TRIG_Menu: R_TRIG;
+	//Gestion des pages de pop up des alarmes avec réarmement
+	NivHaut :BOOL;
+	Alarms	:BOOL;
+	F_TRIG_Deco: F_TRIG;
+	IHM_Mesure_Debit_Deconta: REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_Visu.Page_En_Cours 	:= VisuElems.CURRENTVISU; 			// Récupération du nom de la page en cours
+Var_Test1 				:= VisuElems.CurrentFullUserName;
+GVL_Visu.Language 		:= VisuElems.CURRENTLANGUAGE;		// récupération du language en cours
+GVL_Visu.Connexion 		:= VisuElems.CurrentUserGroupName;	// Récupération du nom de l'utilisateur en cours (Peu poser problème si plusieurs connexion en même temps)
+Var_Test2 				:= VisuElems.CurrentUserName;
+Var_test3 				:= VisuElems.CurrentRemainingAutoLogoutTime;
+Var_test4 				:= VisuElems.CurrentUseAutoLogoutTime;
+Info_PLC(bExecute:= Start, tTimeOut:= DEFAULT_ADS_TIMEOUT);
+
+//////////////////////////////////////////////////////////////
+//Gestion de la page dépollution							//
+//////////////////////////////////////////////////////////////
+// Mouvement de la flèche vers le haut :
+IF (Mode_Cabine_Depollution)
+	THEN
+		GVL_Visu.Arrow_Up := GVL_Visu.Arrow_Up - 1;
+		IF (GVL_Visu.Arrow_Up = 0)
+			THEN
+			GVL_Visu.Arrow_Up := 150;
+		END_IF;
+	ELSE
+		GVL_Visu.Arrow_Up := 150;
+END_IF
+// Mouvement de la flèche vers le bas :
+IF (Mode_Cabine_Depollution)
+	THEN
+		GVL_Visu.Arrow_Down := LIMIT(0, GVL_Visu.Arrow_Down + 1, 150);
+		IF (GVL_Visu.Arrow_Down = 150)
+			THEN
+			GVL_Visu.Arrow_Down := 0;
+		END_IF;
+	ELSE
+		GVL_Visu.Arrow_Down := 0;
+END_IF
+
+// Retour à la page Menu à la fin du mode Depollution
+IF ((GVL_Visu.Page_En_Cours = 'Depollution') AND R_TRIG_RecetEnCours_Manu.Q)
+	THEN
+	VisuElems.CURRENTVISU := 'menu';
+END_IF
+
+//Affichage de la valeur de mesure
+IHM_Mesure_Debit_Deconta := GVL_RegTROX.MES_RegSouf_GD_FCVT01.Mesure_EAN / LIMIT(1.0, Volume_Cabine, 1000);
+
+//////////////////////////////////////////////////////////////
+//Gestion du pop-up actionneurs								//
+//////////////////////////////////////////////////////////////
+IF (MES_Debit_Volh_Soufflage > 1.0)
+	THEN
+		On_Off_Ventilation := TRUE;
+	ELSE
+		On_Off_Ventilation := FALSE;
+END_IF
+
+//////////////////////////////////////////////////////////////
+//Gestion de la page Nettoyage								//
+//////////////////////////////////////////////////////////////
+R_TRIG_Inc(CLK:= GVL_Visu.On_Off_Anim_Rap);
+IF (R_TRIG_Inc.Q AND Mode_Cabine_Nettoyage)
+	THEN
+		Cpt_Clean := Cpt_Clean + 1;
+		IF (Cpt_Clean > 7)
+			THEN
+				Cpt_Clean := 0;
+		END_IF
+END_IF
+IF (NOT Mode_Cabine_Nettoyage)
+	THEN
+		Cpt_Clean := 0;
+END_IF
+CASE Cpt_Clean OF
+	0:	// Etape 0 initialisation des valeurs
+	GVL_Visu.Cmd_Img_Clean1 := FALSE;
+	GVL_Visu.Cmd_Img_Clean2 := FALSE;
+	GVL_Visu.Cmd_Img_Clean3 := FALSE;
+	GVL_Visu.Cmd_Img_Clean4 := FALSE;
+	GVL_Visu.Cmd_Img_Clean5 := FALSE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	1: // Etape affichage de l'image 1
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := FALSE;
+	GVL_Visu.Cmd_Img_Clean3 := FALSE;
+	GVL_Visu.Cmd_Img_Clean4 := FALSE;
+	GVL_Visu.Cmd_Img_Clean5 := FALSE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	2: // Etape affichage de l'image 1,2
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := FALSE;
+	GVL_Visu.Cmd_Img_Clean4 := FALSE;
+	GVL_Visu.Cmd_Img_Clean5 := FALSE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	3: // Etape affichage de l'image 1,2,3
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := TRUE;
+	GVL_Visu.Cmd_Img_Clean4 := FALSE;
+	GVL_Visu.Cmd_Img_Clean5 := FALSE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	4: // Etape affichage de l'image 1,2,3,4
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := TRUE;
+	GVL_Visu.Cmd_Img_Clean4 := TRUE;
+	GVL_Visu.Cmd_Img_Clean5 := FALSE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	5: // Etape affichage de l'image 1,2,3,4,5
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := TRUE;
+	GVL_Visu.Cmd_Img_Clean4 := TRUE;
+	GVL_Visu.Cmd_Img_Clean5 := TRUE;
+	GVL_Visu.Cmd_Img_Clean6 := FALSE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	6: // Etape affichage de l'image 1,2,3,4,5,6
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := TRUE;
+	GVL_Visu.Cmd_Img_Clean4 := TRUE;
+	GVL_Visu.Cmd_Img_Clean5 := TRUE;
+	GVL_Visu.Cmd_Img_Clean6 := TRUE;
+	GVL_Visu.Cmd_Img_Clean7 := FALSE;
+	
+	7: // Etape affichage de l'image 1,2,3,4,5,6,7
+	GVL_Visu.Cmd_Img_Clean1 := TRUE;
+	GVL_Visu.Cmd_Img_Clean2 := TRUE;
+	GVL_Visu.Cmd_Img_Clean3 := TRUE;
+	GVL_Visu.Cmd_Img_Clean4 := TRUE;
+	GVL_Visu.Cmd_Img_Clean5 := TRUE;
+	GVL_Visu.Cmd_Img_Clean6 := TRUE;
+	GVL_Visu.Cmd_Img_Clean7 := TRUE;
+END_CASE
+
+// Retour à la page Menu à la fin du mode Nettoyage
+IF ((GVL_Visu.Page_En_Cours = 'Nettoyage') AND R_TRIG_RecetEnCours_Manu.Q)
+	THEN
+	VisuElems.CURRENTVISU := 'menu';
+END_IF
+
+//////////////////////////////////////////////////////////////
+//Gestion de la page Sel_Recettes							//
+//////////////////////////////////////////////////////////////
+IF (Nbre_Etape_Totale <> 0)
+	THEN
+	GVL_Visu.Visu_Btn_Start := FALSE;
+	ELSE
+	GVL_Visu.Visu_Btn_Start := TRUE;
+END_IF
+
+//////////////////////////////////////////////////////////////
+//Gestion de la page Recet_EnCours							//
+//////////////////////////////////////////////////////////////
+//Affichage de la valeur du volume d'eau restant pour la douche - reset de l'affichage quand la vidange est ouverte
+RS_VolEau_Douche (SET:= Mode_Auto.Mode_12 OR Mode_Auto.Mode_13, RESET1:= E_Vanne_Vidange_Douche_Ouv OR Mode_Cabine_Libre);
+GVL_Visu.Visu_VolEau_Douche := Mode_Auto.Mode_12 OR Mode_Auto.Mode_13;
+
+//Affichage de la valeur du volume d'eau restant pour le lavabo - reset de l'affichage quand la vidange est ouverte
+RS_VolEau_Lavabo (SET:= Mode_Auto.Mode_14 OR Mode_Auto.Mode_15, RESET1:= E_Vanne_Vidange_Lavabo_Ouv OR Mode_Cabine_Libre);
+GVL_Visu.Visu_VolEau_Lavabo := Mode_Auto.Mode_14 OR Mode_Auto.Mode_15;
+
+//Affichage du décomptes en secondes
+GVL_Visu.Visu_Tempo := Mode_Auto.Mode_1 OR Mode_Auto.Mode_2 OR Mode_Auto.Mode_4 OR Mode_Auto.Mode_5 OR Mode_Auto.Mode_6
+						OR Mode_Auto.Mode_7 OR Mode_Auto.Mode_8 OR Mode_Auto.Mode_10 OR Mode_Auto.Mode_11
+						OR Mode_Auto.Mode_18 OR Mode_Auto.Mode_19 OR Mode_Auto.Mode_27;
+
+//Affichage du nombre de cycle restant de chasse d'eau
+GVL_Visu.Visu_ChasseEau := Mode_Auto.Mode_9 OR Mode_Auto.Mode_26;
+
+//Affichage du débit d'eau, peu importe si c'est la douche ou le lavabo
+GVL_Visu.Visu_Debit_Eau := Mode_Auto.Mode_14 OR Mode_Auto.Mode_15 OR Mode_Auto.Mode_12 OR Mode_Auto.Mode_13;
+GVL_Visu.Visu_Mes_Debit_Eau := MAX(Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor,Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor);
+
+// Retour à la page Menu à la fin de la recette
+R_TRIG_RecetEnCours(CLK:= Mode_Cabine_Libre);
+IF ((GVL_Visu.Page_En_Cours = 'Recet_EnCours') AND R_TRIG_RecetEnCours.Q)
+	THEN
+	VisuElems.CURRENTVISU := 'menu';
+END_IF
+
+//////////////////////////////////////////////////////////////
+//Gestion de la page Mode_Manu								//
+//////////////////////////////////////////////////////////////
+//Affichage de la valeur du volume d'eau restant pour la douche - reset de l'affichage quand la vidange est ouverte
+RS_VolEau_Douche_Manu (SET:= Mode_Manu.Mode_12 OR Mode_Manu.Mode_13, RESET1:= Mode_Cabine_Libre);
+GVL_Visu.Visu_VolEau_Douche_Manu := RS_VolEau_Douche_Manu.Q1;
+
+//Affichage de la valeur du volume d'eau restant pour le lavabo - reset de l'affichage quand la vidange est ouverte
+RS_VolEau_Lavabo_Manu (SET:= Mode_Manu.Mode_14 OR Mode_Manu.Mode_15, RESET1:= Mode_Cabine_Libre);
+GVL_Visu.Visu_VolEau_Lavabo_Manu := RS_VolEau_Lavabo_Manu.Q1;
+
+//Affichage du nombre de cycle restant de chasse d'eau
+GVL_Visu.Visu_ChasseEau_Manu := Mode_Manu.Mode_9 OR Mode_Manu.Mode_26;
+
+//Affichage du débit d'eau, peu importe si c'est la douche ou le lavabo
+GVL_Visu.Visu_Debit_Eau_Manu := Mode_Manu.Mode_14 OR Mode_Manu.Mode_15 OR Mode_Manu.Mode_12 OR Mode_Manu.Mode_13;
+GVL_Visu.Visu_Mes_Debit_Eau_Manu := MAX(Tab_MES_Sonde_Debit_Alim_Douche.R_MesCor,Tab_MES_Sonde_Debit_Alim_Lavabo.R_MesCor);
+
+// Retour à la page Menu à la fin du mode manu
+R_TRIG_RecetEnCours_Manu(CLK:= Mode_Cabine_Libre);
+IF ((GVL_Visu.Page_En_Cours = 'ModeManuel') AND R_TRIG_RecetEnCours_Manu.Q)
+	THEN
+	VisuElems.CURRENTVISU := 'menu';
+END_IF
+
+// Conversion en integer de la variable de sélection du mode
+GVL_Visu.Manu_Choix_Numero_Mode_INT := REAL_TO_INT(Manu_Choix_Numero_Mode);
+
+// Gestion de la sélection des modes manuel présent dans le projet :
+GVL_Visu.Tab_Choix_Modes[1] := FALSE;		// Mode 1 douche avec vidange avec tempo
+GVL_Visu.Tab_Choix_Modes[2] := FALSE;		// Mode 2 douche sans vidange  avec tempo
+GVL_Visu.Tab_Choix_Modes[3] := FALSE;		// Mode 3 douchette avec vidange
+GVL_Visu.Tab_Choix_Modes[4] := TRUE;		// Mode 4 lavabo avec vidange avec tempo
+GVL_Visu.Tab_Choix_Modes[5] := TRUE;		// Mode 5 lavabo sans vidange avec tempo
+GVL_Visu.Tab_Choix_Modes[6] := FALSE;		// Mode 6 activation prise
+GVL_Visu.Tab_Choix_Modes[7] := TRUE;		// Mode 7 vidange(s)
+GVL_Visu.Tab_Choix_Modes[8] := TRUE;		// Mode 8 neutre
+GVL_Visu.Tab_Choix_Modes[9] := FALSE;		// Mode 9 CHASSE D EAU GRAND VOLUME
+GVL_Visu.Tab_Choix_Modes[10] := FALSE;		// Mode 10 Dépollution
+GVL_Visu.Tab_Choix_Modes[11] := FALSE;		// Mode 11 bas débit
+GVL_Visu.Tab_Choix_Modes[12] := FALSE;		// Mode 12 douche avec vidange transition volume d'eau
+GVL_Visu.Tab_Choix_Modes[13] := FALSE;		// Mode 13 douche sans vidange transition volume d'eau
+GVL_Visu.Tab_Choix_Modes[14] := TRUE;		// Mode 14 lavabo avec vidange transition volume d'eau
+GVL_Visu.Tab_Choix_Modes[15] := TRUE;		// Mode 15 lavabo sans vidange transition volume d'eau
+GVL_Visu.Tab_Choix_Modes[16] := FALSE;		// Mode 16 douche avec vidange avec BP
+GVL_Visu.Tab_Choix_Modes[17] := FALSE;		// Mode 17 lavabo avec vidange avec BP
+GVL_Visu.Tab_Choix_Modes[18] := FALSE;		// Mode 18 lavage NEP eau chaude
+GVL_Visu.Tab_Choix_Modes[19] := FALSE;		// Mode 19 lavage NEP eau froide
+GVL_Visu.Tab_Choix_Modes[20] := FALSE;		// Mode 20 Paramétrable (non utilisé)
+GVL_Visu.Tab_Choix_Modes[21] := FALSE;		// Mode 21 alerte préparateur
+GVL_Visu.Tab_Choix_Modes[22] := FALSE;		// Mode 22 alerte évaluateur
+GVL_Visu.Tab_Choix_Modes[23] := FALSE;		// Mode 23 évaluation (sans moteur bypass)
+GVL_Visu.Tab_Choix_Modes[24] := FALSE;		// Mode 24 évaluation (avec moteur bypass)
+GVL_Visu.Tab_Choix_Modes[25] := FALSE;		// Mode 25 MISE EN CONDITION
+GVL_Visu.Tab_Choix_Modes[26] := FALSE;		// Mode 26 CHASSE D EAU PETIT VOLUME
+GVL_Visu.Tab_Choix_Modes[27] := FALSE;		// Mode nettoyage (version NEP)
+GVL_Visu.Tab_Choix_Modes[28] := FALSE;		// Mode cabine en condition
+GVL_Visu.Tab_Choix_Modes[29] := FALSE;		// Libre
+GVL_Visu.Tab_Choix_Modes[30] := FALSE;		// Mode 30 à 59 texte éditable
+//premier mode
+GVL_Visu.Min_Mode_Manu := 4;
+//dernier mode
+GVL_Visu.Max_Mode_Manu := 15;
+
+//Affichage du paramétrage du débit d'eau Lavabo
+GVL_Visu.Affich_Debit_Eau_Manu := (Manu_Choix_Numero_Mode = 14) OR (Manu_Choix_Numero_Mode = 15)
+											OR (Manu_Choix_Numero_Mode = 12) OR (Manu_Choix_Numero_Mode = 13);
+//Affichage du paramétrage du débit d'eau douche
+GVL_Visu.Affich_Debit_Eau_Manu_Douche := (Manu_Choix_Numero_Mode = 12) OR (Manu_Choix_Numero_Mode = 13);
+//Affichage du paramétrage du débit d'eau Lavabo
+GVL_Visu.Affich_Debit_Eau_Manu_Lavabo := (Manu_Choix_Numero_Mode = 14) OR (Manu_Choix_Numero_Mode = 15);
+
+//Affichage de la consigne de température
+GVL_Visu.Visu_Temp_Manu := 	Option_Regul_Temp_Eau AND
+							((Manu_Choix_Numero_Mode = 1) OR (Manu_Choix_Numero_Mode = 2)
+							OR (Manu_Choix_Numero_Mode = 4) OR (Manu_Choix_Numero_Mode = 5)
+							OR (Manu_Choix_Numero_Mode = 12) OR (Manu_Choix_Numero_Mode = 13)
+							OR (Manu_Choix_Numero_Mode = 14) OR (Manu_Choix_Numero_Mode = 15));								
+									
+//Affichage du paramétrage de la chasse d'eau
+GVL_Visu.Affich_ChasseEau_Manu := (Manu_Choix_Numero_Mode = 9) OR (Manu_Choix_Numero_Mode = 26);
+
+//Gestion des limites minimum et maximum du volume d'eau lors d'une vidange fermée
+IF (Manu_Choix_Numero_Mode = 13)		//Douche
+	THEN
+	Manu_Lct_Cons_Vol_Douche := LIMIT(0, Manu_Lct_Cons_Vol_Douche, Volume_Secu_Debord_Douche);
+	ELSE
+	Manu_Lct_Cons_Vol_Douche := LIMIT(0, Manu_Lct_Cons_Vol_Douche, 999);
+END_IF
+IF (Manu_Choix_Numero_Mode = 15)		//Lavabo
+	THEN
+	Manu_Lct_Cons_Vol_Lavabo := LIMIT(0, Manu_Lct_Cons_Vol_Lavabo, Volume_Secu_Debord_Lavabo);
+	ELSE
+	Manu_Lct_Cons_Vol_Lavabo := LIMIT(0, Manu_Lct_Cons_Vol_Lavabo, 999);
+END_IF
+
+//Gestion des limites de temporisation lors d'une vidange fermée et du temps de remplissage du WC
+Manu_Tot_Second := (TO_DINT(Manu_Tempo_Transition_Heure) * 3600)
+					+ (TO_DINT(Manu_Tempo_Transition_Minute) * 60)
+					+ (TO_DINT(Manu_Tempo_Transition_Seconde));
+//Limite de la sécurité haute de la douche
+Seconde_Limite_Douche 	:= TO_REAL((Temp_Secu_Debord_Douche) MOD 60);
+Minute_Limite_Douche 	:= TO_REAL((Temp_Secu_Debord_Douche / 60) MOD 60);
+Heure_Limite_Douche 	:= TO_REAL((Temp_Secu_Debord_Douche / 3600) MOD 24);
+//Limite de la sécurité haute du lavabo
+Seconde_Limite_Lavabo	:= TO_REAL((Temp_Secu_Debord_Lavabo) MOD 60);
+Minute_Limite_Lavabo 	:= TO_REAL((Temp_Secu_Debord_Lavabo / 60) MOD 60);
+Heure_Limite_Lavabo 	:= TO_REAL((Temp_Secu_Debord_Lavabo / 3600) MOD 24);
+//Limite de la sécurité haute du cycle de chasse d'eau
+Seconde_Limite_WC		:= TO_REAL((Temps_Remplissage_WC) MOD 60);
+Minute_Limite_WC 		:= TO_REAL((Temps_Remplissage_WC / 60) MOD 60);
+Heure_Limite_WC 		:= TO_REAL((Temps_Remplissage_WC / 3600) MOD 24);
+IF (Manu_Choix_Numero_Mode = 2 AND Option_Douche)
+	THEN	//Douche
+	IF (Manu_Tot_Second > TO_DINT(Temp_Secu_Debord_Douche))
+		THEN
+		Manu_Tempo_Transition_Seconde := Seconde_Limite_Douche;
+		Manu_Tempo_Transition_Minute := Minute_Limite_Douche;
+		Manu_Tempo_Transition_Heure := Heure_Limite_Douche;
+	END_IF
+	ELSIF (Manu_Choix_Numero_Mode = 5 AND Option_Lavabo)
+	THEN	//Lavabo
+	IF (Manu_Tot_Second > TO_DINT(Temp_Secu_Debord_Lavabo))
+		THEN
+		Manu_Tempo_Transition_Seconde := Seconde_Limite_Lavabo;
+		Manu_Tempo_Transition_Minute := Minute_Limite_Lavabo;
+		Manu_Tempo_Transition_Heure := Heure_Limite_Lavabo;
+	END_IF
+	ELSIF (Manu_Choix_Numero_Mode = 9 OR Manu_Choix_Numero_Mode = 26 AND (Option_WC_GV OR Option_WC_PV))
+	THEN	//WC
+	IF (Manu_Tot_Second > TO_DINT(Temps_Remplissage_WC))
+		THEN
+		Manu_Tempo_Transition_Seconde := Seconde_Limite_WC;
+		Manu_Tempo_Transition_Minute := Minute_Limite_WC;
+		Manu_Tempo_Transition_Heure := Heure_Limite_WC;
+	END_IF
+	ELSE
+	Manu_Tempo_Transition_Seconde := Manu_Tempo_Transition_Seconde;
+	Manu_Tempo_Transition_Minute := Manu_Tempo_Transition_Minute;
+	Manu_Tempo_Transition_Heure := Manu_Tempo_Transition_Heure;
+END_IF
+
+//////////////////////////////////////////////////////////////
+//gestion de la page menu									//
+//////////////////////////////////////////////////////////////
+//Initialisation des Enbale forçage lors du retour sur la page menu
+R_Trig_Init(CLK:= (GVL_Visu.Page_En_Cours = 'menu'));
+IF(R_Trig_Init.Q)
+	THEN
+	EF_Cmd_PC_Cab  							:= FALSE;
+	EF_Cmd_Vanne_Alim_Douche  				:= FALSE;
+	EF_Cmd_Vanne_Alim_Douchette  			:= FALSE;
+	EF_Cmd_Vanne_Alim_Lavabo  				:= FALSE;
+	EF_Cmd_Vanne_Vid_Douche  				:= FALSE;
+	EF_Cmd_Vanne_Vid_Lavabo 				:= FALSE;
+	EF_Cmd_ElectroValve_Alim_Douche  		:= FALSE;
+	EF_Cmd_ElectroValve_Alim_Lavabo 		:= FALSE;
+	EF_Cons_Registre_Extraction 			:= FALSE;
+	EF_Cons_Registre_Soufflage 				:= FALSE;
+	EF_Vanne_Souf_Bas_Deb 					:= FALSE;
+	EF_Vanne_Ext_Bas_Deb 					:= FALSE;
+	EF_Cons_Reg_Etanche_Ext 				:= FALSE;
+	EF_Cmd_Reg_Etanche_Souf 				:= FALSE;
+	EF_Cons_V3V_Eau_Mitig 					:= FALSE;
+	EF_Vanne_Alim_NEP 						:= FALSE;
+	EF_Cons_V3V_Bat_Froid_CTA  				:= FALSE;
+	EF_Cmd_Verin_WC_GV  					:= FALSE;
+	EF_Cmd_Verin_WC_PV  					:= FALSE;
+	Tab_MotRep_CTA.Mot_Ecriture.0			:= FALSE;
+	Tab_MotSouf_CTA.Mot_Ecriture.0			:= FALSE;
+	Tab_Mot_Aerobox_Bas_Deb.Mot_Ecriture.0	:= FALSE;
+	Tab_Mot_ByPass.Mot_Ecriture.0			:= FALSE;
+END_IF
+
+(*//Gestion du retour sur la page 'Accueil' après un certain délais sur la page Menu
+TON_Menu(IN:= (GVL_Visu.Page_En_Cours = 'menu'), PT:= T#10M);
+R_TRIG_Menu(CLK:= TON_Menu.Q);
+IF (R_TRIG_Menu.Q)
+	THEN
+	VisuElems.CURRENTVISU := 'Accueil';
+END_IF*)
+
+//////////////////////////////////////////////////////////////
+//Gestion des pages de pop up des alarmes avec réarmement	//
+//////////////////////////////////////////////////////////////
+NivHaut := 	Defaut_Debordement_Douche OR Defaut_Debordement_Lavabo;
+Alarms	:= 	NOT NivHaut AND Condi_Affich_Rearm;
+GVL_Visu.Affichage_PopUp_HightLevel	:= NivHaut;
+GVL_Visu.Affichage_PopUp_Alarm := Alarms;
+
+//////////////////////////////////////////////////////////////
+//Autres													//
+//////////////////////////////////////////////////////////////	
+//Clignotement lent pour gérer des animations :
+Tmr(IN := TRUE, PT := T#500MS);
+RTrig(CLK := Tmr.Q);
+IF RTrig.Q THEN
+    GVL_Visu.On_Off_Anim := NOT GVL_Visu.On_Off_Anim;  	// bascule ON↔OFF
+    Tmr(IN := FALSE);                					// arrêt court du timer pour le remettre à zéro
+END_IF
+IF NOT Tmr.Q THEN
+    Tmr(IN := TRUE);
+END_IF
+//Clignotement rapide pour gérer des animations :
+Tmr1(IN := TRUE, PT := T#200MS);
+RTrig1(CLK := Tmr1.Q);
+IF RTrig1.Q THEN
+    GVL_Visu.On_Off_Anim_Rap := NOT GVL_Visu.On_Off_Anim_Rap;  	// bascule ON↔OFF
+    Tmr1(IN := FALSE);                					// arrêt court du timer pour le remettre à zéro
+END_IF
+IF NOT Tmr1.Q THEN
+    Tmr1(IN := TRUE);
+END_IF
+//Clignotement rapide pour gérer des animations :
+Tmr2(IN := TRUE, PT := T#1S);
+RTrig2(CLK := Tmr2.Q);
+IF RTrig2.Q THEN
+    GVL_Visu.On_Off_Anim_Lent := NOT GVL_Visu.On_Off_Anim_Lent;  	// bascule ON↔OFF
+    Tmr2(IN := FALSE);                					// arrêt court du timer pour le remettre à zéro
+END_IF
+IF NOT Tmr2.Q THEN
+    Tmr2(IN := TRUE);
+END_IF
+
+// Sélection de l'affichage du numéro de la cabine sur les visuels :
+CASE GVL_Visu.Numero_Cabine OF
+	0: GVL_Visu.Nom_Cabine_FR := 'PAS DE NOM'; GVL_Visu.Nom_Cabine_EN := 'NO NAME';
+	1: GVL_Visu.Nom_Cabine_FR := 'CABINE 1'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 1';
+	2: GVL_Visu.Nom_Cabine_FR := 'CABINE 2'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 2';
+	3: GVL_Visu.Nom_Cabine_FR := 'CABINE 3'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 3';
+	4: GVL_Visu.Nom_Cabine_FR := 'CABINE 4'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 4';
+	5: GVL_Visu.Nom_Cabine_FR := 'CABINE 5'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 5';
+	6: GVL_Visu.Nom_Cabine_FR := 'CABINE 6'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 6';
+	7: GVL_Visu.Nom_Cabine_FR := 'CABINE 7'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 7';
+	8: GVL_Visu.Nom_Cabine_FR := 'CABINE 8'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 8';
+	9: GVL_Visu.Nom_Cabine_FR := 'CABINE 9'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 9';
+	10: GVL_Visu.Nom_Cabine_FR := 'CABINE 10'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 10';
+	11: GVL_Visu.Nom_Cabine_FR := 'CABINE 11'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 11';
+	12: GVL_Visu.Nom_Cabine_FR := 'CABINE 12'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 12';
+	13: GVL_Visu.Nom_Cabine_FR := 'CABINE 13'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 13';
+	14: GVL_Visu.Nom_Cabine_FR := 'CABINE 14'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 14';
+	15: GVL_Visu.Nom_Cabine_FR := 'CABINE 15'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 15';
+	16: GVL_Visu.Nom_Cabine_FR := 'CABINE 16'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 16';
+	17: GVL_Visu.Nom_Cabine_FR := 'CABINE 17'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 17';
+	18: GVL_Visu.Nom_Cabine_FR := 'CABINE 18'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 18';
+	19: GVL_Visu.Nom_Cabine_FR := 'CABINE 19'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 19';
+	20: GVL_Visu.Nom_Cabine_FR := 'CABINE 20'; GVL_Visu.Nom_Cabine_EN := 'BOOTH 20';
+END_CASE
+
+// Gestion de la connexion de l'utilisateur Admin :
+IF (GVL_Visu.Connexion = "Admin") THEN GVL_Visu.Etat_Connexion := TRUE; ELSE GVL_Visu.Etat_Connexion := FALSE; END_IF;
+
+//Gestion du retour à la pague menu si déconnexion
+F_TRIG_Deco(CLK:= GVL_Visu.Etat_Connexion);
+IF(F_TRIG_Deco.Q) THEN
+	VisuElems.CURRENTVISU := 'menu';
+END_IF
+
+// Gestion de l'affichage de la couleur de la cabine :
+GVL_Visu.Couleur_Cabine := SHL(TO_DWORD(Opacite), 24) OR SHL(TO_DWORD(Cde_Rouge_Cabine), 16) OR SHL(TO_DWORD(Cde_Vert_Cabine), 8) OR TO_DWORD(Cde_Bleu_Cabine);
+GVL_Visu.Couleur_Cabine2 := SHL(TO_DWORD(Opacite1), 24) OR SHL(TO_DWORD(Cde_Rouge_Cabine), 16) OR SHL(TO_DWORD(Cde_Vert_Cabine), 8) OR TO_DWORD(Cde_Bleu_Cabine);
+
+// Gestion du changement de page automatique si on es sur la page menu et qu'il y'a un mode en cours (depo, auto, manu, net)
+IF(Mode_Cabine_Automatique)
+	THEN
+	VisuElems.CURRENTVISU := 'Recet_EnCours';
+END_IF
+IF(NOT Mode_Cabine_Automatique AND Mode_Cabine_Manuel)
+	THEN
+	VisuElems.CURRENTVISU := 'ModeManuel';
+END_IF
+IF(NOT Mode_Cabine_Automatique AND Mode_Cabine_Nettoyage)
+	THEN
+	VisuElems.CURRENTVISU := 'Nettoyage';
+END_IF
+IF(NOT Mode_Cabine_Automatique AND Mode_Cabine_Depollution)
+	THEN
+	VisuElems.CURRENTVISU := 'Depollution';
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="Visu">
+      <LineId Id="1315" Count="39" />
+      <LineId Id="1832" Count="0" />
+      <LineId Id="1831" Count="0" />
+      <LineId Id="1833" Count="0" />
+      <LineId Id="1355" Count="424" />
+      <LineId Id="399" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

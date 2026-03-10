@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Objet_Sonde" Id="{d3c01d7f-fdde-4454-9be8-c30a7b849b77}">
+    <Declaration><![CDATA[TYPE Objet_Sonde :
+	STRUCT
+	Mot_Lecture 			:INT; (*Mot de lecture des bits*)
+	Mot_Ecriture 			:INT; (*Mot d'écriture des bits*)
+	R_MesBrut 			:REAL; (*Mesure de la température brute*)
+	R_MesCor 			:REAL; (*Mesure de la température corrigée*)
+	W_Offset				:REAL; (* Consigne Offset de température*)
+	W_SeuilAlarmeHaute 	:REAL; (*Consigne du seuil haut du déclenchement de l'alarme haute température*)
+	W_SeuilAlarmeBasse 	:REAL; (*Consigne du seuil bas du déclenchement de l'alarme basse température*)
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

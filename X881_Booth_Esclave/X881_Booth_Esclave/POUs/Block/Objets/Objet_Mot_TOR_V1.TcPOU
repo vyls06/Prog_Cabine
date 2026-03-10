@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Objet_Mot_TOR_V1" Id="{2627d1ee-0c3c-4adc-98b1-6ae5a6889fc0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Objet_Mot_TOR_V1
+VAR_INPUT
+	Cmd_Ma_Moteur			:BOOL;	(*Commande de la marche du moteur / 1 = Marche*)
+	Info_ETOR_Ma_Moteur	:BOOL;	(*Information TOR de la marche du moteur / 1 = Marche*)
+	Info_ETOR_Def_Moteur	:BOOL;	(*Information TOR du défaut du moteur / 1 = Défaut*)
+END_VAR
+
+VAR_OUTPUT
+	STOR_CMD_MOTEUR	:BOOL;	(*Commande ouverture a appliqué au Moteur (pour STOR) / 1 = Marche*)
+END_VAR
+
+VAR_IN_OUT
+	Tab_MoteurTOR	:Objet_Mot_TOR; (*Tableau des valeurs*)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Recopie pour lecture GTC *********************************************************)
+Tab_MoteurTOR.Mot_Lecture.0		:= STOR_CMD_MOTEUR;
+Tab_MoteurTOR.Mot_Lecture.2   	:= Info_ETOR_Ma_Moteur;
+Tab_MoteurTOR.Mot_Lecture.1  		:= Info_ETOR_Def_Moteur;
+
+(* Gestion commande **************************************************************)
+IF Tab_MoteurTOR.Mot_Ecriture.0
+	THEN
+		STOR_CMD_MOTEUR := Tab_MoteurTOR.Mot_Ecriture.1;
+	ELSE
+		STOR_CMD_MOTEUR := Cmd_Ma_Moteur;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Objet_Mot_TOR_V1">
+      <LineId Id="22" Count="10" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

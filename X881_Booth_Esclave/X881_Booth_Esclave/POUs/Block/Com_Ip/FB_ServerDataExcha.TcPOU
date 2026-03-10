@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_ServerDataExcha" Id="{168cbb15-be0a-43d3-a4e2-fb06436bbb62}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ServerDataExcha
+VAR_INPUT
+	hSocket			: T_HSOCKET;
+	bExecute		: BOOL;
+END_VAR
+VAR_OUTPUT
+	bBusy			: BOOL;
+	bError 			: BOOL;
+	nErrID			: UDINT;
+	sFromClient		: T_MaxString;
+END_VAR
+VAR
+	fbSocketReceive	: FB_SocketReceive := ( sSrvNetId := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	fbSocketSend	: FB_SocketSend :=  ( sSrvNetId := '', tTimeout := DEFAULT_ADS_TIMEOUT );
+	eStep			: E_DataExchaSteps;
+	RisingEdge		: R_TRIG;
+	fbReceiveTON	: TON;
+	fbDisconnectTON 	: TON;
+	cbReceived, startPos, endPos, idx	: UDINT;
+	cbFrame			: UDINT;
+	rxBuffer			: ARRAY[0..1000] OF BYTE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[RisingEdge( CLK := bExecute );
+CASE eStep OF
+
+	DATAEXCHA_STATE_IDLE:
+		IF RisingEdge.Q THEN
+			bBusy 	:= TRUE;
+			bError 	:= FALSE;
+			nErrId 	:= 0;
+			fbDisconnectTON( IN := FALSE, PT := T#0s );(* disable timeout check first *)
+			fbReceiveTON( IN := FALSE, PT := T#0s ); (* receive first request immediately *)
+			eStep 	:= DATAEXCHA_STATE_RECEIVE_START;
+		END_IF
+
+	DATAEXCHA_STATE_RECEIVE_START: (* Receive remote client data *)
+		fbReceiveTON(  IN := TRUE );
+		IF fbReceiveTON.Q THEN
+			fbReceiveTON( IN := FALSE );
+			fbSocketReceive( bExecute := FALSE );
+			fbSocketReceive( 	hSocket		:= hSocket,
+							pDest		:= ADR( Tab_Com_Receive ),			(*ADR( rxBuffer ) + cbReceived,*)
+							cbLen		:= SIZEOF( Tab_Com_Receive ),		(*SIZEOF( rxBuffer ) - cbReceived,*)
+							bExecute	:= TRUE );
+			eStep := DATAEXCHA_STATE_RECEIVE_WAIT;
+		END_IF
+
+	DATAEXCHA_STATE_RECEIVE_WAIT:
+		fbSocketReceive( bExecute := FALSE );
+		IF NOT fbSocketReceive.bBusy THEN
+			IF NOT fbSocketReceive.bError THEN
+
+				IF (fbSocketReceive.nRecBytes > 0) THEN(* bytes received *)
+
+					startPos 		:= cbReceived;(* rxBuffer array index of first data byte *)
+					endPos  		:= cbReceived + fbSocketReceive.nRecBytes  - 1;(* rxBuffer array index of last data byte *)
+					cbReceived 	:= cbReceived + fbSocketReceive.nRecBytes;(* calculate the number of received data bytes *)
+					cbFrame		:= 0;(* reset frame length *)
+
+					IF cbReceived < SIZEOF( sFromClient ) THEN(* no overflow *)
+
+						fbReceiveTON( IN := FALSE, PT := T#0s ); (* bytes received => increase the read (polling) speed *)
+						fbDisconnectTON( IN := FALSE, PT := PLCPRJ_RECEIVE_TIMEOUT );(* bytes received => disable timeout check *)
+
+						(* search for string end delimiter *)
+						FOR idx := startPos TO endPos BY 1 DO
+							IF rxBuffer[idx] = 0 THEN(* string end delimiter found *)
+								cbFrame := idx + 1;(* calculate the length of the received string (inclusive the end delimiter) *)
+								MEMCPY(  ADR( sFromClient ), ADR( rxBuffer ), cbFrame );(* copy the received string to the output variable (inclusive the end delimiter) *)
+								MEMMOVE( ADR( rxBuffer ), ADR( rxBuffer[cbFrame] ),  cbReceived - cbFrame  );(* move the reamaining data bytes *)
+								cbReceived := cbReceived - cbFrame;(* recalculate the reamaining data byte length *)
+								eStep := DATAEXCHA_STATE_SEND_START;
+								EXIT;
+							END_IF
+						END_FOR
+
+					ELSE(* there is no more free read buffer space => the answer string should be terminated *)
+						LogError( 'FB_SocketReceive (remote client)',  PLCPRJ_ERROR_RECEIVE_BUFFER_OVERFLOW );
+						nErrId := PLCPRJ_ERROR_RECEIVE_BUFFER_OVERFLOW;(* buffer overflow !*)
+						eStep := DATAEXCHA_STATE_ERROR;
+					END_IF
+
+				ELSE(* no bytes received *)
+					fbReceiveTON( IN := FALSE, PT := PLCPRJ_RECEIVE_POLLING_TIME );(* no bytes received => decrease the read (polling) speed *)
+					fbDisconnectTON( IN := TRUE, PT := PLCPRJ_RECEIVE_TIMEOUT );(* no bytes received => enable timeout check*)
+					IF fbDisconnectTON.Q THEN (* timeout error*)
+						fbDisconnectTON( IN := FALSE );
+						LogError( 'FB_SocketReceive (remote client)',  PLCPRJ_ERROR_RECEIVE_TIMEOUT );
+						nErrID := PLCPRJ_ERROR_RECEIVE_TIMEOUT;
+						eStep := DATAEXCHA_STATE_ERROR;
+					ELSE(* repeat reading *)
+						eStep := DATAEXCHA_STATE_RECEIVE_START; (* repeat reading *)
+					END_IF
+				END_IF
+			ELSE(* receive error *)
+				LogError( 'FB_SocketReceive (remote client)',  fbSocketReceive.nErrId );
+				nErrId := fbSocketReceive.nErrId;
+				eStep := DATAEXCHA_STATE_ERROR;
+			END_IF
+		END_IF
+
+	DATAEXCHA_STATE_SEND_START:
+		fbSocketSend( bExecute := FALSE );
+		fbSocketSend(	hSocket	:= hSocket,
+						pSrc	:= ADR( Tab_Com_Send ),			(*ADR( sFromClient ),*)
+						cbLen	:= SIZEOF( Tab_Com_Send ),		(*INT_TO_UDINT(LEN( sFromClient )) + 1,(* string length inclusive the zero delimiter *)*)
+						bExecute:= TRUE );
+		eStep := DATAEXCHA_STATE_SEND_WAIT;
+
+	DATAEXCHA_STATE_SEND_WAIT:
+		fbSocketSend( bExecute := FALSE );
+		IF NOT fbSocketSend.bBusy THEN
+			IF NOT fbSocketSend.bError THEN
+				bBusy := FALSE;
+				eStep := DATAEXCHA_STATE_IDLE;
+			ELSE
+				LogError( 'fbSocketSend (remote client)',  fbSocketSend.nErrId );
+				nErrId := fbSocketSend.nErrId;
+				eStep := DATAEXCHA_STATE_ERROR;
+			END_IF
+		END_IF
+
+	DATAEXCHA_STATE_ERROR:
+		bBusy := FALSE;
+		bError := TRUE;
+		cbReceived := 0;(* reset old received data bytes *)
+		eStep := DATAEXCHA_STATE_IDLE;
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ServerDataExcha">
+      <LineId Id="22" Count="105" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

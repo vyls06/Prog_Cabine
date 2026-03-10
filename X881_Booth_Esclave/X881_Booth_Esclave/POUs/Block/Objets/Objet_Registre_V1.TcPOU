@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Objet_Registre_V1" Id="{aaec54bc-9668-4797-aab2-1a7e3bbe6fe1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Objet_Registre_V1
+VAR_INPUT
+	Cons_Pos_Dem		:REAL;	(*Consigne position registre demandé (Venant de la Régulation) / en %*)
+	Cmd_Ouv_Dem		:BOOL;	(*Commande ouverture registre demandé (Venant de la Régulation) / 1 = Ouverture*)
+	Info_Mess_Pos		:REAL;	(*nfo mesure position registre (recopie EAN) / en %*)
+	Info_Fdc_ouvert		:BOOL;	(*Info fin de course ouvert (recopie ETOR) / 1 = Ouvert*)
+	Info_Fdc_ferme		:BOOL;	(*Info fin de course fermé (recopi ETOR) / 1 = Fermé*)
+	Type_Consigne		:BOOL;	(*Choix du TYPE de pilotage du registre / 1 = ANA / 0 = TOR*)
+	Control_Discordance	:BOOL;	(*Autorisation de marche des alarmes / 1 = Alarme autorisé*)
+	Tempo_AL_Discor	:TIME;	(*Temporisation pour les alarmes discodance / en sec*)
+	Hyst_AL_Discor		:REAL;	(*HystéRésis pour les alarmes discodance si LE registre est en pilotage ANA / en %*)
+	Presence_Fdc		:INT;	(*Mot de présence des fin de course / 0 = Pas de fin de course / 1 = Fin de course Ouvert / 2 = Fin de course Fermé / 3 = Les 2 fin de course*)
+	Inverse_SAN			:BOOL;	(*Inversion de la sortie SAN / 1 = Sens inverse / 0 = Sens normal*)
+	SAN_MIN			:REAL;	(*Valeur minimal de la sortie SAN / en point automate*)
+	SAN_MAX			:REAL;	(*Valeur maximal de la sortie SAN / en point automate*)
+END_VAR
+
+VAR_OUTPUT
+	SAN_CONS_REG			:REAL;	(*Consigne a appliqué au registre ANA (pour SAN) / en %*)
+	STOR_CMD_OUV_REG	:BOOL;	(*Commande a appliqué au registre TOR (pour STOR) / 1 = Ouverture*)
+END_VAR
+
+VAR
+	TON_1			:TON;
+	TON_2			:TON;
+	TON_3			:TON;
+	TON_4			:TON;
+	Request			:BOOL;
+	CONS_REG_INT	:REAL;
+	CMD_REG_INT	:BOOL;
+	CONS_REG		:REAL;
+	Adr1			:DINT;
+	Adr2			:DINT;
+	Adr3			:DINT;
+	Adr4			:DINT;
+	Adr5			:DINT;
+	Adr6			:DINT;
+	Adr7			:DINT;
+	val_x			:REAL;
+	val_b			:REAL;
+	val_a			:REAL;
+	val_y			:REAL;
+	val_final			:REAL;
+END_VAR
+
+VAR_IN_OUT
+	Tab_RegMoto	:Objet_Registre; (*Tableau des valeurs*)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion consigne **************************************************************)
+IF Tab_RegMoto.Mot_Lecture.5 (* Gestion consigne pour un registre ANA *)
+	THEN
+		STOR_CMD_OUV_REG := FALSE;
+		IF Tab_RegMoto.Mot_Ecriture.0
+			THEN
+				CONS_REG_INT := Tab_RegMoto.W_ConsForcage;
+			ELSE
+				CONS_REG_INT := LIMIT(Tab_RegMoto.W_LimiteMinPosition,Cons_Pos_Dem,Tab_RegMoto.W_LimiteMaxPosition);
+		END_IF;
+		CONS_REG := CONS_REG_INT;
+	ELSE (* Gestion consigne pour un registre TOR *)
+		CONS_REG := 0.0;
+		IF Tab_RegMoto.Mot_Ecriture.0
+			THEN
+				CMD_REG_INT := Tab_RegMoto.Mot_Ecriture.1;
+			ELSE
+				CMD_REG_INT := Cmd_Ouv_Dem;
+		END_IF;
+		STOR_CMD_OUV_REG := CMD_REG_INT;
+END_IF;
+
+
+(* Gestion sortie analogique **************************************************************)
+(* Mise à l'echelle sortie ****)
+val_x := CONS_REG;
+val_b := SAN_Max - (val_a * 100.0);
+val_a := (SAN_Max - SAN_Min) / 100.0;
+val_y := (val_a * val_x) + val_b;
+
+(* Inversion de la sortie ANA ****)
+IF (Inverse_SAN)
+	THEN
+		val_final := SAN_Max - val_y;
+	ELSE
+		val_final := val_y;
+END_IF;
+SAN_CONS_REG := LIMIT(SAN_Min,val_final, SAN_Max);
+
+
+(* Gestion alarme **************************************************************)
+IF Control_Discordance
+	THEN
+		IF NOT(Type_Consigne) (* Alarme discordance pour registre STOR *)
+			THEN
+				CASE Presence_Fdc OF
+					0 :
+						Tab_RegMoto.Mot_Lecture.4 := FALSE;
+					1 :
+						TON_1(IN := Tab_RegMoto.Mot_Lecture.0 AND NOT(Tab_RegMoto.Mot_Lecture.1),PT := Tempo_AL_Discor);
+						Tab_RegMoto.Mot_Lecture.4 := TON_1.Q;
+
+					2 :
+						TON_2(IN := NOT(Tab_RegMoto.Mot_Lecture.0) AND NOT(Tab_RegMoto.Mot_Lecture.2),PT := Tempo_AL_Discor);
+						Tab_RegMoto.Mot_Lecture.4 := TON_2.Q;
+
+					3 :
+						TON_3(IN := (Tab_RegMoto.Mot_Lecture.0 AND NOT(Tab_RegMoto.Mot_Lecture.1)) OR (NOT(Tab_RegMoto.Mot_Lecture.0) AND NOT(Tab_RegMoto.Mot_Lecture.2)),PT := Tempo_AL_Discor);
+						Tab_RegMoto.Mot_Lecture.4 := TON_3.Q;
+
+					ELSE Tab_RegMoto.Mot_Lecture.4 := FALSE;
+
+				END_CASE;
+
+			ELSE (* Alarme discordance pour registre SAN *)
+				TON_4(IN := ((Tab_RegMoto.R_Position + Hyst_AL_Discor) < Tab_RegMoto.R_InfoConsPosition) OR ((Tab_RegMoto.R_Position - Hyst_AL_Discor) > Tab_RegMoto.R_InfoConsPosition),PT := Tempo_AL_Discor);
+				Tab_RegMoto.Mot_Lecture.4 := TON_4.Q;
+		END_IF;
+ELSE (* Si control discordance désactivé *)
+Tab_RegMoto.Mot_Lecture.4 := FALSE;
+END_IF;
+
+(* Recopie pour lecture GTC *********************************************************)
+Tab_RegMoto.Mot_Lecture.0		:= STOR_CMD_OUV_REG;
+Tab_RegMoto.Mot_Lecture.1		:= Info_Fdc_ouvert;
+Tab_RegMoto.Mot_Lecture.2		:= Info_Fdc_ferme;
+Tab_RegMoto.Mot_Lecture.3 		:= Control_Discordance;
+Tab_RegMoto.Mot_Lecture.5		:= Type_Consigne;
+Tab_RegMoto.R_Position			:= Info_Mess_Pos;
+Tab_RegMoto.R_InfoConsPosition	:= CONS_REG;]]></ST>
+    </Implementation>
+    <LineIds Name="Objet_Registre_V1">
+      <LineId Id="56" Count="78" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

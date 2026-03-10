@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Objet_Pressostat" Id="{5ef0c420-ad25-4f45-94de-c1e1a9011f34}">
+    <Declaration><![CDATA[TYPE Objet_Pressostat :
+STRUCT
+	Mot_Lecture 			:INT; (*Mot de lecture des bits*)
+	Mot_Ecriture 			:INT; (*Mot d'écriture des bits*)
+	R_SeuilPress	 		:REAL; (* en Pa *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

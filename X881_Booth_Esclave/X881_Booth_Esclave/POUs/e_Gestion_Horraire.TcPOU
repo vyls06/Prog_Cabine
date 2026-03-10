@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="e_Gestion_Horraire" Id="{ad46cfe9-efde-489c-9465-8f9334266460}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM e_Gestion_Horraire
+VAR
+	bFirstTime	: BOOL;
+	Forc_MAL: BOOL := TRUE;
+	DayOfWeek: WORD;
+
+	fbRtc		: RTC_EX2;
+	fbGetTime	: NT_GetTime;
+	fbSetTime	: NT_SetLocalTime;
+
+	F_TRIG_MAL: F_TRIG;
+	TOF_For_MAL: TOF;
+	RTC_Time_Lum:RTC_Time;
+	TOF_Occup: TOF;
+	Out_Schedule: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Variables mise à l'heure de la CPU*)
+RTC_Modifiable.wYear := Ecr_Annee_Automate;
+RTC_Modifiable.wMonth := Ecr_Mois_Automate;
+RTC_Modifiable.wDay := Ecr_Jour_Automate;
+RTC_Modifiable.wHour := Ecr_Heure_Automate;
+RTC_Modifiable.wMinute := Ecr_Minute_Automate;
+(*Récupération du jour de la semaine*)
+DayOfWeek := F_GetDayOfWeek(SYSTEMTIME_TO_DT(RTC_Modifiable));
+RTC_Modifiable.wDayOfWeek := DayOfWeek;
+
+(*Mise à l'heure de la CPU*)
+fbSetTime(
+	TIMESTR	:= RTC_Modifiable,
+	START		:= StartMiseALheure,
+	TMOUT		:= DEFAULT_ADS_TIMEOUT);
+(*Mise à l'heure de l'automate après l'ecriture de la modification de l'heure*)
+F_TRIG_MAL(CLK:= StartMiseALheure, Q=> bFirstTime);
+
+(*Récupération de l'heure depuis la CPU*)
+fbGetTime(
+	START		:= bFirstTime OR TOF_For_MAL.Q ,
+	TMOUT		:= DEFAULT_ADS_TIMEOUT);
+
+IF NOT fbGetTime.BUSY AND NOT fbGetTime.ERR THEN
+	rtcTime := fbGetTime.TIMESTR;
+	bFirstTime := FALSE;
+END_IF;
+
+(******************************RTC Time******************************)
+fbRtc(
+	EN 		:= NOT bFirstTime AND NOT TOF_For_MAL.Q,
+	PDT 	:=rtcTime ,
+	PMICRO	:= rtcMicro,
+	CDT	=> rtcTime,
+	CMICRO	=> rtcMicro);
+(*Fonction démarrage mise à l'heure automatiquement après une mise en RUN de l'automate*)
+TOF_For_MAL(IN:= Forc_MAL, PT:= T#1s);
+IF (TOF_For_MAL.Q) THEN Forc_MAL := FALSE; END_IF;
+
+(******************************Récupération Heure,Minutes,Secondes******************************)
+Van := fbRtc.CDT.wYear;
+Vmois :=fbRtc.CDT.wMonth;
+Vjour := fbRtc.CDT.wDay;
+Vheure := fbRtc.CDT.wHour;
+Vminute := fbRtc.CDT.wMinute;
+Vseconde := fbRtc.CDT.wSecond;
+VDayOfWeek := fbRtc.CDT.wDayOfWeek;
+
+(******************************Gestion de l'horodatage******************************)
+RTC_Time_Lum(
+	Auto_manu:= TRUE,
+	IN_MONTH:= Vmois,
+	IN_DAY:= Vjour,
+	IN_HOURS:= Vheure,
+	IN_MINUTES:= Vminute,
+	pos_sem:= DayOfWeek,
+	Heure_debut_lun:= deb_lundi,
+	Heure_fin_lun:= Fin_Lundi,
+	Heure_debut_mar:= deb_Mardi,
+	Heure_fin_mar:= Fin_Mardi,
+	Heure_debut_mer:= deb_Mercredi,
+	Heure_fin_mer:= Fin_Mercredi,
+	Heure_debut_jeu:= deb_Jeudi,
+	Heure_fin_jeu:= Fin_Jeudi,
+	Heure_debut_ven:= deb_Vendredi,
+	Heure_fin_ven:= Fin_Vendredi,
+	Heure_debut_sam:= deb_Samedi,
+	Heure_fin_sam:= Fin_Samedi,
+	Heure_debut_dim:= deb_Dimanche,
+	Heure_fin_dim:= Fin_Dimanche,
+	fct_hebdo:= TRUE,
+	hebdo_lun:= Sel_Lundi,
+	hebdo_mar:= Sel_Mardi,
+	hebdo_mer:= Sel_Mercredi,
+	hebdo_jeu:= Sel_Jeudi,
+	hebdo_ven:= Sel_Vendredi,
+	hebdo_sam:= Sel_Samedi,
+	hebdo_dim:= Sel_Dimanche,
+	Sortie=> Out_Schedule);
+(*Temporisation en cas de paramétrage de l'heure deb 00h00 et fin 23h59*)
+TOF_Occup(IN:= Out_Schedule, PT:= T#125s);
+Mode_Occupation := TOF_Occup.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="e_Gestion_Horraire">
+      <LineId Id="16" Count="81" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

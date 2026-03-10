@@ -1,0 +1,540 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="Alarmes" Id="{5562c3ff-050d-45e4-aefc-859d749a3fa5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Alarmes
+VAR
+	NB_ALARMES_MAX      : UINT := 100;
+    GA_Alarmes        	: ARRAY[1..2, 1..100] OF ST_Alarmes;
+    GA_AlarmesActives 	: ARRAY[1..2, 1..100] OF ST_Alarmes;
+	Tab_Alarme_FREN		: ARRAY[1..2, 1..100] OF STRING(80);
+    G_NbAlarmesActives  : UINT := 0;
+	
+	i         : UINT;
+    idx       : UINT 	:= 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//////////////////////////////////////////////////////////////
+// gestion des alarmes (bilingue FR/EN)                     //
+//////////////////////////////////////////////////////////////
+//Déclaration des alarmes
+//Alarme 1
+GA_Alarmes[1, 1].Id := 1;
+GA_Alarmes[1, 1].Libelle := 'Défaut débordement de la douche / à réarmer';
+GA_Alarmes[2, 1].Libelle := 'High water level in shower tray detected / must be acquit !';
+GA_Alarmes[1, 1].Active := Defaut_Debordement_Douche;
+
+//Alarme 2
+GA_Alarmes[1, 2].Id := 2;
+GA_Alarmes[1, 2].Libelle := 'Défaut débordement du lavabo / à réarmer';
+GA_Alarmes[2, 2].Libelle := 'High water level in sink tray detected / must be acquit !';
+GA_Alarmes[1, 2].Active := Defaut_Debordement_Lavabo;
+
+//Alarme 3
+GA_Alarmes[1, 3].Id := 3;
+GA_Alarmes[1, 3].Libelle := 'Défaut discordance débit d’eau de la douche / à réarmer';
+GA_Alarmes[2, 3].Libelle := 'Mismatch in shower water flow rate / must be acquit !';
+GA_Alarmes[1, 3].Active := Defaut_Discord_Deb_Eau_Douche;
+
+//Alarme 4
+GA_Alarmes[1, 4].Id := 4;
+GA_Alarmes[1, 4].Libelle := 'Défaut discordance débit d’eau du lavabo / à réarmer';
+GA_Alarmes[2, 4].Libelle := 'Mismatch in sink water flow rate / must be acquit !';
+GA_Alarmes[1, 4].Active := Defaut_Discord_Deb_Eau_Lavabo;
+
+//Alarme 5
+GA_Alarmes[1, 5].Id := 5;
+GA_Alarmes[1, 5].Libelle := 'Défaut discordance prise de courant / à réarmer';
+GA_Alarmes[2, 5].Libelle := 'Power plug supply mismatch / must be acquit !';
+GA_Alarmes[1, 5].Active := Defaut_Discord_PC_Cab;
+
+//Alarme 6
+GA_Alarmes[1, 6].Id := 6;
+GA_Alarmes[1, 6].Libelle := 'Défaut prise forcée manuellement / à réarmer';
+GA_Alarmes[2, 6].Libelle := 'Manually forced power plug / must be acquit !';
+GA_Alarmes[1, 6].Active := Def_Discord_Alim_Prise;
+
+//Alarme 7
+GA_Alarmes[1, 7].Id := 7;
+GA_Alarmes[1, 7].Libelle := 'Défaut prise lors de l’ouverture porte / à réarmer';
+GA_Alarmes[2, 7].Libelle := 'Door open during a power plug cycle / must be acquit !';
+GA_Alarmes[1, 7].Active := Def_Prise_Porte_Ouverte;
+
+//Alarme 8
+GA_Alarmes[1, 8].Id := 8;
+GA_Alarmes[1, 8].Libelle := 'Défaut pompe de relevage / à réarmer';
+GA_Alarmes[2, 8].Libelle := 'Error on the lifting pump / must be acquit !';
+GA_Alarmes[1, 8].Active := Defaut_Pompe_Relevage;
+
+//Alarme 9
+GA_Alarmes[1, 9].Id := 9;
+GA_Alarmes[1, 9].Libelle := 'Défaut porte ouverte depuis plus d une minute';
+GA_Alarmes[2, 9].Libelle := 'Door open for more than one minute';
+GA_Alarmes[1, 9].Active := Defaut_Porte_Ouverte;
+
+//Alarme 10
+GA_Alarmes[1, 10].Id := 10;
+GA_Alarmes[1, 10].Libelle := 'Défaut de communication avec la passerelle LED';
+GA_Alarmes[2, 10].Libelle := 'Light gateway communication error';
+GA_Alarmes[1, 10].Active := Defaut_Com_Dalcnet;
+
+//Alarme 11
+GA_Alarmes[1, 11].Id := 11;
+GA_Alarmes[1, 11].Libelle := 'Défaut de communication avec la vanne thermostatique de la cabine';
+GA_Alarmes[2, 11].Libelle := 'thermostatic valve gateway communication error';
+GA_Alarmes[1, 11].Active := Defaut_Com_Vanne_General;
+
+//Alarme 12
+GA_Alarmes[1, 12].Id := 12;
+GA_Alarmes[1, 12].Libelle := 'Défaut de communication avec la vanne thermostatique générale';
+GA_Alarmes[2, 12].Libelle := 'thermostatic valve gateway communication error';
+GA_Alarmes[1, 12].Active := Defaut_Com_Vanne_General;
+
+//Alarme 13
+GA_Alarmes[1, 13].Id := 13;
+GA_Alarmes[1, 13].Libelle := 'Défaut de communication avec l’automate maitre';
+GA_Alarmes[2, 13].Libelle := 'Master PLC communication error';
+GA_Alarmes[1, 13].Active := Defaut_Com_Client;
+
+//Alarme 14
+GA_Alarmes[1, 14].Id := 14;
+GA_Alarmes[1, 14].Libelle := 'Discordance ouverture de la vanne de vidange de la douche';
+GA_Alarmes[2, 14].Libelle := 'Water drain shower valve fault - not opened';
+GA_Alarmes[1, 14].Active := Defaut_Discord_Vanne_Vid_Douche_Ouv;
+
+//Alarme 15
+GA_Alarmes[1, 15].Id := 15;
+GA_Alarmes[1, 15].Libelle := 'Discordance fermeture de la vanne de vidange de la douche';
+GA_Alarmes[2, 15].Libelle := 'Water drain shower valve fault - not closed';
+GA_Alarmes[1, 15].Active := Defaut_Discord_Vanne_Vid_Douche_Ferm;
+
+//Alarme 16
+GA_Alarmes[1, 16].Id := 16;
+GA_Alarmes[1, 16].Libelle := 'Discordance ouverture de la vanne de vidange du lavabo';
+GA_Alarmes[2, 16].Libelle := 'Water drain sink valve fault - not opened';
+GA_Alarmes[1, 16].Active := Defaut_Discord_Vanne_Vid_Lavabo_Ouv;
+
+//Alarme 17
+GA_Alarmes[1, 17].Id := 17;
+GA_Alarmes[1, 17].Libelle := 'Discordance fermeture de la vanne de vidange du lavabo';
+GA_Alarmes[2, 17].Libelle := 'Water drain sink valve fault - not closed';
+GA_Alarmes[1, 17].Active := Defaut_Discord_Vanne_Vid_Lavabo_Ferm;
+
+//Alarme 18
+GA_Alarmes[1, 18].Id := 18;
+GA_Alarmes[1, 18].Libelle := 'Discordance ouverture de la vanne d’alimentation de la douche';
+GA_Alarmes[2, 18].Libelle := 'Water supply shower valve fault - not opened';
+GA_Alarmes[1, 18].Active := Defaut_Discord_Vanne_Alim_Douche_Ouv;
+
+//Alarme 19
+GA_Alarmes[1, 19].Id := 19;
+GA_Alarmes[1, 19].Libelle := 'Discordance fermeture de la vanne d alimentation de la douche';
+GA_Alarmes[2, 19].Libelle := 'Water supply shower valve fault - not closed';
+GA_Alarmes[1, 19].Active := Defaut_Discord_Vanne_Alim_Douche_Ferm;
+
+//Alarme 20
+GA_Alarmes[1, 20].Id := 20;
+GA_Alarmes[1, 20].Libelle := 'Discordance ouverture de la vanne d’alimentation du lavabo';
+GA_Alarmes[2, 20].Libelle := 'Water supply sink valve fault - not opened';
+GA_Alarmes[1, 20].Active := Defaut_Discord_Vanne_Alim_Lavabo_Ouv;
+
+//Alarme 21
+GA_Alarmes[1, 21].Id := 21;
+GA_Alarmes[1, 21].Libelle := 'Discordance fermeture de la vanne d’alimentation du lavabo';
+GA_Alarmes[2, 21].Libelle := 'Water supply sink valve fault - not closed';
+GA_Alarmes[1, 21].Active := Defaut_Discord_Vanne_Alim_Lavabo_Ferm;
+
+//Alarme 22
+GA_Alarmes[1, 22].Id := 22;
+GA_Alarmes[1, 22].Libelle := 'Discordance ouverture de la vanne d’alimentation de la douchette';
+GA_Alarmes[2, 22].Libelle := 'Water supply handspray valve fault - not opened';
+GA_Alarmes[1, 22].Active := Defaut_Discord_Vanne_Alim_Douchette_Ouv;
+
+//Alarme 23
+GA_Alarmes[1, 23].Id := 23;
+GA_Alarmes[1, 23].Libelle := 'Discordance fermeture de la vanne d’alimentation de la douchette';
+GA_Alarmes[2, 23].Libelle := 'Water supply handspray valve fault - not closed';
+GA_Alarmes[1, 23].Active := Defaut_Discord_Vanne_Alim_Douchette_Ferm;
+
+//Alarme 24
+GA_Alarmes[1, 24].Id := 24;
+GA_Alarmes[1, 24].Libelle := 'Discordance ouverture vanne alimentation NEP';
+GA_Alarmes[2, 24].Libelle := 'Mismatch between CIP supply valve opening';
+GA_Alarmes[1, 24].Active := Defaut_Discord_Vanne_Alim_NEP_Ouv;
+
+//Alarme 25
+GA_Alarmes[1, 25].Id := 25;
+GA_Alarmes[1, 25].Libelle := 'Discordance fermeture vanne alimentation NEP';
+GA_Alarmes[2, 25].Libelle := 'Mismatch between CIP supply valve closure';
+GA_Alarmes[1, 25].Active := Defaut_Discord_Vanne_Alim_NEP_Ferm;
+
+//Alarme 26
+GA_Alarmes[1, 26].Id := 26;
+GA_Alarmes[1, 26].Libelle := 'Discordance ouverture de la vanne de soufflage bas débit';
+GA_Alarmes[2, 26].Libelle := 'Air supply low flow valve fault - not opened';
+GA_Alarmes[1, 26].Active := Defaut_Discord_Vanne_Souf_Bas_Deb_Ouv;
+
+//Alarme 27
+GA_Alarmes[1, 27].Id := 27;
+GA_Alarmes[1, 27].Libelle := 'Discordance fermeture de la vanne de soufflage bas débit';
+GA_Alarmes[2, 27].Libelle := 'Air supply low flow valve fault - not closed';
+GA_Alarmes[1, 27].Active := Defaut_Discord_Vanne_Souf_Bas_Deb_Ferm;
+
+//Alarme 28
+GA_Alarmes[1, 28].Id := 28;
+GA_Alarmes[1, 28].Libelle := 'Discordance ouverture de la vanne d’extraction bas débit';
+GA_Alarmes[2, 28].Libelle := 'Exhaust low flow valve fault - not opened';
+GA_Alarmes[1, 28].Active := Defaut_Discord_Vanne_Ext_Bas_Deb_Ouv;
+
+//Alarme 29
+GA_Alarmes[1, 29].Id := 29;
+GA_Alarmes[1, 29].Libelle := 'Discordance fermeture de la vanne d’extraction bas débit';
+GA_Alarmes[2, 29].Libelle := 'Exhaust low flow valve fault - not closed';
+GA_Alarmes[1, 29].Active := Defaut_Discord_Vanne_Ext_Bas_Deb_Ferm;
+
+//Alarme 30
+GA_Alarmes[1, 30].Id := 30;
+GA_Alarmes[1, 30].Libelle := 'Discordance de régulation du débit d’extraction';
+GA_Alarmes[2, 30].Libelle := 'Exhaust flow regulation fault';
+GA_Alarmes[1, 30].Active := Defaut_Discord_Deb_Ext;
+
+//Alarme 31
+GA_Alarmes[1, 31].Id := 31;
+GA_Alarmes[1, 31].Libelle := 'Discordance de régulation du débit de soufflage';
+GA_Alarmes[2, 31].Libelle := 'Supply flow regulation fault';
+GA_Alarmes[1, 31].Active := Defaut_Discord_Deb_Souf;
+
+//Alarme 32
+GA_Alarmes[1, 32].Id := 32;
+GA_Alarmes[1, 32].Libelle := 'Défaut différentiel prise électrique';
+GA_Alarmes[2, 32].Libelle := 'Differential fault in electrical outlet';
+GA_Alarmes[1, 32].Active := Defaut_Differentiel_Prise_Elec;
+
+//Alarme 33
+GA_Alarmes[1, 33].Id := 33;
+GA_Alarmes[1, 33].Libelle := 'Registre d’extraction non fermé';
+GA_Alarmes[2, 33].Libelle := 'Booth air exhaust damper no closed';
+GA_Alarmes[1, 33].Active := Defaut_Discord_Reg_Ext_Ferm;
+
+//Alarme 34
+GA_Alarmes[1, 34].Id := 34;
+GA_Alarmes[1, 34].Libelle := 'Registre de soufflage non fermé';
+GA_Alarmes[2, 34].Libelle := 'Booth air supply damper no closed';
+GA_Alarmes[1, 34].Active := Defaut_Discord_Reg_Souf_Ferm;
+
+//Alarme 35
+GA_Alarmes[1, 35].Id := 35;
+GA_Alarmes[1, 35].Libelle := 'Défaut Klixon batterie électrique';
+GA_Alarmes[2, 35].Libelle := 'Electric battery klixon fault';
+GA_Alarmes[1, 35].Active := Defaut_Klixon_BattElec;
+
+//Alarme 36
+GA_Alarmes[1, 36].Id := 36;
+GA_Alarmes[1, 36].Libelle := 'Discordance ouverture du registre d’extraction';
+GA_Alarmes[2, 36].Libelle := 'Discordance opening of the exhaust damper';
+GA_Alarmes[1, 36].Active := Defaut_Discord_Reg_Etanche_Ext;
+
+//Alarme 37
+GA_Alarmes[1, 37].Id := 37;
+GA_Alarmes[1, 37].Libelle := 'Défaut discordance de régulation de pression';
+GA_Alarmes[2, 37].Libelle := 'Pressure regulation mismatch';
+GA_Alarmes[1, 37].Active := Defaut_Discord_Regul_Press_Cab;
+
+//Alarme 38
+GA_Alarmes[1, 38].Id := 38;
+GA_Alarmes[1, 38].Libelle := 'Défaut de communication avec le registre de soufflage';
+GA_Alarmes[2, 38].Libelle := 'Communication failure with the supply air damper';
+GA_Alarmes[1, 38].Active := Defaut_Com_Reg_Souf;
+
+//Alarme 39
+GA_Alarmes[1, 39].Id := 39;
+GA_Alarmes[1, 39].Libelle := 'Défaut de communication avec le registre d’extraction';
+GA_Alarmes[2, 39].Libelle := 'Communication failure with the exhaust damper';
+GA_Alarmes[1, 39].Active := Defaut_Com_Reg_Ext;
+
+//Alarme 40
+GA_Alarmes[1, 40].Id := 40;
+GA_Alarmes[1, 40].Libelle := 'Défaut avec le module bas débit';
+GA_Alarmes[2, 40].Libelle := 'Fault with the low flow module';
+GA_Alarmes[1, 40].Active := Defaut_Ensemble_Bas_Debit;
+
+//Alarme 41
+GA_Alarmes[1, 41].Id := 41;
+GA_Alarmes[1, 41].Libelle := 'Défaut avec le module Bypass';
+GA_Alarmes[2, 41].Libelle := 'Fault with the Bypass module';
+GA_Alarmes[1, 41].Active := Defaut_Ensemble_Bypass;
+
+//Alarme 42
+GA_Alarmes[1, 42].Id := 42;
+GA_Alarmes[1, 42].Libelle := 'Défaut capteur de pression de la cabine';
+GA_Alarmes[2, 42].Libelle := 'Booth pressure sensor fault';
+GA_Alarmes[1, 42].Active := Defaut_Sonde_Press_Cabine;
+
+//Alarme 43
+GA_Alarmes[1, 43].Id := 43;
+GA_Alarmes[1, 43].Libelle := 'Défaut capteur de température de la cabine';
+GA_Alarmes[2, 43].Libelle := 'Booth temperature sensor fault';
+GA_Alarmes[1, 43].Active := Defaut_Sonde_Temp_Cabine;
+
+//Alarme 44
+GA_Alarmes[1, 44].Id := 44;
+GA_Alarmes[1, 44].Libelle := 'Défaut capteur d’hygrométrie de la cabine';
+GA_Alarmes[2, 44].Libelle := 'Booth humidity sensor fault';
+GA_Alarmes[1, 44].Active := Defaut_Sonde_Hygro_Cabine;
+
+//Alarme 45
+GA_Alarmes[1, 45].Id := 45;
+GA_Alarmes[1, 45].Libelle := 'Défaut capteur température eau mitigée';
+GA_Alarmes[2, 45].Libelle := 'Mixed water temperature sensor fault';
+GA_Alarmes[1, 45].Active := Defaut_Sonde_Temp_Eau_Mitig;
+
+//Alarme 46
+GA_Alarmes[1, 46].Id := 46;
+GA_Alarmes[1, 46].Libelle := 'Defaut sur le moteur de soufflage de la CTA climatique';
+GA_Alarmes[2, 46].Libelle := 'Fault on air supply motor of climatic AHU';
+GA_Alarmes[1, 46].Active := Defaut_MotSouf_CTA;
+
+//Alarme 47
+GA_Alarmes[1, 47].Id := 47;
+GA_Alarmes[1, 47].Libelle := 'Defaut sur le moteur de reprise de la CTA climatique';
+GA_Alarmes[2, 47].Libelle := 'Fault on air return motor of climatic AHU';
+GA_Alarmes[1, 47].Active := Defaut_MotRep_CTA;
+
+//Alarme 48
+GA_Alarmes[1, 48].Id := 48;
+GA_Alarmes[1, 48].Libelle := 'Defaut seuil haut d’hygrométrie de soufflage de la CTA climatique';
+GA_Alarmes[2, 48].Libelle := 'High humidity threshold fault in the supply air of climatic AHU';
+GA_Alarmes[1, 48].Active := Defaut_Hygrostat_CTA;
+
+//Alarme 49
+GA_Alarmes[1, 49].Id := 49;
+GA_Alarmes[1, 49].Libelle := 'Defaut alimentation de la batterie electrique de la CTA climatique';
+GA_Alarmes[2, 49].Libelle := 'Power supply failure of the electric battery of climatic AHU';
+GA_Alarmes[1, 49].Active := Defaut_Alim_BatElec_CTA;
+//Alarme 50
+GA_Alarmes[1, 50].Id := 50;
+GA_Alarmes[1, 50].Libelle := 'Defaut sur l’humidificateur de la CTA climatique';
+GA_Alarmes[2, 50].Libelle := 'Fault on humidifier of climatic AHU';
+GA_Alarmes[1, 50].Active := Defaut_Humi_CTA;
+
+//Alarme 51
+GA_Alarmes[1, 51].Id := 51;
+GA_Alarmes[1, 51].Libelle := 'Defaut de discordance sur la régulation de la température';
+GA_Alarmes[2, 51].Libelle := 'Mismatch with the temperature control of the booth';
+GA_Alarmes[1, 51].Active := Defaut_Regul_Temp;
+
+//Alarme 52
+GA_Alarmes[1, 52].Id := 52;
+GA_Alarmes[1, 52].Libelle := 'Défaut de discordance sur la régulation d’hygrométrie';
+GA_Alarmes[2, 52].Libelle := 'Mismatch with the hygrometer control of the booth';
+GA_Alarmes[1, 52].Active := Defaut_Regul_Hygro;
+
+//Alarme 53
+GA_Alarmes[1, 53].Id := 53;
+GA_Alarmes[1, 53].Libelle := 'Défaut temperature de soufflage CTA climatique trop haute';
+GA_Alarmes[2, 53].Libelle := 'Faulty supply air temperature AHU climatic too high';
+GA_Alarmes[1, 53].Active := Defaut_Thermostat_Secu;
+
+//Alarme 54
+GA_Alarmes[1, 54].Id := 54;
+GA_Alarmes[1, 54].Libelle := 'Défaut sonde de température soufflage CTA climatique';
+GA_Alarmes[2, 54].Libelle := 'Faulty supply air temperature sensor in AHU Climatic';
+GA_Alarmes[1, 54].Active := Defaut_Sonde_Temp_Souf;
+
+//Alarme 55
+GA_Alarmes[1, 55].Id := 55;
+GA_Alarmes[1, 55].Libelle := 'Défaut discordance du soufflage de la CTA climatique';
+GA_Alarmes[2, 55].Libelle := 'Mismatch in the airflow of the AHU Climatic';
+GA_Alarmes[1, 55].Active := Defaut_Discord_Souf_CTA;
+
+//Alarme 56
+GA_Alarmes[1, 56].Id := 56;
+GA_Alarmes[1, 56].Libelle := 'Défaut communication du Registre de soufflage gros débit';
+GA_Alarmes[2, 56].Libelle := 'High-flow blow damper communication fault';
+GA_Alarmes[1, 56].Active := GVL_RegTROX.RegSouf_GD_FCVT01_DefCom;
+
+//Alarme 57
+GA_Alarmes[1, 57].Id := 57;
+GA_Alarmes[1, 57].Libelle := 'Défaut discordance débit du Registre de soufflage gros débit';
+GA_Alarmes[2, 57].Libelle := 'Mismatch Flow Rate of High Flow Blow damper';
+GA_Alarmes[1, 57].Active := GVL_RegTROX.RegSouf_GD_FCVT01_Def_DiscordDeb;
+
+//Alarme 58
+GA_Alarmes[1, 58].Id := 58;
+GA_Alarmes[1, 58].Libelle := 'Défaut communication du Registre de soufflage petit débit';
+GA_Alarmes[2, 58].Libelle := 'Low-flow blow damper communication fault';
+GA_Alarmes[1, 58].Active := GVL_RegTROX.RegSouf_PD_FCVT02_DefCom;
+
+//Alarme 59
+GA_Alarmes[1, 59].Id := 59;
+GA_Alarmes[1, 59].Libelle := 'Défaut discordance débit du Registre de soufflage petit débit';
+GA_Alarmes[2, 59].Libelle := 'Mismatch Flow Rate of Low-flow blow damper';
+GA_Alarmes[1, 59].Active := GVL_RegTROX.RegSouf_PD_FCVT02_Def_DiscordDeb;
+
+//Alarme 60
+GA_Alarmes[1, 60].Id := 60;
+GA_Alarmes[1, 60].Libelle := 'Défaut communication du Registre de soufflage général';
+GA_Alarmes[2, 60].Libelle := 'General blow damper communication fault';
+GA_Alarmes[1, 60].Active := GVL_RegTROX.RegSouf_Cabine_FCVT03_DefCom;
+
+//Alarme 61
+GA_Alarmes[1, 61].Id := 61;
+GA_Alarmes[1, 61].Libelle := 'Défaut discordance débit du Registre de soufflage général';
+GA_Alarmes[2, 61].Libelle := 'Mismatch Flow Rate of General blow damper';
+GA_Alarmes[1, 61].Active := GVL_RegTROX.RegSouf_Cabine_FCVT03_Def_DiscordDeb;
+
+//Alarme 62
+GA_Alarmes[1, 62].Id := 62;
+GA_Alarmes[1, 62].Libelle := 'Défaut communication du Registre de bypass de la CTA climatique';
+GA_Alarmes[2, 62].Libelle := 'Climatic AHU bypass damper communication fault';
+GA_Alarmes[1, 62].Active := GVL_RegTROX.Reg_Bypass_FCVT04_DefCom;
+
+//Alarme 63
+GA_Alarmes[1, 63].Id := 63;
+GA_Alarmes[1, 63].Libelle := 'Défaut discordance débit du Registre de bypass de la CTA climatique';
+GA_Alarmes[2, 63].Libelle := 'Mismatch Flow Rate of Climatic AHU bypass damper';
+GA_Alarmes[1, 63].Active := GVL_RegTROX.Reg_Bypass_FCVT04_Def_DiscordDeb;
+
+//Alarme 64
+GA_Alarmes[1, 64].Id := 64;
+GA_Alarmes[1, 64].Libelle := 'Défaut communication du Registre de soufflage gros débit de la cabine';
+GA_Alarmes[2, 64].Libelle := 'High-flow booth blower damper communication fault';
+GA_Alarmes[1, 64].Active := GVL_RegTROX.RegSouf_CabGD_FCVT05_DefCom;
+
+//Alarme 65
+GA_Alarmes[1, 65].Id := 65;
+GA_Alarmes[1, 65].Libelle := 'Défaut discordance débit du Registre de soufflage gros débit de la cabine';
+GA_Alarmes[2, 65].Libelle := 'Mismatch Flow Rate of High-flow booth blower damper';
+GA_Alarmes[1, 65].Active := GVL_RegTROX.RegSouf_CabGD_FCVT05_Def_DiscordDeb;
+
+//Alarme 66
+GA_Alarmes[1, 66].Id := 66;
+GA_Alarmes[1, 66].Libelle := 'Défaut communication du Registre de soufflage petit débit de la cabine';
+GA_Alarmes[2, 66].Libelle := 'Booth low-flow blow damper communication fault';
+GA_Alarmes[1, 66].Active := GVL_RegTROX.RegSouf_CabPD_FCVT06_DefCom;
+
+//Alarme 67
+GA_Alarmes[1, 67].Id := 67;
+GA_Alarmes[1, 67].Libelle := 'Défaut discordance débit du Registre de soufflage petit débit de la cabine';
+GA_Alarmes[2, 67].Libelle := 'Mismatch Flow Rate of Booth low-flow blow damper';
+GA_Alarmes[1, 67].Active := GVL_RegTROX.RegSouf_CabPD_FCVT06_Def_DiscordDeb;
+
+//Alarme 68
+GA_Alarmes[1, 68].Id := 68;
+GA_Alarmes[1, 68].Libelle := 'Défaut communication du Registre de reprise de la CTA climatique';
+GA_Alarmes[2, 68].Libelle := 'Climatic AHU recovery damper communication fault';
+GA_Alarmes[1, 68].Active := GVL_RegTROX.RegRep_FCVT07_DefCom;
+
+//Alarme 69
+GA_Alarmes[1, 69].Id := 69;
+GA_Alarmes[1, 69].Libelle := 'Défaut discordance débit du Registre de reprise de la CTA climatique';
+GA_Alarmes[2, 69].Libelle := 'Mismatch Flow Rate of Climatic AHU recovery damper';
+GA_Alarmes[1, 69].Active := GVL_RegTROX.RegRep_FCVT07_Def_DiscordDeb;
+
+// idx = compteur d'alarmes actives
+idx := 0;
+
+// Parcours de toutes les alarmes (on utilise la langue 1 comme référence logique)
+FOR i := 1 TO NB_ALARMES_MAX DO
+
+    // On teste seulement la version FR pour la logique (Id + Active)
+    IF GA_Alarmes[1, i].Id <> 0 THEN
+
+        IF GA_Alarmes[1, i].Active THEN
+            idx := idx + 1;
+
+            // On recopie les deux langues dans le tableau "actives"
+            // 1 = FR, 2 = EN
+            GA_AlarmesActives[1, idx] := GA_Alarmes[1, i];
+            GA_AlarmesActives[2, idx] := GA_Alarmes[2, i];
+        END_IF
+
+    END_IF
+
+END_FOR
+
+// Nettoyage des cases non utilisées pour les deux langues
+FOR i := idx + 1 TO NB_ALARMES_MAX DO
+    // FR
+    GA_AlarmesActives[1, i].Id      := 0;
+    GA_AlarmesActives[1, i].Libelle := '';
+    GA_AlarmesActives[1, i].Active  := FALSE;
+
+    // EN
+    GA_AlarmesActives[2, i].Id      := 0;
+    GA_AlarmesActives[2, i].Libelle := '';
+    GA_AlarmesActives[2, i].Active  := FALSE;
+END_FOR
+
+// Mise à jour du compteur
+G_NbAlarmesActives := idx;
+
+// ------------------------------------------------------------
+// COPIE DES LIBELLÉS DANS Tab_Alarme_FREN (FR + EN uniquement)
+// ------------------------------------------------------------
+FOR i := 1 TO G_NbAlarmesActives DO
+    Tab_Alarme_FREN[1, i] := GA_AlarmesActives[1, i].Libelle;   // Français
+    Tab_Alarme_FREN[2, i] := GA_AlarmesActives[2, i].Libelle;   // Anglais
+END_FOR
+
+// Nettoyage des lignes restantes jusqu'à 100
+FOR i := G_NbAlarmesActives + 1 TO 100 DO
+    Tab_Alarme_FREN[1, i] := '';
+    Tab_Alarme_FREN[2, i] := '';
+END_FOR
+
+//Variable des alarmes warning
+Mode_Warning := Defaut_Porte_Ouverte OR Defaut_Com_Dalcnet OR Defaut_Com_Vanne_General OR Defaut_Com_Vanne_General
+			OR Defaut_Com_Client OR Defaut_Discord_Deb_Ext OR Defaut_Discord_Deb_Souf OR Defaut_Discord_Reg_Ext_Ferm
+			OR Defaut_Discord_Reg_Souf_Ferm OR Defaut_Klixon_BattElec OR Defaut_Discord_Regul_Press_Cab
+			OR Defaut_Com_Reg_Souf OR Defaut_Com_Reg_Ext OR Defaut_Ensemble_Bas_Debit OR Defaut_Ensemble_Bypass
+			OR Defaut_Sonde_Press_Cabine OR Defaut_Sonde_Temp_Cabine OR Defaut_Sonde_Hygro_Cabine
+			OR Defaut_Sonde_Temp_Eau_Mitig OR Defaut_Hygrostat_CTA OR Defaut_Regul_Temp OR Defaut_Regul_Hygro
+			OR Defaut_Discord_Souf_CTA
+			OR GVL_RegTROX.RegSouf_GD_FCVT01_DefCom	OR GVL_RegTROX.RegSouf_GD_FCVT01_Def_DiscordDeb	OR GVL_RegTROX.RegSouf_PD_FCVT02_DefCom
+			OR GVL_RegTROX.RegSouf_PD_FCVT02_Def_DiscordDeb	OR GVL_RegTROX.RegSouf_Cabine_FCVT03_DefCom	 OR GVL_RegTROX.RegSouf_Cabine_FCVT03_Def_DiscordDeb
+			OR GVL_RegTROX.Reg_Bypass_FCVT04_DefCom OR GVL_RegTROX.Reg_Bypass_FCVT04_Def_DiscordDeb OR GVL_RegTROX.RegSouf_CabGD_FCVT05_DefCom
+			OR GVL_RegTROX.RegSouf_CabGD_FCVT05_Def_DiscordDeb OR GVL_RegTROX.RegSouf_CabPD_FCVT06_DefCom OR GVL_RegTROX.RegSouf_CabPD_FCVT06_Def_DiscordDeb
+			OR GVL_RegTROX.RegRep_FCVT07_DefCom OR GVL_RegTROX.RegRep_FCVT07_Def_DiscordDeb;
+]]></ST>
+    </Implementation>
+    <LineIds Name="Alarmes">
+      <LineId Id="14" Count="331" />
+      <LineId Id="419" Count="4" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="426" Count="4" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="432" Count="4" />
+      <LineId Id="431" Count="0" />
+      <LineId Id="438" Count="4" />
+      <LineId Id="437" Count="0" />
+      <LineId Id="444" Count="4" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="450" Count="4" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="456" Count="4" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="462" Count="4" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="468" Count="4" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="474" Count="4" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="480" Count="4" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="486" Count="4" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="492" Count="4" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="498" Count="4" />
+      <LineId Id="497" Count="0" />
+      <LineId Id="346" Count="60" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

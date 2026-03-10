@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="Objet_Moteur_EC" Id="{46d34619-ab47-48e5-94dd-56ed9e8f576c}">
+    <Declaration><![CDATA[TYPE Objet_Moteur_EC :
+	STRUCT
+	Mot_Lecture 			:INT; (*Mot de lecture des bits*)
+	Mot_Ecriture 			:INT; (*Mot d'écriture des bits*)
+	R_LimiteMinFreq 		:REAL; (*Info Limite basse vitesse*)
+	R_LimiteMaxFreq 		:REAL; (*Info Limite haute vitesse*)
+	R_InfoFreq			:REAL; (*Mesure de la vitesse*)
+	R_InfoCons 			:REAL; (*Info consigne appliquée*)
+	W_LimiteMinCons 		:REAL; (*Consigne limite basse*)
+	W_LimiteMaxCons 	:REAL; (*Consigne limite haute*)
+	W_ConsOccupe 		:REAL; (*Consigne mode occupé*)
+	W_ConsInoccupe 		:REAL; (*Consigne mode inoccupé*)
+	W_ConsForcage 		:REAL; (*Consigne mode forcé*)
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

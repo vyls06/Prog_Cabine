@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Objet_Sonde_V1" Id="{dcef5497-b3cf-4181-9cf7-20ba27115d3b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Objet_Sonde_V1
+VAR_INPUT
+	Mesure_EAN: REAL;
+	Enable_Alarme: BOOL;
+	Status_DEF_EAN: BOOL;
+	Tempo_AL: TIME;
+	Hyst_AL: REAL;
+	EAN_MIN: REAL;
+	EAN_MAX: REAL;
+	MES_MIN: REAL;
+	MES_MAX: REAL;
+	Filtre_Actif: BOOL;
+	Temps_Echantillonage: TIME;
+END_VAR
+
+VAR
+	TON_AL_S: TON;
+	TON_AL_B: TON;
+	TON_AL_H: TON;
+	TON_1: TON;
+	TON_2: TON;
+	TP_1: TP;
+	TP_2: TP;
+	R_TRIG_1: R_TRIG;
+	R_TRIG_2: R_TRIG;
+	val_a: REAL;
+	val_b: REAL;
+	val_y: REAL;
+	val_x: REAL;
+	val_1: REAL;
+	val_2: REAL;
+	Diff_Mesure: REAL;
+	Mesure_Echantillonner: REAL;
+	Incremment_Mesure: REAL;
+	Incremment_Temps: TIME;
+	DINT_Temps_Echantillonage: DINT;
+	DINT_Incremment_Temps: DINT;
+END_VAR
+VAR_IN_OUT
+	Tab_Sonde :Objet_Sonde;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Gestion mesure **************************************************************)
+(* Mise à l'échelle température *)
+val_1 := MES_MAX - MES_MIN;
+val_2 := EAN_MAX - EAN_MIN;
+val_x := Mesure_EAN;
+val_a := val_1 / MAX(0.1,val_2);
+val_b := MES_MAX - (val_a * EAN_MAX);
+val_y := (val_a * val_x) + val_b;
+Tab_Sonde.R_MesBrut := LIMIT(MES_MIN,val_y,MES_MAX);
+
+(* Gestion filtrage mesure *)
+(* Fonction échantillonnage ***************)
+TON_1(IN := NOT(TP_1.Q), PT := Temps_Echantillonage);
+TP_1(IN := TON_1.Q , PT := T#500ms);
+
+(* Calcule de l'éccart entre la mesure et mesure T-1 ***************) 
+R_TRIG_1(CLK := TP_1.Q);
+IF R_TRIG_1.Q
+	THEN
+		Diff_Mesure := Tab_Sonde.R_MesBrut - Mesure_Echantillonner;
+END_IF;
+
+(* Détermination de l'incremment ***************)
+Incremment_Mesure := Diff_Mesure / 10.0;
+
+(* Détermination du temps entre chaque incremmentation ***************) 
+DINT_Temps_Echantillonage := TIME_TO_DINT(Temps_Echantillonage) / 1000;
+DINT_Incremment_Temps := DINT_Temps_Echantillonage;
+Incremment_Temps := DINT_TO_TIME(DINT_Incremment_Temps * 1000);
+
+(* Echantillonage de la mesure ***************) 
+(* Temporisation d'incrementation *)
+TON_2(IN := NOT(TP_2.Q), PT := Incremment_Temps);
+TP_2(IN := TON_2.Q , PT := T#100ms);
+
+R_TRIG_2(CLK := TP_2.Q);
+IF R_TRIG_2.Q
+	THEN
+		Mesure_Echantillonner := Mesure_Echantillonner + Incremment_Mesure;
+END_IF;
+
+(* Calcule mesure température corrigé *)
+IF Filtre_Actif
+	THEN
+		Tab_Sonde.R_MesCor := Mesure_Echantillonner + Tab_Sonde.W_Offset;
+	ELSE
+		Tab_Sonde.R_MesCor := Tab_Sonde.R_MesBrut + Tab_Sonde.W_Offset;
+END_IF;
+
+(* Gestion alarmes *************************************************************)
+(* Alarme status température *)
+TON_AL_S(IN := Status_DEF_EAN, PT := Tempo_AL);
+Tab_Sonde.Mot_Lecture.0 := TON_AL_S.Q;
+
+(* Alarme température basse *)
+TON_AL_B(IN := (Tab_Sonde.R_MesCor < Tab_Sonde.W_SeuilAlarmeBasse) AND Enable_Alarme, PT := Tempo_AL);
+IF TON_AL_B.Q
+	THEN
+		Tab_Sonde.Mot_Lecture.2 := TRUE;
+END_IF;
+IF ((Tab_Sonde.R_MesCor - Hyst_AL) >= Tab_Sonde.W_SeuilAlarmeBasse OR NOT (Enable_Alarme))
+	THEN
+		Tab_Sonde.Mot_Lecture.2 := FALSE;
+END_IF;
+
+(* Alarme température haute *)
+TON_AL_H(IN := (Tab_Sonde.R_MesCor > Tab_Sonde.W_SeuilAlarmeHaute) AND Enable_Alarme, PT := Tempo_AL);
+IF TON_AL_H.Q
+	THEN
+		Tab_Sonde.Mot_Lecture.1 := TRUE;
+END_IF;
+IF ((Tab_Sonde.R_MesCor + Hyst_AL) <= Tab_Sonde.W_SeuilAlarmeHaute OR NOT (Enable_Alarme))
+	THEN
+		Tab_Sonde.Mot_Lecture.1 := FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="Objet_Sonde_V1">
+      <LineId Id="41" Count="74" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="LogError" Id="{6deb7fd8-db81-4b33-8bf0-debc28a348c9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION LogError : DINT
+VAR_INPUT
+	msg			: STRING;
+	nErrId		: DWORD;
+END_VAR
+VAR
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bLogDebugMessages THEN
+	IF nErrId = 0 THEN
+		LogError := ADSLOGSTR( ADSLOG_MSGTYPE_HINT OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, '::No error!   %s'),'' );
+	ELSIF ( nErrId AND 16#80000000) =16#80000000 THEN
+		LogError := ADSLOGDINT( ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, ':: Win32 error: %d' ), DWORD_TO_DINT(SCODE_CODE( nErrId )) );
+	ELSIF (nErrId AND 16#00008100) =16#00008100 THEN
+		LogError := ADSLOGDINT( ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, '::Internal PLC sample project error: %d' ), DWORD_TO_DINT(nErrId) );
+	ELSIF (nErrId AND 16#00008000) =16#00008000 THEN
+		LogError := ADSLOGDINT( ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, '::Internal TCP/IP Connection Server error: %d' ), DWORD_TO_DINT(nErrId) );
+	ELSE
+		LogError := ADSLOGDINT( ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_LOG, CONCAT( msg, '::TwinCAT System error: %d' ), DWORD_TO_DINT(nErrId) );
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="LogError">
+      <LineId Id="9" Count="12" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
